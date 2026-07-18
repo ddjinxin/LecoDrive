@@ -23,19 +23,9 @@ AIGC:
 
 ---
 
-## 📸 截图 · Screenshots
+## 📖 项目演示 · Demo
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center"><img src="screenshot.png" width="280"/><br/><sub>日间主界面 · Day Mode</sub></td>
-    <td align="center"><img src="screenshot2.png" width="280"/><br/><sub>3D 车模渲染 · 3D Car Model</sub></td>
-    <td align="center"><img src="screenshot3.png" width="280"/><br/><sub>夜间主界面 · Night Mode</sub></td>
-  </tr>
-</table>
-</div>
-
----
+https://pd.qq.com/s/c37t0jlqx
 
 ## 📖 项目简介 · Overview
 
