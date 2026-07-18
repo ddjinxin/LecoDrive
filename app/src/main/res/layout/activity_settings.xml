@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF1A1A2E"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="设置"
+            android:textSize="22sp"
+            android:textColor="#FF00D4E8"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Wallpaper Section -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="壁纸设置"
+            android:textSize="16sp"
+            android:textColor="#FFCCCCCC"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="4dp">
+
+            <Button
+                android:id="@+id/btn_day_wallpaper"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="白天"
+                android:textSize="14sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF2A4A6A"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_night_wallpaper"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="夜间"
+                android:textSize="14sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF2A4A6A"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_weather_animation"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="天气"
+                android:textSize="14sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF2A4A6A"
+                android:layout_marginLeft="4dp"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_default_wallpaper"
+                android:layout_width="0dp"
+                android:layout_height="44dp"
+                android:layout_weight="1"
+                android:text="默认"
+                android:textSize="14sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF2A4A6A"
+                android:layout_marginLeft="4dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/label_day_wallpaper_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="未设置"
+                android:textSize="12sp"
+                android:textColor="#FF888888"
+                android:gravity="center_horizontal" />
+
+            <TextView
+                android:id="@+id/label_night_wallpaper_status"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="未设置"
+                android:textSize="12sp"
+                android:textColor="#FF888888"
+                android:gravity="center_horizontal" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textSize="12sp"
+                android:gravity="center_horizontal" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textSize="12sp"
+                android:gravity="center_horizontal" />
+
+        </LinearLayout>
+
+        <!-- Vehicle Type: 油车/电车平均分布，无标签 -->
+        <RadioGroup
+            android:id="@+id/vehicle_type_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <RadioButton
+                android:id="@+id/radio_fuel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="油车"
+                android:textColor="#FFFFFFFF"
+                android:textSize="16sp"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radio_elec"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="电车"
+                android:textColor="#FFFFFFFF"
+                android:textSize="16sp" />
+
+        </RadioGroup>
+
+        <!-- Refuel Button -->
+        <Button
+            android:id="@+id/btn_refuel"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="加油/充电"
+            android:textSize="16sp"
+            android:textColor="#FFFFFFFF"
+            android:background="#FF2A4A2A"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Refuel: 加油量 + 加油时续航 (默认隐藏，点按钮后显示) -->
+        <LinearLayout
+            android:id="@+id/refuel_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/label_refuel_amount"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="加油量(L)"
+                    android:textSize="14sp"
+                    android:textColor="#FFCCCCCC" />
+
+                <TextView
+                    android:id="@+id/label_refuel_range"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="加油时续航(km)"
+                    android:textSize="14sp"
+                    android:textColor="#FFCCCCCC" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/edit_refuel_amount"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:background="#FF2A2A4A"
+                    android:padding="8dp"
+                    android:layout_marginRight="8dp"
+                    android:hint="加满油的升数"
+                    android:textColorHint="#FF666666" />
+
+                <EditText
+                    android:id="@+id/edit_refuel_range"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:background="#FF2A2A4A"
+                    android:padding="8dp"
+                    android:hint="油表显示续航"
+                    android:textColorHint="#FF666666" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Base Mileage + Idle Energy Rate in one row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="存量里程(km)"
+                android:textSize="14sp"
+                android:textColor="#FFCCCCCC" />
+
+            <TextView
+                android:id="@+id/label_idle_rate"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="怠速油耗(L/h)"
+                android:textSize="14sp"
+                android:textColor="#FFCCCCCC" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <EditText
+                android:id="@+id/edit_base_mileage"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:text="0"
+                android:textColor="#FFFFFFFF"
+                android:textSize="18sp"
+                android:background="#FF2A2A4A"
+                android:padding="8dp"
+                android:layout_marginRight="8dp"
+                android:hint="0"
+                android:textColorHint="#FF666666" />
+
+            <EditText
+                android:id="@+id/edit_idle_fuel_rate"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:text="1.2"
+                android:textColor="#FFFFFFFF"
+                android:textSize="18sp"
+                android:background="#FF2A2A4A"
+                android:padding="8dp"
+                android:hint="1.2"
+                android:textColorHint="#FF666666" />
+
+        </LinearLayout>
+
+        <!-- Energy Table Section -->
+        <TextView
+            android:id="@+id/label_energy_table"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="油耗设置 (L/100km)"
+            android:textSize="16sp"
+            android:textColor="#FFCCCCCC"
+            android:layout_marginBottom="8dp" />
+
+        <LinearLayout
+            android:id="@+id/fuel_table_container"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <!-- Save & Cancel Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp">
+
+            <Button
+                android:id="@+id/btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="取消"
+                android:textSize="18sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:layout_marginRight="8dp" />
+
+            <Button
+                android:id="@+id/btn_save"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="保存"
+                android:textSize="18sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF00B8D4" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

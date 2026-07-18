@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.jingxin.pandrive.view.GridBackgroundView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/grid_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:weightSum="100"
+        android:background="@android:color/transparent">
+
+        <!-- Section 1: Date & Time (10%) -->
+        <com.jingxin.pandrive.view.DateTimeView
+            android:id="@+id/section_datetime"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="10" />
+
+        <!-- Section 2: Speedometer (top 2/3) + Compass+Clock (bottom 1/3) (45%) -->
+        <LinearLayout
+            android:id="@+id/section_gauges"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="45"
+            android:orientation="vertical"
+            android:weightSum="3"
+            android:background="@android:color/transparent">
+
+            <!-- Top 2/3: Speedometer -->
+            <com.jingxin.pandrive.view.SpeedometerView
+                android:id="@+id/speedometer_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="2" />
+
+            <!-- Bottom 1/3: Compass (left) + Clock (right) + Mileage overlay -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false"
+                    android:background="@android:color/transparent">
+
+                    <FrameLayout
+                        android:id="@+id/compass_container"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
+
+                        <com.jingxin.pandrive.view.CompassView
+                            android:id="@+id/compass_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:visibility="visible" />
+
+                        <com.jingxin.pandrive.view.CompassViewMinimal
+                            android:id="@+id/compass_view_minimal"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+
+                    </FrameLayout>
+
+                    <!-- Clock -->
+                    <FrameLayout
+                        android:id="@+id/clock_container"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1">
+
+                        <com.jingxin.pandrive.view.ClockView
+                            android:id="@+id/clock_view"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center" />
+
+                    </FrameLayout>
+
+                </LinearLayout>
+
+                <!-- Mileage display: centered between compass and clock -->
+                <com.jingxin.pandrive.view.MileageView
+                    android:id="@+id/mileage_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- Section 3: Navigation Bar (15%) -->
+        <com.jingxin.pandrive.view.NavigationBarView
+            android:id="@+id/section_navigation"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="15"
+            android:background="@android:color/transparent" />
+
+        <!-- Section 4: Lane + Car3D (30%) -->
+        <FrameLayout
+            android:id="@+id/section_car3d"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="30"
+            android:background="@android:color/transparent">
+
+            <com.jingxin.pandrive.view.LaneView
+                android:id="@+id/lane_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TextureView
+                android:id="@+id/texture_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+    <!-- 手动切换日夜模式按钮（右上角） -->
+    <ImageView
+        android:id="@+id/theme_button"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/ic_theme"
+        android:padding="6dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:contentDescription="切换日夜模式" />
+
+</com.jingxin.pandrive.view.GridBackgroundView>
