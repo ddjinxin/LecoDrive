@@ -23,17 +23,9 @@ AIGC:
 
 ---
 
-## 📸 Screenshots
+## 📸 Demo
 
-<div align="center">
-<table>
-  <tr>
-    <td align="center"><img src="screenshot.png" width="280"/><br/><sub>Day Mode</sub></td>
-    <td align="center"><img src="screenshot2.png" width="280"/><br/><sub>3D Car Model Rendering</sub></td>
-    <td align="center"><img src="screenshot3.png" width="280"/><br/><sub>Night Mode</sub></td>
-  </tr>
-</table>
-</div>
+https://pd.qq.com/s/c37t0jlqx
 
 ---
 
