@@ -23,6 +23,10 @@ import org.json.JSONObject;
 
 import com.jingxin.pandrive.util.CompatUtils;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -123,6 +127,19 @@ public class DataHub {
     private double prevLon = 0;
     private boolean hasPrevLocation = false;
     private String todayDate = "";        // 用于判断日期变更归零
+
+    // ===== 外部备份文件（重装/清数据后从该文件恢复所有设置）=====
+    // 文件位置: /sdcard/Download/LecoDrive/settings.json
+    // 首次不存在时用出厂默认值新建；之后每次修改覆盖写回
+    private static final String BACKUP_DIR = "/sdcard/Download/LecoDrive/";
+    private static final String BACKUP_FILE = BACKUP_DIR + "settings.json";
+
+    // ===== 出厂初始值（仅首次安装/首次运行时使用，之后以备份文件为准）=====
+    private static final float DEFAULT_IDLE_FUEL_RATE = 1.2f;
+    private static final float DEFAULT_REFUEL_REMAINING_RANGE = 80f;
+    private static final float[] DEFAULT_FUEL_SPEED_THRESHOLDS = {0, 20, 40, 60, 80, 105, 115, 130, 999};
+    private static final float[] DEFAULT_FUEL_VALUES = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
+
     private static final String MILEAGE_PREFS = "mileage_prefs";
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
@@ -140,15 +157,15 @@ public class DataHub {
     // Fuel consumption: 距离加权累计法
     public static final int VEHICLE_FUEL = 0;    // 油车
     public static final int VEHICLE_ELEC = 1;    // 电车
-    private int vehicleType = VEHICLE_FUEL;      // 车型
-    private float driveFuelUsed = 0f;       // 行驶累计能耗量(L 或 kWh)，不含怠速
-    private float idleFuelUsed = 0f;        // 怠速累计能耗量(L 或 kWh)，与距离无关
-    private float fuelCalcKm = 0f;          // 累计行驶距离(km)
-    private float idleFuelRate = 1.2f;      // 怠速能耗率(L/h 或 kW)
+    private int vehicleType;                // 车型（启动时由 loadSettings() 初始化）
+    private float driveFuelUsed;            // 行驶累计能耗量(L 或 kWh)，不含怠速
+    private float idleFuelUsed;             // 怠速累计能耗量(L 或 kWh)，与距离无关
+    private float fuelCalcKm;               // 累计行驶距离(km)
+    private float idleFuelRate;             // 怠速能耗率(L/h 或 kW)
     private float fuelConsumption = 0f;     // 当前综合油耗(仅行驶效率，L/100km)
-    private float lastRefuelAmount = 0f;    // 加油后的总油量(L或kWh)：旧剩余 + 新加的
-    private float fuelUsedAtRefuel = 0f;    // 加油时的总消耗起点(driveFuelUsed+idleFuelUsed)
-    private float refuelRemainingRange = 80f;  // 加油时车辆显示的续航(km)
+    private float lastRefuelAmount;         // 加油后的总油量(L或kWh)：旧剩余 + 新加的
+    private float fuelUsedAtRefuel;         // 加油时的总消耗起点(driveFuelUsed+idleFuelUsed)
+    private float refuelRemainingRange;     // 加油时车辆显示的续航(km)
     private static final long FUEL_TICK_MS = 1000;  // 每1秒计算一次
     private static final long FUEL_UI_INTERVAL_MS = 60000;  // 每60秒刷新UI
     private long lastFuelTickTime = 0;
@@ -163,9 +180,9 @@ public class DataHub {
     };
 
     // Configurable fuel-speed table: key = max speed of range, value = L/100km
-    // Default: 0→20, 20→12, 40→11, 60→10, 80→9.5, 105→8, 115→7.5, 130→9.5, 999→11
-    private float[] fuelSpeedThresholds = {0, 20, 40, 60, 80, 105, 115, 130, 999};
-    private float[] fuelValues = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
+    // 数组长度始终为9，元素值由 loadSettings() 初始化
+    private float[] fuelSpeedThresholds = new float[9];
+    private float[] fuelValues = new float[9];
 
     // Navi timeout
     private final Handler naviTimeoutHandler = new Handler(Looper.getMainLooper());
@@ -293,6 +310,7 @@ public class DataHub {
         tripDistance = 0f;
         hasPrevLocation = false;
         editSettings().putFloat("base_mileage", baseMileage).apply();
+        persistBackup();
         persistMileage();
         notifyMileageChanged();
     }
@@ -307,6 +325,7 @@ public class DataHub {
             editor.putFloat("fuel_v" + i, fuelValues[i]);
         }
         editor.apply();
+        persistBackup();
     }
     public int getFuelTableSize() { return fuelValues.length; }
 
@@ -345,23 +364,171 @@ public class DataHub {
                 .apply();
     }
 
+    /**
+     * 加载设置：优先从外部备份文件读取，备份不存在时用出厂默认值新建一份。
+     * 所有字段不再依赖 SharedPreferences 的硬编码默认值——备份文件即唯一权威来源。
+     * SharedPreferences 仅作内存读缓存：备份文件加载完成后同步写入 SP。
+     *
+     * 安全机制：读取失败时（如启动时还没拿到存储权限）只用默认值填充内存，
+     * 绝不覆盖备份文件——保留磁盘原文件等授权后重试读取。
+     */
     private void loadSettings() {
-        SharedPreferences prefs = appContext.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE);
-        baseMileage = prefs.getFloat("base_mileage", 0f);
-        idleFuelRate = prefs.getFloat("idle_fuel_rate", 1.2f);
-        vehicleType = prefs.getInt("vehicle_type", VEHICLE_FUEL);
-        // Load configurable fuel values
-        float[] defaults = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
-        for (int i = 0; i < fuelValues.length; i++) {
-            fuelValues[i] = prefs.getFloat("fuel_v" + i, defaults[i]);
+        File backup = new File(BACKUP_FILE);
+        if (backup.exists() && loadFromBackup(backup)) {
+            // 备份文件加载成功 → 同步到 SP 缓存
+            persistSettingsToSP();
+            return;
         }
-        // Load refuel data
-        lastRefuelAmount = prefs.getFloat("last_refuel_amount", 0f);
-        fuelUsedAtRefuel = prefs.getFloat("fuel_used_at_refuel", 0f);
-        refuelRemainingRange = prefs.getFloat("refuel_remaining_range", 80f);
-        driveFuelUsed = prefs.getFloat("drive_fuel_used", 0f);
-        idleFuelUsed = prefs.getFloat("idle_fuel_used", 0f);
-        fuelCalcKm = prefs.getFloat("fuel_calc_km", 0f);
+        // 读不到（文件不存在 / 无权限 / JSON损坏）→ 只用默认值入内存，不覆盖文件
+        initDefaultSettings();
+        persistSettingsToSP();
+        // 注意：这里不调 persistBackup()，避免无权限时把原备份文件冲掉
+        Log.w(TAG, "备份文件读取失败或不存在，暂用默认值;授权后会重试读取");
+    }
+
+    /**
+     * 授权成功后调用：重新尝试从备份文件读取设置。
+     * 如果读到，覆盖内存字段 + 同步 SP + 通知监听器刷新 UI。
+     * 读不到（确实没有备份文件）则生成一份默认备份。
+     * @return true 表示确实从备份恢复了用户数据
+     */
+    public boolean retryLoadFromBackup() {
+        File backup = new File(BACKUP_FILE);
+        if (backup.exists() && loadFromBackup(backup)) {
+            persistSettingsToSP();
+            notifyFuelChanged();
+            notifyMileageChanged();
+            Log.i(TAG, "授权后重试读取备份成功，已恢复用户设置");
+            return true;
+        }
+        // 确实没有备份文件 → 生成一份默认备份（此时权限已拿到，可以安全写入）
+        persistBackup();
+        Log.i(TAG, "授权后重试: 无备份文件，已生成默认备份");
+        return false;
+    }
+
+    /** 从备份文件读取所有设置到内存字段 */
+    private boolean loadFromBackup(File backup) {
+        try {
+            JSONObject root = new JSONObject(readFile(backup));
+            baseMileage          = (float) root.optDouble("base_mileage", 0f);
+            idleFuelRate         = (float) root.optDouble("idle_fuel_rate", DEFAULT_IDLE_FUEL_RATE);
+            vehicleType          = root.optInt("vehicle_type", VEHICLE_FUEL);
+            lastRefuelAmount     = (float) root.optDouble("last_refuel_amount", 0f);
+            fuelUsedAtRefuel     = (float) root.optDouble("fuel_used_at_refuel", 0f);
+            refuelRemainingRange = (float) root.optDouble("refuel_remaining_range", DEFAULT_REFUEL_REMAINING_RANGE);
+            driveFuelUsed        = (float) root.optDouble("drive_fuel_used", 0f);
+            idleFuelUsed         = (float) root.optDouble("idle_fuel_used", 0f);
+            fuelCalcKm           = (float) root.optDouble("fuel_calc_km", 0f);
+            JSONArray thresholds = root.optJSONArray("fuel_speed_thresholds");
+            JSONArray values     = root.optJSONArray("fuel_values");
+            if (thresholds != null && values != null && values.length() == 9) {
+                for (int i = 0; i < 9; i++) {
+                    fuelSpeedThresholds[i] = (float) thresholds.optDouble(i);
+                    fuelValues[i]          = (float) values.optDouble(i);
+                }
+            } else {
+                System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
+                System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
+            }
+            Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "读取备份文件失败，改用默认值: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /** 用出厂默认值初始化所有字段（仅内存，不写文件。首次运行写文件由调用方决定） */
+    private void initDefaultSettings() {
+        baseMileage          = 0f;
+        idleFuelRate         = DEFAULT_IDLE_FUEL_RATE;
+        vehicleType          = VEHICLE_FUEL;
+        System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
+        System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
+        lastRefuelAmount     = 0f;
+        fuelUsedAtRefuel     = 0f;
+        refuelRemainingRange = DEFAULT_REFUEL_REMAINING_RANGE;
+        driveFuelUsed        = 0f;
+        idleFuelUsed         = 0f;
+        fuelCalcKm           = 0f;
+        Log.i(TAG, "已用出厂默认值初始化内存字段");
+    }
+
+    /** 将所有字段写入 SharedPreferences（作为读缓存） */
+    private void persistSettingsToSP() {
+        SharedPreferences.Editor e = editSettings();
+        e.putFloat("base_mileage", baseMileage);
+        e.putFloat("idle_fuel_rate", idleFuelRate);
+        e.putInt("vehicle_type", vehicleType);
+        for (int i = 0; i < fuelValues.length; i++) e.putFloat("fuel_v" + i, fuelValues[i]);
+        e.putFloat("last_refuel_amount", lastRefuelAmount);
+        e.putFloat("fuel_used_at_refuel", fuelUsedAtRefuel);
+        e.putFloat("refuel_remaining_range", refuelRemainingRange);
+        e.putFloat("drive_fuel_used", driveFuelUsed);
+        e.putFloat("idle_fuel_used", idleFuelUsed);
+        e.putFloat("fuel_calc_km", fuelCalcKm);
+        e.apply();
+    }
+
+    /** 将所有字段写入备份文件（覆盖写）。失败仅打日志不抛异常 */
+    public void persistBackup() {
+        try {
+            File dir = new File(BACKUP_DIR);
+            if (!dir.exists() && !dir.mkdirs()) {
+                Log.e(TAG, "创建备份目录失败: " + BACKUP_DIR);
+                return;
+            }
+            JSONObject root = new JSONObject();
+            root.put("base_mileage", baseMileage);
+            root.put("idle_fuel_rate", idleFuelRate);
+            root.put("vehicle_type", vehicleType);
+            JSONArray thresholds = new JSONArray();
+            JSONArray values = new JSONArray();
+            for (int i = 0; i < fuelValues.length; i++) {
+                thresholds.put((double) fuelSpeedThresholds[i]);
+                values.put((double) fuelValues[i]);
+            }
+            root.put("fuel_speed_thresholds", thresholds);
+            root.put("fuel_values", values);
+            root.put("last_refuel_amount", lastRefuelAmount);
+            root.put("fuel_used_at_refuel", fuelUsedAtRefuel);
+            root.put("refuel_remaining_range", refuelRemainingRange);
+            root.put("drive_fuel_used", driveFuelUsed);
+            root.put("idle_fuel_used", idleFuelUsed);
+            root.put("fuel_calc_km", fuelCalcKm);
+            writeFile(new File(BACKUP_FILE), root.toString());
+        } catch (Exception e) {
+            Log.e(TAG, "写入备份文件失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 应用退出时调用：将所有运行时累加器（油耗tick等）持久化到 SP + 备份文件 + 里程 SP。
+     * 兜底作用，确保油耗在退出时不丢失。
+     */
+    public void persistAll() {
+        persistSettingsToSP();
+        persistBackup();
+        persistMileage();
+    }
+
+    // 简单的文件读写工具
+    private String readFile(File f) throws Exception {
+        try (FileInputStream fis = new FileInputStream(f)) {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buf = new byte[1024];
+            int n;
+            while ((n = fis.read(buf)) > 0) baos.write(buf, 0, n);
+            return new String(baos.toByteArray(), "UTF-8");
+        }
+    }
+
+    private void writeFile(File f, String content) throws Exception {
+        try (FileOutputStream fos = new FileOutputStream(f)) {
+            fos.write(content.getBytes("UTF-8"));
+            fos.flush();
+        }
     }
 
     private void notifyMileageChanged() {
@@ -398,6 +565,7 @@ public class DataHub {
     public void setRefuelRemainingRange(float km) {
         refuelRemainingRange = km;
         editSettings().putFloat("refuel_remaining_range", refuelRemainingRange).apply();
+        persistBackup();
     }
     /** 加油修正：用输入的续航里程反推剩余油量
      *  反推油耗优先级：综合油耗 > 当前速度查表 > 默认值
@@ -411,6 +579,7 @@ public class DataHub {
                 .putFloat("last_refuel_amount", lastRefuelAmount)
                 .putFloat("fuel_used_at_refuel", fuelUsedAtRefuel)
                 .apply();
+        persistBackup();
         notifyFuelChanged();
     }
 
@@ -425,6 +594,7 @@ public class DataHub {
                 .putFloat("fuel_used_at_refuel", fuelUsedAtRefuel)
                 .putFloat("refuel_remaining_range", refuelRemainingRange)
                 .apply();
+        persistBackup();
         notifyFuelChanged();
     }
 
@@ -452,6 +622,7 @@ public class DataHub {
     public void setVehicleType(int type) {
         vehicleType = type;
         editSettings().putInt("vehicle_type", vehicleType).apply();
+        persistBackup();
         notifyFuelChanged();
     }
 
@@ -518,6 +689,7 @@ public class DataHub {
     public void setIdleFuelRate(float rate) {
         idleFuelRate = rate;
         editSettings().putFloat("idle_fuel_rate", idleFuelRate).apply();
+        persistBackup();
     }
 
     /** 速度→油耗查表 (L/100km)，使用可配置的速度-油耗映射 */
@@ -534,6 +706,7 @@ public class DataHub {
                 .putFloat("idle_fuel_used", idleFuelUsed)
                 .putFloat("fuel_calc_km", fuelCalcKm)
                 .apply();
+        persistBackup();  // 每60秒同步到备份文件，断电最多丢60秒累加数据
     }
 
     private void notifyFuelChanged() {

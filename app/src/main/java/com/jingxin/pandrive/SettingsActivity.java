@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
+import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
 
 import java.io.File;
@@ -121,6 +122,11 @@ public class SettingsActivity extends Activity {
             setResult(RESULT_CANCELED);
             finish();
         });
+
+        // Check update button
+        Button btnCheckUpdate = findViewById(R.id.btn_check_update);
+        btnCheckUpdate.setOnClickListener(v ->
+                UpdateChecker.getInstance(this).checkManually(this));
 
         // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -367,7 +373,9 @@ public class SettingsActivity extends Activity {
         boolean isElec = radioElec.isChecked();
         editRefuelAmount.setText("");
         editRefuelAmount.setHint(isElec ? "充电量(kWh)" : "加油量(L)");
-        editRefuelRange.setText("80");
+        // 回显上次保存的车表续航（首次启动默认80，校准过则显示校准值）
+        float currentRange = dataHub.getRefuelRemainingRange();
+        editRefuelRange.setText(String.valueOf((int) currentRange));
         editRefuelRange.setHint(isElec ? "当前车表续航(km)" : "当前车表续航(km)");
         labelRefuelAmount.setText(isElec ? "充电量(kWh)" : "加油量(L)");
         labelRefuelRange.setText(isElec ? "当前车表续航(km)" : "当前车表续航(km)");

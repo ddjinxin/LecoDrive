@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- 外部存储的 Download/LecoDrive 目录，用于安装 APK 文件 -->
+    <!-- external-path 对应 Environment.getExternalStorageDirectory() -->
+    <!-- /sdcard/Download/LecoDrive/ 是其符号链接，同一物理路径 -->
+    <external-path name="external_download" path="Download/LecoDrive/" />
+</paths>

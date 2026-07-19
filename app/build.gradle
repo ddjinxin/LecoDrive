@@ -10,8 +10,8 @@ android {
         applicationId "com.jingxin.pandrive"
         minSdk 21
         targetSdk 35
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.0.1"
     }
 
     signingConfigs {
@@ -40,4 +40,7 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    // 官方 Jetpack core: 提供FileProvider用于Android 7.0+分享APK给系统安装器
+    implementation 'androidx.core:core:1.9.0'
+}

@@ -33,6 +33,7 @@ import com.jingxin.pandrive.view.LaneView;
 import com.jingxin.pandrive.view.MileageView;
 import com.jingxin.pandrive.view.NavigationBarView;
 import com.jingxin.pandrive.view.SpeedometerView;
+import com.jingxin.pandrive.update.UpdateChecker;
 
 public class MainActivity extends Activity implements
         ThemeController.OnThemeChangeListener,
@@ -349,6 +350,8 @@ public class MainActivity extends Activity implements
                 if (Manifest.permission.READ_EXTERNAL_STORAGE.equals(permissions[i])
                         && grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     tryRetryLoadModel();
+                    // 授权成功后重试读取备份文件，恢复用户设置
+                    dataHub.retryLoadFromBackup();
                 }
             }
             checkLocationPermission();
@@ -364,6 +367,8 @@ public class MainActivity extends Activity implements
             // Returned from MANAGE_EXTERNAL_STORAGE settings
             if (Build.VERSION.SDK_INT >= 30 && Environment.isExternalStorageManager()) {
                 tryRetryLoadModel();
+                // 授权成功后重试读取备份文件，恢复用户设置
+                dataHub.retryLoadFromBackup();
             } else {
                 Toast.makeText(this, "未授予文件访问权限，3D模型无法加载", Toast.LENGTH_LONG).show();
             }
@@ -545,6 +550,9 @@ public class MainActivity extends Activity implements
             gridBackgroundView.reloadWallpaper();
             gridBackgroundView.resumeWallpaper();
         }
+
+        // 启动时检查应用更新（内部已做"本次启动只查一次"去重）
+        UpdateChecker.getInstance(this).checkOnLaunch(this);
     }
 
     @Override
@@ -553,6 +561,8 @@ public class MainActivity extends Activity implements
         if (checkFailed) return;
         // GL渲染的暂停/恢复改由onStop/onStart控制
         dataHub.unregisterSensors();
+        // 退出时把油耗tick累加值+所有设置同步到备份文件
+        dataHub.persistAll();
         if (gridBackgroundView != null) gridBackgroundView.pauseWallpaper();
     }
 
@@ -575,6 +585,8 @@ public class MainActivity extends Activity implements
     protected void onStop() {
         super.onStop();
         if (checkFailed) return;
+        // 兜底再保存一次，确保能耗累加器不丢
+        dataHub.persistAll();
         if (glTextureRenderer != null) {
             glTextureRenderer.onPause();
         }
@@ -595,6 +607,7 @@ public class MainActivity extends Activity implements
         dataHub.unregisterSensors();
         dataHub.stopFuelSampling();
         dataHub.unregisterLocation();
+        dataHub.persistAll();
         themeController.unregisterAmapReceiver();
         if (gridBackgroundView != null) gridBackgroundView.release();
         // 不在此处 stopService：前台服务通过通知栏"退出"按钮由用户主动停止
