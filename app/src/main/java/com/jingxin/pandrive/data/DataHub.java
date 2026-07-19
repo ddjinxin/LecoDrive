@@ -121,8 +121,7 @@ public class DataHub {
     // Mileage tracking (all in meters)
     private float tripDistance = 0f;      // 单次里程
     private float todayDistance = 0f;     // 今日里程
-    private float totalDistance = 0f;     // GPS累计里程
-    private float baseMileage = 0f;      // 存量里程（km，用户设置）
+    private float totalDistance = 0f;     // 累计里程（米，含用户设置的起始值）
     private double prevLat = 0;
     private double prevLon = 0;
     private boolean hasPrevLocation = false;
@@ -136,22 +135,15 @@ public class DataHub {
 
     // ===== 出厂初始值（仅首次安装/首次运行时使用，之后以备份文件为准）=====
     private static final float DEFAULT_IDLE_FUEL_RATE = 1.2f;
-    private static final float DEFAULT_REFUEL_REMAINING_RANGE = 80f;
     private static final float[] DEFAULT_FUEL_SPEED_THRESHOLDS = {0, 20, 40, 60, 80, 105, 115, 130, 999};
     private static final float[] DEFAULT_FUEL_VALUES = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
 
-    private static final String MILEAGE_PREFS = "mileage_prefs";
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
 
     /** 获取设置SharedPreferences的Editor，避免重复写 getSharedPreferences().edit() */
     private SharedPreferences.Editor editSettings() {
         return appContext.getSharedPreferences(SETTINGS_PREFS, Context.MODE_PRIVATE).edit();
-    }
-
-    /** 获取里程SharedPreferences的Editor */
-    private SharedPreferences.Editor editMileage() {
-        return appContext.getSharedPreferences(MILEAGE_PREFS, Context.MODE_PRIVATE).edit();
     }
 
     // Fuel consumption: 距离加权累计法
@@ -165,7 +157,13 @@ public class DataHub {
     private float fuelConsumption = 0f;     // 当前综合油耗(仅行驶效率，L/100km)
     private float lastRefuelAmount;         // 加油后的总油量(L或kWh)：旧剩余 + 新加的
     private float fuelUsedAtRefuel;         // 加油时的总消耗起点(driveFuelUsed+idleFuelUsed)
-    private float refuelRemainingRange;     // 加油时车辆显示的续航(km)
+    // 近期油耗：窗口内非怠速秒瞬时查表油耗的滑动平均
+    private int recentFuelWindowSec = 120;          // 周期(秒)，默认120，可配 60/120/180/240/300
+    private float[] recentSamples;                  // 环形数组样本池
+    private int recentSampleCount = 0;              // 当前有效样本数
+    private int recentSampleHead = 0;               // 环形数组头指针（下一个写入位置）
+    private float recentSampleSum = 0f;             // 当前样本和（O(1) 算平均）
+    private final Object recentLock = new Object(); // 读写同步锁
     private static final long FUEL_TICK_MS = 1000;  // 每1秒计算一次
     private static final long FUEL_UI_INTERVAL_MS = 60000;  // 每60秒刷新UI
     private long lastFuelTickTime = 0;
@@ -195,7 +193,7 @@ public class DataHub {
     public interface OnModeListener { void onModeChanged(int mode); }
     public interface OnDayNightListener { void onDayNightChanged(boolean isNight); }
     public interface OnMileageListener { void onMileageChanged(float tripKm, float todayKm, float totalKm); }
-    public interface OnFuelListener { void onFuelChanged(float fuelLPer100km, float remainingRangeKm, float remainingPercent); }
+    public interface OnFuelListener { void onFuelChanged(float overallFuelLPer100km, float recentFuelLPer100km, float remainingRangeKm, float remainingPercent); }
     public interface OnLocationListener { void onLocationChanged(double latitude, double longitude); }
 
     private final List<OnSpeedListener> speedListeners = new ArrayList<>();
@@ -213,8 +211,7 @@ public class DataHub {
 
     private DataHub(Context context) {
         appContext = context.getApplicationContext();
-        loadMileage();
-        loadSettings();
+        loadSettings();  // 含里程三字段加载和跨天判断
     }
 
     public static synchronized DataHub getInstance(Context context) {
@@ -293,25 +290,22 @@ public class DataHub {
     // Mileage getters (all in km)
     public float getTripDistanceKm() { return tripDistance / 1000f; }
     public float getTodayDistanceKm() { return todayDistance / 1000f; }
-    public float getTotalDistanceKm() { return totalDistance / 1000f + baseMileage; }
+    public float getTotalDistanceKm() { return totalDistance / 1000f; }
 
     public void resetTripDistance() {
         tripDistance = 0f;
-        persistMileage();
+        persistBackup();
         notifyMileageChanged();
     }
 
-    // --- Base mileage (存量里程, in km) ---
-    public float getBaseMileage() { return baseMileage; }
-    public void setBaseMileage(float km) {
-        baseMileage = km;
-        totalDistance = 0f;
-        todayDistance = 0f;
-        tripDistance = 0f;
-        hasPrevLocation = false;
-        editSettings().putFloat("base_mileage", baseMileage).apply();
+    // --- Total mileage (累计里程, in km) ---
+    /** 设置累计里程：用户在设置页输入当前车表读数，直接覆盖累计值，并清零今日/本次行程（已包含在新累计值中） */
+    public void setTotalMileage(float km) {
+        totalDistance = km * 1000f;  // km → 米
+        todayDistance = 0f;          // 清零（已包含在新累计值里）
+        tripDistance = 0f;           // 清零（同理）
+        hasPrevLocation = false;     // 下一个GPS点作为新起点
         persistBackup();
-        persistMileage();
         notifyMileageChanged();
     }
 
@@ -339,29 +333,6 @@ public class DataHub {
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return (float) (R * c);
-    }
-
-    private void loadMileage() {
-        SharedPreferences prefs = appContext.getSharedPreferences(MILEAGE_PREFS, Context.MODE_PRIVATE);
-        todayDistance = prefs.getFloat("today_distance", 0f);
-        totalDistance = prefs.getFloat("total_distance", 0f);
-        todayDate = prefs.getString("today_date", "");
-        tripDistance = 0f;  // 启动时清零，代表本次行程
-        // Check date change: if stored date != today, reset today distance
-        String currentDate = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
-        if (!currentDate.equals(todayDate)) {
-            todayDistance = 0f;
-            todayDate = currentDate;
-        }
-    }
-
-    private void persistMileage() {
-        editMileage()
-                .putFloat("trip_distance", tripDistance)
-                .putFloat("today_distance", todayDistance)
-                .putFloat("total_distance", totalDistance)
-                .putString("today_date", todayDate)
-                .apply();
     }
 
     /**
@@ -411,21 +382,44 @@ public class DataHub {
     private boolean loadFromBackup(File backup) {
         try {
             JSONObject root = new JSONObject(readFile(backup));
-            baseMileage          = (float) root.optDouble("base_mileage", 0f);
+            // 里程三字段（统一以备份文件为权威来源）
+            totalDistance = (float) root.optDouble("total_distance", 0f);
+            todayDistance = (float) root.optDouble("today_distance", 0f);
+            todayDate     = root.optString("today_date", "");
+            // 跨天判断：存的日期 != 今天 → 今日行程清零，更新日期
+            String currentDate = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
+            if (!currentDate.equals(todayDate)) {
+                todayDistance = 0f;
+                todayDate = currentDate;
+            }
+            tripDistance = 0f;  // 启动清零，代表本次行程
             idleFuelRate         = (float) root.optDouble("idle_fuel_rate", DEFAULT_IDLE_FUEL_RATE);
             vehicleType          = root.optInt("vehicle_type", VEHICLE_FUEL);
             lastRefuelAmount     = (float) root.optDouble("last_refuel_amount", 0f);
             fuelUsedAtRefuel     = (float) root.optDouble("fuel_used_at_refuel", 0f);
-            refuelRemainingRange = (float) root.optDouble("refuel_remaining_range", DEFAULT_REFUEL_REMAINING_RANGE);
             driveFuelUsed        = (float) root.optDouble("drive_fuel_used", 0f);
             idleFuelUsed         = (float) root.optDouble("idle_fuel_used", 0f);
             fuelCalcKm           = (float) root.optDouble("fuel_calc_km", 0f);
+            fuelConsumption      = (float) root.optDouble("fuel_consumption", 0f);
+            int winSec           = root.optInt("recent_fuel_window_sec", 120);
+            setRecentFuelWindowSec(winSec);  // 初始化样本池
             JSONArray thresholds = root.optJSONArray("fuel_speed_thresholds");
             JSONArray values     = root.optJSONArray("fuel_values");
-            if (thresholds != null && values != null && values.length() == 9) {
+            if (thresholds != null && values != null && values.length() == 9
+                    && thresholds.length() == 9) {
                 for (int i = 0; i < 9; i++) {
                     fuelSpeedThresholds[i] = (float) thresholds.optDouble(i);
                     fuelValues[i]          = (float) values.optDouble(i);
+                }
+                // 校验：油耗值全0（数据损坏或历史脏数据）→ 恢复默认值
+                boolean allZero = true;
+                for (float v : fuelValues) {
+                    if (v > 0.01f) { allZero = false; break; }
+                }
+                if (allZero) {
+                    System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
+                    System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
+                    Log.w(TAG, "油耗表全0，已恢复默认值");
                 }
             } else {
                 System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
@@ -441,33 +435,40 @@ public class DataHub {
 
     /** 用出厂默认值初始化所有字段（仅内存，不写文件。首次运行写文件由调用方决定） */
     private void initDefaultSettings() {
-        baseMileage          = 0f;
+        totalDistance        = 0f;
+        todayDistance        = 0f;
+        todayDate            = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
+        tripDistance         = 0f;
         idleFuelRate         = DEFAULT_IDLE_FUEL_RATE;
         vehicleType          = VEHICLE_FUEL;
         System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
         System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
         lastRefuelAmount     = 0f;
         fuelUsedAtRefuel     = 0f;
-        refuelRemainingRange = DEFAULT_REFUEL_REMAINING_RANGE;
         driveFuelUsed        = 0f;
         idleFuelUsed         = 0f;
         fuelCalcKm           = 0f;
+        recentFuelWindowSec  = 120;
+        setRecentFuelWindowSec(120);  // 初始化样本池
         Log.i(TAG, "已用出厂默认值初始化内存字段");
     }
 
     /** 将所有字段写入 SharedPreferences（作为读缓存） */
     private void persistSettingsToSP() {
         SharedPreferences.Editor e = editSettings();
-        e.putFloat("base_mileage", baseMileage);
+        e.putFloat("total_distance", totalDistance);
+        e.putFloat("today_distance", todayDistance);
+        e.putString("today_date", todayDate);
         e.putFloat("idle_fuel_rate", idleFuelRate);
         e.putInt("vehicle_type", vehicleType);
         for (int i = 0; i < fuelValues.length; i++) e.putFloat("fuel_v" + i, fuelValues[i]);
         e.putFloat("last_refuel_amount", lastRefuelAmount);
         e.putFloat("fuel_used_at_refuel", fuelUsedAtRefuel);
-        e.putFloat("refuel_remaining_range", refuelRemainingRange);
         e.putFloat("drive_fuel_used", driveFuelUsed);
         e.putFloat("idle_fuel_used", idleFuelUsed);
         e.putFloat("fuel_calc_km", fuelCalcKm);
+        e.putFloat("fuel_consumption", fuelConsumption);
+        e.putInt("recent_fuel_window_sec", recentFuelWindowSec);
         e.apply();
     }
 
@@ -480,7 +481,9 @@ public class DataHub {
                 return;
             }
             JSONObject root = new JSONObject();
-            root.put("base_mileage", baseMileage);
+            root.put("total_distance", totalDistance);
+            root.put("today_distance", todayDistance);
+            root.put("today_date", todayDate);
             root.put("idle_fuel_rate", idleFuelRate);
             root.put("vehicle_type", vehicleType);
             JSONArray thresholds = new JSONArray();
@@ -493,10 +496,11 @@ public class DataHub {
             root.put("fuel_values", values);
             root.put("last_refuel_amount", lastRefuelAmount);
             root.put("fuel_used_at_refuel", fuelUsedAtRefuel);
-            root.put("refuel_remaining_range", refuelRemainingRange);
             root.put("drive_fuel_used", driveFuelUsed);
             root.put("idle_fuel_used", idleFuelUsed);
             root.put("fuel_calc_km", fuelCalcKm);
+            root.put("fuel_consumption", fuelConsumption);
+            root.put("recent_fuel_window_sec", recentFuelWindowSec);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
@@ -510,7 +514,6 @@ public class DataHub {
     public void persistAll() {
         persistSettingsToSP();
         persistBackup();
-        persistMileage();
     }
 
     // 简单的文件读写工具
@@ -534,7 +537,7 @@ public class DataHub {
     private void notifyMileageChanged() {
         float tripKm = tripDistance / 1000f;
         float todayKm = todayDistance / 1000f;
-        float totalKm = totalDistance / 1000f + baseMileage;
+        float totalKm = totalDistance / 1000f;
         for (OnMileageListener l : mileageListeners) l.onMileageChanged(tripKm, todayKm, totalKm);
     }
 
@@ -548,12 +551,14 @@ public class DataHub {
         float remaining = lastRefuelAmount - usedSinceRefuel;
         return remaining > 0 ? remaining : 0f;
     }
-    /** 续航里程 = 剩余油量 ÷ 当前油耗 × 100 (km)
-     *  油耗为0时（还没行驶过），用默认油耗估算
+    /** 续航里程 = 剩余油量 ÷ 近期油耗 × 100 (km)
+     *  近期油耗三层回退：窗口样本平均 → 综合油耗 → 默认值
+     *  油耗为0时（防异常数据导致除零）返回0
      */
     public float getRemainingRange() {
         if (lastRefuelAmount <= 0) return 0f;
-        float effectiveConsumption = fuelConsumption > 0.01f ? fuelConsumption : getDefaultFuelConsumption();
+        float effectiveConsumption = getRecentConsumption();
+        if (effectiveConsumption <= 0.01f) return 0f;  // 防除零
         return getRemainingEnergy() / effectiveConsumption * 100f;
     }
     /** 剩余能量百分比 = 剩余 / 总量 × 100 */
@@ -561,19 +566,80 @@ public class DataHub {
         if (lastRefuelAmount <= 0) return 0f;
         return getRemainingEnergy() / lastRefuelAmount * 100f;
     }
-    public float getRefuelRemainingRange() { return refuelRemainingRange; }
-    public void setRefuelRemainingRange(float km) {
-        refuelRemainingRange = km;
-        editSettings().putFloat("refuel_remaining_range", refuelRemainingRange).apply();
+
+    // ==================== 近期油耗 ====================
+
+    public int getRecentFuelWindowSec() { return recentFuelWindowSec; }
+    /** 设置近期油耗周期（秒），重置样本池。合法值：60/120/180/240/300 */
+    public void setRecentFuelWindowSec(int sec) {
+        if (sec != 60 && sec != 120 && sec != 180 && sec != 240 && sec != 300) {
+            sec = 120;
+        }
+        recentFuelWindowSec = sec;
+        synchronized (recentLock) {
+            recentSamples = new float[sec];
+            recentSampleCount = 0;
+            recentSampleHead  = 0;
+            recentSampleSum   = 0f;
+        }
+        editSettings().putInt("recent_fuel_window_sec", recentFuelWindowSec).apply();
         persistBackup();
     }
-    /** 加油修正：用输入的续航里程反推剩余油量
-     *  反推油耗优先级：综合油耗 > 当前速度查表 > 默认值
+
+    /** 行驶秒 tick 调用：把瞬时查表油耗入队，超周期自动淘汰最老样本 */
+    private void recordRecentSample(float rate) {
+        synchronized (recentLock) {
+            if (recentSamples == null) {
+                recentSamples = new float[recentFuelWindowSec];
+                recentSampleCount = 0;
+                recentSampleHead  = 0;
+                recentSampleSum   = 0f;
+            }
+            if (recentSampleCount < recentSamples.length) {
+                // 队列未满：直接写入
+                recentSamples[recentSampleHead] = rate;
+                recentSampleSum += rate;
+                recentSampleCount++;
+            } else {
+                // 队列已满：覆盖最老的样本
+                recentSampleSum -= recentSamples[recentSampleHead];
+                recentSamples[recentSampleHead] = rate;
+                recentSampleSum += rate;
+            }
+            recentSampleHead = (recentSampleHead + 1) % recentSamples.length;
+        }
+    }
+
+    /**
+     * 取近期油耗（L/100km 或 kWh/100km），三层回退：
+     * 1. 窗口内有样本 → 算术平均
+     * 2. 无样本（周期内全怠速）→ 综合油耗
+     * 3. 综合油耗也是0（从未行驶过）→ 默认油耗（中间段平均）
      */
-    public void setRefuelAmount(float liters) {
-        float effectiveConsumption = getEffectiveFuelConsumption();
-        float remainingLiters = refuelRemainingRange * effectiveConsumption / 100f;
-        lastRefuelAmount = remainingLiters + liters;  // 新总量 = 旧剩余 + 新加的
+    public float getRecentConsumption() {
+        synchronized (recentLock) {
+            if (recentSampleCount > 0) {
+                return recentSampleSum / recentSampleCount;
+            }
+        }
+        if (fuelConsumption > 0.01f) return fuelConsumption;
+        return getDefaultFuelConsumption();
+    }
+    /** 加油修正：用户输入的续航为加油前的旧续航，加油量为新增油量
+     *  旧续航 × 近期油耗 ÷ 100 = 加油前剩余油量
+     *  新总量 = 旧剩余 + 加油量
+     *  新续航 = 新总量 × 100 ÷ 近期油耗（反推，让续航与油量一致）
+     *  @param oldRangeKm 加油前的旧续航（用户输入）
+     *  @param liters     本次加油量
+     */
+    public void setRefuelAmount(float oldRangeKm, float liters) {
+        float effectiveConsumption = getRecentConsumption();
+        if (effectiveConsumption <= 0.01f) effectiveConsumption = getDefaultFuelConsumption();
+        // 加油前剩余油量（用旧续航反推）
+        float remainingLiters = oldRangeKm * effectiveConsumption / 100f;
+        // 新总量 = 旧剩余 + 新加油量
+        lastRefuelAmount = remainingLiters + liters;
+        // 加油后起点对齐当前累计消耗，使 getRemainingEnergy() = 新总量
         fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed;
         editSettings()
                 .putFloat("last_refuel_amount", lastRefuelAmount)
@@ -583,16 +649,24 @@ public class DataHub {
         notifyFuelChanged();
     }
 
-    /** 仅修正续航（不加油）：直接用输入的续航反推剩余油量作为新基准 */
+    /** 仅修正续航（不加油）：用近期油耗把目标续航反推为剩余油量，
+     *  调整 fuelUsedAtRefuel 使 getRemainingEnergy() 等于该剩余油量。
+     *  无加油记录时（全新安装）把目标续航反推后的总油量暂作 lastRefuelAmount。 */
     public void calibrateRange(float rangeKm) {
-        float effectiveConsumption = getEffectiveFuelConsumption();
-        lastRefuelAmount = rangeKm * effectiveConsumption / 100f;
-        fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed;
-        refuelRemainingRange = rangeKm;
+        float effectiveConsumption = getRecentConsumption();
+        if (effectiveConsumption <= 0.01f) effectiveConsumption = getDefaultFuelConsumption();
+        float remainingLiters = rangeKm * effectiveConsumption / 100f;
+        if (lastRefuelAmount > 0) {
+            // 已有加油记录：调整起点使剩余油量 = remainingLiters
+            fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed - (lastRefuelAmount - remainingLiters);
+        } else {
+            // 全新安装：把目标续航反推为暂作总量，起点设为当前累计消耗
+            lastRefuelAmount = remainingLiters;
+            fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed;
+        }
         editSettings()
                 .putFloat("last_refuel_amount", lastRefuelAmount)
                 .putFloat("fuel_used_at_refuel", fuelUsedAtRefuel)
-                .putFloat("refuel_remaining_range", refuelRemainingRange)
                 .apply();
         persistBackup();
         notifyFuelChanged();
@@ -667,6 +741,8 @@ public class DataHub {
             float rate = lookupFuelBySpeed(speed);
             driveFuelUsed += distKm * rate / 100f;
             fuelCalcKm += distKm;
+            // 瞬时查表油耗入近期油耗样本池
+            recordRecentSample(rate);
         }
 
         // 综合油耗 = 纯行驶效率（只看行驶消耗和行驶距离，不含怠速）
@@ -712,7 +788,8 @@ public class DataHub {
     private void notifyFuelChanged() {
         float range = getRemainingRange();
         float percent = getRemainingPercent();
-        for (OnFuelListener l : fuelListeners) l.onFuelChanged(fuelConsumption, range, percent);
+        float recent = getRecentConsumption();
+        for (OnFuelListener l : fuelListeners) l.onFuelChanged(fuelConsumption, recent, range, percent);
     }
 
     /**
@@ -1062,7 +1139,7 @@ public class DataHub {
         if (locationManager != null) {
             try { locationManager.removeUpdates(locationListener); } catch (Exception ignored) {}
         }
-        persistMileage();
+        persistBackup();
     }
 
     private final LocationListener locationListener = new LocationListener() {
@@ -1096,10 +1173,10 @@ public class DataHub {
                         tripDistance += dist;
                         todayDistance += dist;
                         totalDistance += dist;
-                        // Persist every 30 seconds
+                        // 每60秒同步写一次备份文件（与油耗tick一致），断电最多丢60秒里程
                         long now = System.currentTimeMillis();
-                        if (now - lastPersistTime > 30000) {
-                            persistMileage();
+                        if (now - lastPersistTime > 60000) {
+                            persistBackup();
                             lastPersistTime = now;
                         }
                         notifyMileageChanged();

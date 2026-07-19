@@ -158,7 +158,7 @@ public class MainActivity extends Activity implements
 
         // Push initial values to views
         onMileageChanged(dataHub.getTripDistanceKm(), dataHub.getTodayDistanceKm(), dataHub.getTotalDistanceKm());
-        onFuelChanged(dataHub.getFuelConsumption(), dataHub.getRemainingRange(), dataHub.getRemainingPercent());
+        onFuelChanged(dataHub.getFuelConsumption(), dataHub.getRecentConsumption(), dataHub.getRemainingRange(), dataHub.getRemainingPercent());
 
         // 天气动画模式初始化
         boolean weatherAnimEnabled = getSharedPreferences("wallpaper", MODE_PRIVATE)
@@ -718,9 +718,9 @@ public class MainActivity extends Activity implements
     }
 
     @Override
-    public void onFuelChanged(float fuelLPer100km, float remainingRangeKm, float remainingPercent) {
+    public void onFuelChanged(float overallFuelLPer100km, float recentFuelLPer100km, float remainingRangeKm, float remainingPercent) {
         if (mileageView != null) {
-            mileageView.updateFuel(fuelLPer100km, remainingRangeKm, remainingPercent);
+            mileageView.updateFuel(overallFuelLPer100km, recentFuelLPer100km, remainingRangeKm, remainingPercent);
         }
     }
 

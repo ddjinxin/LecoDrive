@@ -249,7 +249,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="存量里程(km)"
+                android:text="累计里程(km)"
                 android:textSize="14sp"
                 android:textColor="#FFCCCCCC" />
 
@@ -300,6 +300,70 @@
                 android:textColorHint="#FF666666" />
 
         </LinearLayout>
+
+        <!-- 近期油耗周期选择 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="近期油耗周期(秒)"
+            android:textSize="14sp"
+            android:textColor="#FFCCCCCC"
+            android:layout_marginBottom="4dp" />
+
+        <RadioGroup
+            android:id="@+id/recent_fuel_window_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radio_recent_60"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="60"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/radio_recent_120"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="120"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radio_recent_180"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="180"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/radio_recent_240"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="240"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+
+            <RadioButton
+                android:id="@+id/radio_recent_300"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="300"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+
+        </RadioGroup>
 
         <!-- Energy Table Section -->
         <TextView

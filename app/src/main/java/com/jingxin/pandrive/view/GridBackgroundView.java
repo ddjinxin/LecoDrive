@@ -134,8 +134,9 @@ public class GridBackgroundView extends FrameLayout {
      * 计算车道梯形边缘角度和中点位置
      */
     private void computeEdgeGeometry(int w, int h) {
-        float laneTop = h * 0.65f;
-        float laneH = h * 0.35f;
+        // 车道梯形在屏幕底部 30% 区域（与 activity_main.xml 中 section_car3d 的 weight=30 对齐）
+        float laneTop = h * 0.70f;
+        float laneH = h * 0.30f;
 
         float nearWidth = w * 0.95f;
         float farWidth = w * 0.15f;

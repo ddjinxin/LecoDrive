@@ -18,17 +18,19 @@ public class MileageView extends View {
     private static final int MODE_TRIP = 0;
     private static final int MODE_TODAY = 1;
     private static final int MODE_TOTAL = 2;
-    private static final int MODE_FUEL = 3;
-    private static final int MODE_RANGE = 4;
-    private static final int MODE_PERCENT = 5;
-    private static final int MODE_COUNT = 6;
-    private static final String[] MODE_LABELS = {"实时行程", "今日行程", "累计行程", "综合", "剩余续航", "剩余"};
+    private static final int MODE_OVERALL = 3;   // 综合油耗
+    private static final int MODE_RECENT = 4;    // 近期油耗
+    private static final int MODE_RANGE = 5;
+    private static final int MODE_PERCENT = 6;
+    private static final int MODE_COUNT = 7;
+    private static final String[] MODE_LABELS = {"实时行程", "今日里程", "累计里程", "", "", "剩余续航", "剩余"};
     private boolean isElectric = false;
 
     private float tripKm = 0f;
     private float todayKm = 0f;
     private float totalKm = 0f;
-    private float fuelLPer100km = 0f;
+    private float overallFuelLPer100km = 0f;  // 综合油耗
+    private float recentFuelLPer100km = 0f;   // 近期油耗
     private float rangeKm = 0f;
     private float remainingPercent = 0f;
 
@@ -75,7 +77,13 @@ public class MileageView extends View {
         this.tripKm = trip; this.todayKm = today; this.totalKm = total; invalidate();
     }
 
-    public void updateFuel(float fuel, float range, float percent) { this.fuelLPer100km = fuel; this.rangeKm = range; this.remainingPercent = percent; invalidate(); }
+    public void updateFuel(float overallFuel, float recentFuel, float range, float percent) {
+        this.overallFuelLPer100km = overallFuel;
+        this.recentFuelLPer100km = recentFuel;
+        this.rangeKm = range;
+        this.remainingPercent = percent;
+        invalidate();
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) { return false; }
@@ -136,8 +144,11 @@ public class MileageView extends View {
                              int activeColor, int activeGlow, int labelColor) {
         float value;
         String numStr;
-        if (mode == MODE_FUEL) {
-            value = fuelLPer100km;
+        if (mode == MODE_OVERALL) {
+            value = overallFuelLPer100km;
+            numStr = String.format("%.1f", value);
+        } else if (mode == MODE_RECENT) {
+            value = recentFuelLPer100km;
             numStr = String.format("%.1f", value);
         } else if (mode == MODE_RANGE) {
             value = rangeKm;
@@ -160,8 +171,10 @@ public class MileageView extends View {
             }
         }
         String label;
-        if (mode == MODE_FUEL) {
+        if (mode == MODE_OVERALL) {
             label = isElectric ? "综合电耗" : "综合油耗";
+        } else if (mode == MODE_RECENT) {
+            label = isElectric ? "近期电耗" : "近期油耗";
         } else if (mode == MODE_RANGE) {
             label = "剩余续航";
         } else if (mode == MODE_PERCENT) {
@@ -231,7 +244,7 @@ public class MileageView extends View {
             char c = numStr.charAt(i);
             if (c == '.') pastDecimal = true;
             // Digits after decimal point use red color (mileage modes only)
-            boolean isFractionDigit = (mode != MODE_FUEL && mode != MODE_RANGE && mode != MODE_PERCENT) && (decimalPos >= 0) && (i > decimalPos) && (c >= '0' && c <= '9');
+            boolean isFractionDigit = (mode != MODE_RANGE && mode != MODE_PERCENT) && (decimalPos >= 0) && (i > decimalPos) && (c >= '0' && c <= '9');
             int digitColor = isFractionDigit ? 0xFFFF4444 : activeColor;
             int digitGlow = isFractionDigit ? 0xFFCC0000 : activeGlow;
 

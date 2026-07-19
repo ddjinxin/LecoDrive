@@ -68,6 +68,15 @@ public class SettingsActivity extends Activity {
         editRefuelRange = findViewById(R.id.edit_refuel_range);
         labelRefuelAmount = findViewById(R.id.label_refuel_amount);
         labelRefuelRange = findViewById(R.id.label_refuel_range);
+        recentFuelWindowGroup = findViewById(R.id.recent_fuel_window_group);
+        // 根据 DataHub 当前周期选中对应 RadioButton
+        int curWin = dataHub.getRecentFuelWindowSec();
+        int rid = R.id.radio_recent_120;
+        if (curWin == 60) rid = R.id.radio_recent_60;
+        else if (curWin == 180) rid = R.id.radio_recent_180;
+        else if (curWin == 240) rid = R.id.radio_recent_240;
+        else if (curWin == 300) rid = R.id.radio_recent_300;
+        recentFuelWindowGroup.check(rid);
 
         // 壁纸设置
         Button btnDayWallpaper = findViewById(R.id.btn_day_wallpaper);
@@ -92,7 +101,7 @@ public class SettingsActivity extends Activity {
         updateWallpaperStatus();
 
         // Load current values
-        editBaseMileage.setText(String.valueOf(dataHub.getTotalDistanceKm()));
+        editBaseMileage.setText(String.format("%.1f", dataHub.getTotalDistanceKm()));
         editIdleFuelRate.setText(String.valueOf(dataHub.getIdleFuelRate()));
 
         // Set vehicle type radio
@@ -150,6 +159,7 @@ public class SettingsActivity extends Activity {
     private View refuelSection;
     private TextView labelRefuelAmount;
     private TextView labelRefuelRange;
+    private RadioGroup recentFuelWindowGroup;
 
     // ==================== 天气动画 ====================
 
@@ -373,12 +383,12 @@ public class SettingsActivity extends Activity {
         boolean isElec = radioElec.isChecked();
         editRefuelAmount.setText("");
         editRefuelAmount.setHint(isElec ? "充电量(kWh)" : "加油量(L)");
-        // 回显上次保存的车表续航（首次启动默认80，校准过则显示校准值）
-        float currentRange = dataHub.getRefuelRemainingRange();
+        // 回显当前剩余续航（由 lastRefuelAmount/fuelUsedAtRefuel 推导，与首页一致）
+        float currentRange = dataHub.getRemainingRange();
         editRefuelRange.setText(String.valueOf((int) currentRange));
-        editRefuelRange.setHint(isElec ? "当前车表续航(km)" : "当前车表续航(km)");
+        editRefuelRange.setHint(isElec ? "剩余续航(km)" : "剩余续航(km)");
         labelRefuelAmount.setText(isElec ? "充电量(kWh)" : "加油量(L)");
-        labelRefuelRange.setText(isElec ? "当前车表续航(km)" : "当前车表续航(km)");
+        labelRefuelRange.setText(isElec ? "剩余续航(km)" : "剩余续航(km)");
         refuelSection.setVisibility(View.VISIBLE);
     }
 
@@ -423,10 +433,10 @@ public class SettingsActivity extends Activity {
         int vType = radioElec.isChecked() ? DataHub.VEHICLE_ELEC : DataHub.VEHICLE_FUEL;
         dataHub.setVehicleType(vType);
 
-        // Save base mileage
+        // Save total mileage
         try {
-            float baseKm = Float.parseFloat(editBaseMileage.getText().toString().trim());
-            dataHub.setBaseMileage(baseKm);
+            float totalKm = Float.parseFloat(editBaseMileage.getText().toString().trim());
+            dataHub.setTotalMileage(totalKm);
         } catch (NumberFormatException ignored) {}
 
         // Save idle energy rate
@@ -434,6 +444,17 @@ public class SettingsActivity extends Activity {
             float rate = Float.parseFloat(editIdleFuelRate.getText().toString().trim());
             if (rate > 0) dataHub.setIdleFuelRate(rate);
         } catch (NumberFormatException ignored) {}
+
+        // Save 近期油耗周期
+        int checkedWinId = recentFuelWindowGroup.getCheckedRadioButtonId();
+        int winSec = 120;
+        if (checkedWinId == R.id.radio_recent_60) winSec = 60;
+        else if (checkedWinId == R.id.radio_recent_180) winSec = 180;
+        else if (checkedWinId == R.id.radio_recent_240) winSec = 240;
+        else if (checkedWinId == R.id.radio_recent_300) winSec = 300;
+        if (winSec != dataHub.getRecentFuelWindowSec()) {
+            dataHub.setRecentFuelWindowSec(winSec);
+        }
 
         // Save refuel data (if refuel section is visible = user clicked refuel)
         if (refuelSection.getVisibility() == View.VISIBLE) {
@@ -446,9 +467,8 @@ public class SettingsActivity extends Activity {
                     } catch (NumberFormatException ignored) {}
 
                     if (amount > 0) {
-                        // 加油+续航：先设续航基准值，再加油
-                        dataHub.setRefuelRemainingRange(range);
-                        dataHub.setRefuelAmount(amount);
+                        // 加油+续航：用户输入的续航为加油前旧续航，加油后反推新续航
+                        dataHub.setRefuelAmount(range, amount);
                     } else {
                         // 仅修正续航（不加油）
                         dataHub.calibrateRange(range);
