@@ -125,6 +125,7 @@ public class DataHub {
     private double prevLat = 0;
     private double prevLon = 0;
     private boolean hasPrevLocation = false;
+    private long prevLocationTime = 0;   // 上一个有效定位的时间戳（ms），用于自适应跳变过滤
     private String todayDate = "";        // 用于判断日期变更归零
 
     // ===== 外部备份文件（重装/清数据后从该文件恢复所有设置）=====
@@ -305,6 +306,7 @@ public class DataHub {
         todayDistance = 0f;          // 清零（已包含在新累计值里）
         tripDistance = 0f;           // 清零（同理）
         hasPrevLocation = false;     // 下一个GPS点作为新起点
+        prevLocationTime = 0;
         persistBackup();
         notifyMileageChanged();
     }
@@ -1164,12 +1166,21 @@ public class DataHub {
             // Mileage tracking
             float accuracy = location.getAccuracy();
             float speed = location.hasSpeed() ? location.getSpeed() : 0f; // m/s
-            // Filter: skip low accuracy (>20m) and near-stationary (<2km/h = 0.56m/s)
-            if (accuracy > 0 && accuracy <= 20f && speed >= 0.56f) {
+            // Filter: skip low accuracy (>20m) and near-stationary (<0.5km/h = 0.14m/s)
+            if (accuracy > 0 && accuracy <= 20f && speed >= 0.14f) {
                 if (hasPrevLocation) {
                     float dist = haversine(prevLat, prevLon, latitude, longitude);
-                    // Skip GPS jumps (>200m in 1-2s is unrealistic)
-                    if (dist > 0f && dist < 200f) {
+                    // 自适应跳变过滤：上限 = 200km/h(55.6m/s) × 时间间隔
+                    // 间隔1秒→上限56m，10秒→556m，30秒→1668m
+                    long currentTime = location.getTime();
+                    float maxDist;
+                    if (prevLocationTime > 0 && currentTime > prevLocationTime) {
+                        float intervalSec = (currentTime - prevLocationTime) / 1000f;
+                        maxDist = 55.6f * intervalSec;
+                    } else {
+                        maxDist = 200f;  // 无法确定时间间隔时回退固定值
+                    }
+                    if (dist > 0f && dist < maxDist) {
                         tripDistance += dist;
                         todayDistance += dist;
                         totalDistance += dist;
@@ -1185,6 +1196,7 @@ public class DataHub {
                 prevLat = latitude;
                 prevLon = longitude;
                 hasPrevLocation = true;
+                prevLocationTime = location.getTime();
             }
         }
         @Override
