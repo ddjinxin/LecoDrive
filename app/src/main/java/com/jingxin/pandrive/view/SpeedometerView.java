@@ -95,7 +95,7 @@ public class SpeedometerView extends View {
     private static final int COLOR_DAY_EMBOSS_HIGHLIGHT = 0x33FFFFFF;
     private static final int COLOR_DAY_BOTTOM_TEXT = 0xFF888888;
     private static final int COLOR_DAY_INACTIVE_BAR = 0xFF5A6A7A;
-    private static final int COLOR_DAY_LED_DIGIT_GLOW = 0xFF00B8D4;
+    private static final int COLOR_DAY_LED_DIGIT_GLOW = 0xFF888888;
     private static final int COLOR_DAY_ACTIVE_BAR_GLOW = 0x5000D4E8;
     private static final int COLOR_DAY_NEEDLE_GLOW = 0x4000D4E8;
     private static final int COLOR_DAY_LED_ON_FADE = 0x0000D4E8;
@@ -925,7 +925,7 @@ public class SpeedometerView extends View {
 
         // 颜色：正常/超速
         boolean isOverspeed = limitedSpeed > 0 && currentSpeed > limitedSpeed;
-        int activeColor = isOverspeed ? COLOR_OVERRUN_RED : (isNightMode ? COLOR_NIGHT_LED_ON : COLOR_DAY_LED_ON);
+        int activeColor = isOverspeed ? COLOR_OVERRUN_RED : (isNightMode ? COLOR_NIGHT_LED_ON : COLOR_BLACK);
         int activeGlow = isOverspeed ? COLOR_OVERSPEED_LED_GLOW : (isNightMode ? COLOR_NIGHT_LED_DIGIT_GLOW : COLOR_DAY_LED_DIGIT_GLOW);
 
         // 逐位绘制LED数码管

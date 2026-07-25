@@ -75,6 +75,7 @@ public class MileageView extends View {
         ledPaint.setStyle(Paint.Style.FILL);
         labelPaint.setStyle(Paint.Style.FILL);
         labelPaint.setTextAlign(Paint.Align.CENTER);
+        labelPaint.setFakeBoldText(true);
         lastCycleTime = System.currentTimeMillis();
         cycleHandler.postDelayed(cycleRunnable, CYCLE_INTERVAL_MS);
     }
@@ -128,16 +129,19 @@ public class MileageView extends View {
         invalidate(); // 持续重绘以保持微摆动和动画
 
         // Colors
-        int activeColor = isNightMode ? 0xFF00E5A0 : 0xFF00D4E8;
-        int activeGlow = isNightMode ? 0xFF009966 : 0xFF00B8D4;
+        int activeColor = isNightMode ? 0xFF00E5A0 : 0xFFFFFFFF;
+        int activeGlow = isNightMode ? 0xFF009966 : 0xFF999999;
         int labelColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;
 
         float cx = w / 2f;
         // 滚轮中心在标签下方，数字区域居中
-        float rollerCenterY = h * 0.6f;
+        float rollerCenterY = h * 0.5f;
 
-        // 滚轮宽度：只占中间区域，不盖住左右指南针和时钟
-        float rollerW = w * 0.20f;
+        // 滚轮宽度：横屏(屏幕宽/高>1.2)用0.18f，竖屏用0.26f
+        int screenW = getResources().getDisplayMetrics().widthPixels;
+        int screenH = getResources().getDisplayMetrics().heightPixels;
+        boolean isLandscape = screenW >= screenH * 1.2f;
+        float rollerW = isLandscape ? w * 0.18f : w * 0.26f;
         float rollerLeft = cx - rollerW / 2f;
         float rollerRight = cx + rollerW / 2f;
 
@@ -153,9 +157,13 @@ public class MileageView extends View {
         // 画银灰色金属圆柱滚轮背景（渐变高光随旋转移动）
         drawRollerBackground(canvas, rollerLeft, rollerTop, rollerRight, rollerBottom, totalRotation);
 
-        // 裁剪到滚轮区域，上下项超出部分被物理裁掉（模拟圆柱背面遮挡）
+        // 裁剪到滚轮圆角区域，上下项超出部分被物理裁掉（模拟圆柱背面遮挡）
+        float cornerRadius = (rollerBottom - rollerTop) * 0.15f;
+        android.graphics.Path clipPath = new android.graphics.Path();
+        clipPath.addRoundRect(new RectF(rollerLeft, rollerTop, rollerRight, rollerBottom),
+                cornerRadius, cornerRadius, android.graphics.Path.Direction.CW);
         canvas.save();
-        canvas.clipRect(rollerLeft, rollerTop, rollerRight, rollerBottom);
+        canvas.clipPath(clipPath);
 
         // 画圆柱面纹理线（随旋转透视移动，让滚轮本身可见转动）
         float radius = h * 0.30f;
@@ -201,7 +209,7 @@ public class MileageView extends View {
         labelPaint.setColor(labelColor);
         labelPaint.setAlpha(255);
         Paint.FontMetrics labelFm = labelPaint.getFontMetrics();
-        float labelBaseline = h * 0.3f - (labelFm.ascent + labelFm.descent) / 2f;
+        float labelBaseline = h * 0.2f - (labelFm.ascent + labelFm.descent) / 2f;
         canvas.drawText(label, w / 2f, labelBaseline, labelPaint);
     }
 
@@ -255,11 +263,11 @@ public class MileageView extends View {
         float highlightCenter = 0.5f + highlightOffset;
 
         // 与速度仪表盘一致的银灰色金属配色
-        // 日间：高光 0xFFA0ADB8 → 中间色 0xFF556070 → 暗面 0xFF2A3540
+        // 日间：高光 0xFFCCD8E4 → 中间色 0xFF8A95A8 → 暗面 0xFF5A6578
         // 夜间：高光 0xFFBBC8D4 → 中间色 0xFF8899AA → 暗面 0xFF4A5A6A
-        int colorHighlight = isNightMode ? 0xFFBBC8D4 : 0xFFA0ADB8;
-        int colorMid = isNightMode ? 0xFF8899AA : 0xFF556070;
-        int colorShadow = isNightMode ? 0xFF4A5A6A : 0xFF2A3540;
+        int colorHighlight = isNightMode ? 0xFFBBC8D4 : 0xFFCCD8E4;
+        int colorMid = isNightMode ? 0xFF8899AA : 0xFF8A95A8;
+        int colorShadow = isNightMode ? 0xFF4A5A6A : 0xFF5A6578;
 
         // 圆柱面渐变：暗面→中间色→高光→中间色→暗面（模拟圆柱凸面光照）
         float h0 = Math.max(0f, highlightCenter - 0.30f);
@@ -283,7 +291,7 @@ public class MileageView extends View {
         bgPaint.setShader(null);
         bgPaint.setStyle(Paint.Style.STROKE);
         bgPaint.setStrokeWidth(1.5f);
-        bgPaint.setColor(isNightMode ? 0xFF99AABB : 0xFF8899AA);
+        bgPaint.setColor(isNightMode ? 0xFF99AABB : 0xFFAABBCC);
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, bgPaint);
     }
 
@@ -315,7 +323,7 @@ public class MileageView extends View {
             int alpha = (int)(100f * cosVal * cosVal);
             if (alpha < 6) continue;
 
-            texPaint.setColor(isNightMode ? 0xFFBBC8D4 : 0xFFA0ADB8);
+            texPaint.setColor(isNightMode ? 0xFFBBC8D4 : 0xFFCCD8E4);
             texPaint.setAlpha(alpha);
             texPaint.setStrokeWidth(1f);
             canvas.drawLine(left + 1, y, right - 1, y, texPaint);
@@ -326,6 +334,14 @@ public class MileageView extends View {
     private void drawRollerEdges(Canvas canvas, float left, float top, float right, float bottom) {
         Paint edgePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         float edgeH = (bottom - top) * 0.15f;
+        float cornerRadius = (bottom - top) * 0.15f;
+
+        // 裁剪到滚轮圆角区域，避免阴影溢出圆角形成方角
+        android.graphics.Path clipPath = new android.graphics.Path();
+        RectF rollerRect = new RectF(left, top, right, bottom);
+        clipPath.addRoundRect(rollerRect, cornerRadius, cornerRadius, android.graphics.Path.Direction.CW);
+        canvas.save();
+        canvas.clipPath(clipPath);
 
         // 上边缘暗影
         LinearGradient topShade = new LinearGradient(0, top, 0, top + edgeH,
@@ -339,6 +355,7 @@ public class MileageView extends View {
                 new int[]{0x00000000, 0x55000000}, new float[]{0, 1f}, Shader.TileMode.CLAMP);
         edgePaint.setShader(bottomShade);
         canvas.drawRect(left, bottom - edgeH, right, bottom, edgePaint);
+        canvas.restore();
     }
 
     /** 只绘制 LED 数字（不画标签），标签已由 drawLabel 固定绘制
@@ -428,8 +445,8 @@ public class MileageView extends View {
     private void drawSlot(Canvas canvas, float left, float top, float right, float bottom) {
         Paint slotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         // 凹陷渐变：上暗下亮（模拟上方被遮挡、下方有反光）
-        int colorTop = isNightMode ? 0xFF15151A : 0xFF2A3540;
-        int colorBottom = isNightMode ? 0xFF2A2A32 : 0xFF4A5A6A;
+        int colorTop = isNightMode ? 0xFF15151A : 0xFF5A6578;
+        int colorBottom = isNightMode ? 0xFF2A2A32 : 0xFF7A8598;
         LinearGradient slotGradient = new LinearGradient(0, top, 0, bottom,
                 new int[]{colorTop, colorBottom}, null, Shader.TileMode.CLAMP);
         slotPaint.setShader(slotGradient);
@@ -443,7 +460,7 @@ public class MileageView extends View {
         slotPaint.setShader(null);
         slotPaint.setStyle(Paint.Style.STROKE);
         slotPaint.setStrokeWidth(1f);
-        slotPaint.setColor(isNightMode ? 0xFF3A3A44 : 0xFF556070);
+        slotPaint.setColor(isNightMode ? 0xFF3A3A44 : 0xFF8A95A8);
         slotPaint.setAlpha(120);
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, slotPaint);
     }

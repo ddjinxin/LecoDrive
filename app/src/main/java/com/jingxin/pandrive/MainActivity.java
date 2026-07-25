@@ -17,6 +17,8 @@ import android.view.View;
 import android.view.WindowManager;
 import android.util.DisplayMetrics;
 import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.FrameLayout;
 
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
@@ -121,6 +123,9 @@ public class MainActivity extends Activity implements
         gridBackgroundView = findViewById(R.id.grid_background);
         themeButton = findViewById(R.id.theme_button);
         textureView = findViewById(R.id.texture_view);
+
+        // 根据横竖屏调整布局比例
+        applyLayoutWeights();
 
         setupGL();
 
@@ -382,9 +387,55 @@ public class MainActivity extends Activity implements
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        // 窗口大小变化时先切换全屏/窗口模式，再刷新View
+        // 窗口大小变化时先切换全屏/窗口模式，再调整布局比例，最后刷新View
         applyFullscreenMode();
+        applyLayoutWeights();
         forceRefreshAllViews();
+    }
+
+    /**
+     * 根据横竖屏调整布局比例
+     * 竖屏：日期10% + 仪表盘27% + 指南针/时钟15% + 导航13% + 车道线35%
+     * 横屏：日期10% + 仪表盘30% + 指南针/时钟15% + 导航15% + 车道线30%（XML默认值）
+     */
+    private void applyLayoutWeights() {
+        boolean isPortrait = getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_PORTRAIT;
+
+        View sectionDatetime = findViewById(R.id.section_datetime);
+        LinearLayout sectionGauges = findViewById(R.id.section_gauges);
+        View sectionNav = findViewById(R.id.section_navigation);
+        View sectionCar3d = findViewById(R.id.section_car3d);
+        View speedometer = findViewById(R.id.speedometer_view);
+        // section_gauges 的第二个子View是包含指南针+时钟的FrameLayout
+        View compassClockContainer = ((LinearLayout) sectionGauges).getChildAt(1);
+
+        if (isPortrait) {
+            // 竖屏：仪表盘27% + 指南针/时钟15% = 42%，内部分割 27:15 = 9:5
+            setVerticalWeight(sectionDatetime, 10f);
+            setVerticalWeight(sectionGauges, 42f);
+            setVerticalWeight(sectionNav, 13f);
+            setVerticalWeight(sectionCar3d, 35f);
+            sectionGauges.setWeightSum(14f);
+            setVerticalWeight(speedometer, 9f);
+            setVerticalWeight(compassClockContainer, 5f);
+        } else {
+            // 横屏：XML默认值
+            setVerticalWeight(sectionDatetime, 10f);
+            setVerticalWeight(sectionGauges, 45f);
+            setVerticalWeight(sectionNav, 15f);
+            setVerticalWeight(sectionCar3d, 30f);
+            sectionGauges.setWeightSum(3f);
+            setVerticalWeight(speedometer, 2f);
+            setVerticalWeight(compassClockContainer, 1f);
+        }
+    }
+
+    private void setVerticalWeight(View view, float weight) {
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams();
+        params.height = 0;
+        params.weight = weight;
+        view.setLayoutParams(params);
     }
 
     @Override
