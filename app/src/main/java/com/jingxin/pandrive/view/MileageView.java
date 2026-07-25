@@ -244,7 +244,7 @@ public class MileageView extends View {
         matrix.postTranslate(cx, pivotY);
         canvas.concat(matrix);
 
-        drawDigits(canvas, w, h, rcy, mode, alpha, activeColor, activeGlow, labelColor);
+        drawDigits(canvas, w, h, rcy, mode, alpha, activeColor, activeGlow, labelColor, rollerLeft, rollerRight);
         canvas.restore();
     }
 
@@ -342,127 +342,109 @@ public class MileageView extends View {
     }
 
     /** 只绘制 LED 数字（不画标签），标签已由 drawLabel 固定绘制
-     *  @param rcy 滚轮中心Y坐标，数字以此为基准垂直居中 */
+     *  凹槽模式：去小数点/逗号，每个数字等宽占一个竖向凹槽，最后一位小数红色
+     *  @param rcy 滚轮中心Y坐标，数字以此为基准垂直居中
+     *  @param rollerLeft/rollerRight 滚轮边界，用于凹槽宽度计算 */
     private void drawDigits(Canvas canvas, int w, int h, float rcy, int mode, int alpha,
-                             int activeColor, int activeGlow, int labelColor) {
+                             int activeColor, int activeGlow, int labelColor,
+                             float rollerLeft, float rollerRight) {
         float value;
-        String numStr;
+        boolean hasDecimal;  // 是否有小数位（决定最后一位是否红色）
+
+        // 统一格式化：有小数的模式用 %.1f，无小数的用 %.0f
         if (mode == MODE_OVERALL) {
             value = overallFuelLPer100km;
-            numStr = String.format("%.1f", value);
+            hasDecimal = true;
         } else if (mode == MODE_RECENT) {
             value = recentFuelLPer100km;
-            numStr = String.format("%.1f", value);
+            hasDecimal = true;
         } else if (mode == MODE_RANGE) {
             value = rangeKm;
-            numStr = (value < 1f) ? "0" : String.format("%.0f", value);
+            hasDecimal = false;
         } else if (mode == MODE_PERCENT) {
             value = remainingPercent;
-            numStr = String.format("%.0f", value);
+            hasDecimal = false;
         } else {
             switch (mode) {
                 case MODE_TODAY: value = todayKm; break;
                 case MODE_TOTAL: value = totalKm; break;
                 default: value = tripKm; break;
             }
-            if (mode == MODE_TOTAL) {
-                numStr = String.format("%,.1f", value);
-            } else if (value < 1f) {
-                numStr = String.format("%.2f", value);
-            } else {
-                numStr = String.format("%.1f", value);
-            }
+            hasDecimal = true;
         }
 
-        // 余量<=10%时红色
+        // 格式化后去掉小数点和逗号，得到纯数字字符串
+        String rawStr = hasDecimal ? String.format("%.1f", value) : String.format("%.0f", value);
+        String numStr = rawStr.replace(".", "").replace(",", "");
+
+        // 余量<=10%时全红
         if (mode == MODE_PERCENT && remainingPercent <= 10f) {
             activeColor = 0xFFFF4444;
             activeGlow = 0xFFCC0000;
         }
 
-        float baseSize = h;
-        float digitH = baseSize * 0.21f;
-        float digitW = digitH * 0.5f;
+        // 凹槽布局：滚轮内宽 ÷ 位数 = 每个凹槽宽度
+        float slotPadding = (rollerRight - rollerLeft) * 0.04f;  // 两侧留白
+        float slotAreaW = (rollerRight - rollerLeft) - slotPadding * 2f;
+        int digitCount = numStr.length();
+        float slotW = slotAreaW / digitCount;
+        float slotGap = slotW * 0.08f;  // 凹槽间距
+        float slotInnerW = slotW - slotGap;
+
+        // 数字尺寸：根据凹槽宽度自适应，高度不变
+        float digitH = h * 0.21f;
+        float digitW = Math.min(slotInnerW * 0.7f, digitH * 0.5f);  // 数字宽不超过槽宽70%
         float segThick = digitH * 0.14f;
         float segGap = digitH * 0.06f;
-        float digitGap = digitW * 0.3f;
 
-        float centerX = w / 2f;
-
-        // Fractional digits are 20% the size of integer digits
-        float fractScale = 0.8f;
-        float fractW = digitW * fractScale;
-        float fractH = digitH * fractScale;
-        float fractThick = segThick * fractScale;
-        float fractGap = segGap * fractScale;
-        float fractDigitGap = digitGap * fractScale;
-
-        float totalDigitWidth = 0;
-        int intDigitCount = 0;
-        int fractDigitCount = 0;
-        boolean pastDecimal = false;
-        for (int i = 0; i < numStr.length(); i++) {
-            char c = numStr.charAt(i);
-            if (c == '.') { pastDecimal = true; totalDigitWidth += digitW * 0.4f; }
-            else if (c == ',') { totalDigitWidth += digitW * 0.4f; }
-            else if (c >= '0' && c <= '9') {
-                if (pastDecimal) { totalDigitWidth += fractW; fractDigitCount++; }
-                else { totalDigitWidth += digitW; intDigitCount++; }
-            }
-        }
-        if (intDigitCount > 1) totalDigitWidth += (intDigitCount - 1) * digitGap;
-        if (fractDigitCount > 1) totalDigitWidth += (fractDigitCount - 1) * fractDigitGap;
-
-        // 数字以滚轮中心 rcy 为基准垂直居中
+        float slotTop = rcy - digitH / 2f - digitH * 0.15f;
+        float slotH = digitH * 1.3f;
         float ledTop = rcy - digitH / 2f;
-        float fractTop = ledTop + digitH - fractH;
-        float dx = centerX - totalDigitWidth / 2f;
 
-        // Find decimal point position for red coloring of fractional digits
-        int decimalPos = numStr.indexOf('.');
-
-        pastDecimal = false;
-        for (int i = 0; i < numStr.length(); i++) {
+        // 绘制每个凹槽 + 数字
+        for (int i = 0; i < digitCount; i++) {
             char c = numStr.charAt(i);
-            if (c == '.') pastDecimal = true;
-            // Digits after decimal point use red color (mileage modes only)
-            boolean isFractionDigit = (mode != MODE_RANGE && mode != MODE_PERCENT) && (decimalPos >= 0) && (i > decimalPos) && (c >= '0' && c <= '9');
-            int digitColor = isFractionDigit ? 0xFFFF4444 : activeColor;
-            int digitGlow = isFractionDigit ? 0xFFCC0000 : activeGlow;
+            float slotX = rollerLeft + slotPadding + i * slotW;
+            float slotCenterX = slotX + slotW / 2f;
 
+            // 画凹槽背景（凹陷效果）
+            drawSlot(canvas, slotX + slotGap / 2f, slotTop, slotX + slotW - slotGap / 2f, slotTop + slotH);
+
+            // 最后一位是小数位时红色
+            boolean isLastDecimal = hasDecimal && (i == digitCount - 1);
+            int digitColor = isLastDecimal ? 0xFFFF4444 : activeColor;
+            int digitGlow = isLastDecimal ? 0xFFCC0000 : activeGlow;
+
+            // 数字居中在凹槽内
+            float digitX = slotCenterX - digitW / 2f;
             if (c >= '0' && c <= '9') {
-                if (pastDecimal) {
-                    LEDDigitHelper.drawLEDDigit(canvas, dx, fractTop, fractW, fractH, fractThick, fractGap,
-                            c - '0', digitColor, digitGlow, alpha);
-                    dx += fractW;
-                    if (i < numStr.length() - 1) {
-                        char nextC = numStr.charAt(i + 1);
-                        if (nextC >= '0' && nextC <= '9') dx += fractDigitGap;
-                    }
-                } else {
-                    LEDDigitHelper.drawLEDDigit(canvas, dx, ledTop, digitW, digitH, segThick, segGap,
-                            c - '0', digitColor, digitGlow, alpha);
-                    dx += digitW;
-                    if (i < numStr.length() - 1) {
-                        char nextC = numStr.charAt(i + 1);
-                        if (nextC >= '0' && nextC <= '9') dx += digitGap;
-                    }
-                }
-            } else if (c == '.') {
-                ledPaint.setColor(digitColor);
-                ledPaint.setShadowLayer(segThick * 1.5f, 0, 0, digitGlow);
-                ledPaint.setAlpha(alpha);
-                canvas.drawCircle(dx + digitW * 0.2f, ledTop + digitH - segThick * 0.5f, segThick * 0.5f, ledPaint);
-                ledPaint.clearShadowLayer();
-                dx += digitW * 0.4f;
-            } else if (c == ',') {
-                ledPaint.setColor(activeColor);
-                ledPaint.setShadowLayer(segThick, 0, 0, activeGlow);
-                ledPaint.setAlpha(alpha);
-                canvas.drawCircle(dx + digitW * 0.2f, ledTop + digitH * 0.65f, segThick * 0.3f, ledPaint);
-                ledPaint.clearShadowLayer();
-                dx += digitW * 0.4f;
+                LEDDigitHelper.drawLEDDigit(canvas, digitX, ledTop, digitW, digitH, segThick, segGap,
+                        c - '0', digitColor, digitGlow, alpha);
             }
         }
+    }
+
+    /** 画凹槽背景：凹陷效果（上亮下暗渐变 + 内边框） */
+    private void drawSlot(Canvas canvas, float left, float top, float right, float bottom) {
+        Paint slotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        // 凹陷渐变：上暗下亮（模拟上方被遮挡、下方有反光）
+        int colorTop = isNightMode ? 0xFF15151A : 0xFF2A3540;
+        int colorBottom = isNightMode ? 0xFF2A2A32 : 0xFF4A5A6A;
+        LinearGradient slotGradient = new LinearGradient(0, top, 0, bottom,
+                new int[]{colorTop, colorBottom}, null, Shader.TileMode.CLAMP);
+        slotPaint.setShader(slotGradient);
+        slotPaint.setStyle(Paint.Style.FILL);
+
+        float cornerRadius = (bottom - top) * 0.12f;
+        RectF rect = new RectF(left, top, right, bottom);
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, slotPaint);
+
+        // 内边框
+        slotPaint.setShader(null);
+        slotPaint.setStyle(Paint.Style.STROKE);
+        slotPaint.setStrokeWidth(1f);
+        slotPaint.setColor(isNightMode ? 0xFF3A3A44 : 0xFF556070);
+        slotPaint.setAlpha(120);
+        canvas.drawRoundRect(rect, cornerRadius, cornerRadius, slotPaint);
     }
 }
