@@ -139,6 +139,10 @@ public class SettingsActivity extends Activity {
         btnCheckUpdate.setOnClickListener(v ->
                 UpdateChecker.getInstance(this).checkManually(this));
 
+        // Help button
+        Button btnHelp = findViewById(R.id.btn_help);
+        btnHelp.setOnClickListener(v -> startActivity(new Intent(this, HelpActivity.class)));
+
         // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }

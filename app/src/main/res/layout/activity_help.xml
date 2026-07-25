@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF1A1A2E"
+    android:padding="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Title -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="使用帮助"
+            android:textSize="22sp"
+            android:textColor="#FF00D4E8"
+            android:gravity="center"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 一、主界面功能 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="一、主界面功能"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="仪表盘：显示实时车速，超速时数字变红预警。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="3D车身：中央展示车辆3D模型，支持手势操作（见下文操作手势）。车模会根据导航的转向在100米以内相应转向，能够根据方向盘的变化感应变化角度，转弯时有转弯灯，刹车时也有刹车灯，行驶过程中会有放大、缩小、旋转、旋转再放大等随机动画，欣赏车模的整体风格，包括车辆内部。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="导航栏：自动接收高德车机版导航数据，显示转向图标和当前道路名称，包含导航和巡航状态下的红绿灯、限速等信息。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="车道线：底部3D车道线随车速流动，营造行驶视野。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="指南针时钟：显示当前方向和时间，行驶时方向自动跟随GPS更新。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="里程轮播：自动滚动显示七项数据——实时行程、今日里程、累计里程、综合油耗、近期油耗、剩余续航、剩余油量（电量为剩余电量）。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="天气：定位成功后自动显示当前温度、天气状态、风向风速和湿度，每30分钟自动刷新。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 二、操作手势 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="二、操作手势"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;单击导航区域：随机切换3D车型。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 三、设置说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="三、设置说明"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="车辆行驶相关信息与设置的关系"
+            android:textSize="14sp"
+            android:textColor="#FFCCCCCC"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="油箱容量：录入一下自己油箱的标准油量，主要是为了中途校准剩余续航使用。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="不加油，根据车机上数据校准剩余续航：只修改剩余续航，不修改加油量，将结合油箱容量这个数据推算剩余油量的百分比，显示在首页的信息中。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="去加油站加油时，记下加油前车辆的续航和本次加油的升数，录入加油量和剩余续航，推算出新的剩余续航，并且油量会重置为100%"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="累计里程：你如果发现和车上的续航里程有差异或者因某些原因清零，按车上累计里程录入即可"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="怠速油耗：这是每小时怠速耗费的油量，经验值，2.0的车按1.2-1.4吧，看各人的情况，这个数据用来计算剩余油量和剩余续航的。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="近期油耗周期：推算剩余油量和剩余续航使用的是近期的油耗，也就是车辆在这个2分钟到5分钟周期内以什么周期来计算一次平均油耗，如果是120秒，则2分钟平均一次，每秒会根据当前的速度与油耗的对应关系生成一个数据，2分钟整体平均一次。然后显示在首页的近期油耗中。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="分段油耗设置：根据不同的车，各人自行估计设置。20以下是多少油耗，20-40是多少，40-60是多少……每秒系统会取一次数"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="综合油耗：与近期油耗的区别是总累计平均。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="电车的大体逻辑也是一样的。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="壁纸设置：白天/夜间/天气/默认四个按钮，可分别设置对应场景壁纸。点击后从文件选择图片或视频，天气按钮切换为天气动画背景。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 四、应用更新 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="四、应用更新"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="应用启动时会自动检查新版本；也可在设置页点击“检查更新”手动触发。检测到新版本会后台静默下载，完成后提示安装。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 五、数据说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="五、数据说明"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="里程：基于GPS信号自动累计，会过滤低精度定位和静止点，保证数据准确。&#10;天气：基于GPS定位自动获取，无GPS时尝试IP定位兜底。&#10;所有设置数据保存在设备本地，不会上传服务器。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Back Button -->
+        <Button
+            android:id="@+id/btn_help_back"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="返回"
+            android:textSize="18sp"
+            android:textColor="#FFFFFFFF"
+            android:background="#FF00B8D4" />
+
+    </LinearLayout>
+</ScrollView>

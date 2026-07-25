@@ -403,7 +403,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- Save & Cancel Buttons -->
+        <!-- Check Update / Cancel / Save / Help Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -416,7 +416,7 @@
                 android:layout_height="52dp"
                 android:layout_weight="1"
                 android:text="检查更新"
-                android:textSize="16sp"
+                android:textSize="14sp"
                 android:textColor="#FFFFFFFF"
                 android:background="#FF2A4A6A"
                 android:layout_marginRight="8dp" />
@@ -427,7 +427,7 @@
                 android:layout_height="52dp"
                 android:layout_weight="1"
                 android:text="取消"
-                android:textSize="18sp"
+                android:textSize="16sp"
                 android:textColor="#FFFFFFFF"
                 android:background="#FF444444"
                 android:layout_marginRight="8dp" />
@@ -438,7 +438,18 @@
                 android:layout_height="52dp"
                 android:layout_weight="1"
                 android:text="保存"
-                android:textSize="18sp"
+                android:textSize="16sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF00B8D4"
+                android:layout_marginRight="8dp" />
+
+            <Button
+                android:id="@+id/btn_help"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:text="帮助"
+                android:textSize="16sp"
                 android:textColor="#FFFFFFFF"
                 android:background="#FF00B8D4" />
 

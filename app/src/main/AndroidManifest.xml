@@ -61,6 +61,12 @@
             android:resizeableActivity="true"
             android:exported="false" />
 
+        <activity
+            android:name=".HelpActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout"
+            android:resizeableActivity="true"
+            android:exported="false" />
+
         <!-- 前台服务：在Service中注册高德广播接收器，确保画中画/窗口模式下仍能接收 -->
         <service
             android:name=".PanDriveService"

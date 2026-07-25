@@ -96,22 +96,6 @@ public class WeatherHelper {
     }
 
     /**
-     * 临时文件日志（诊断车机窗口模式问题用），输出到 /sdcard/Download/pandrive_wallpaper.log
-     */
-    public static void logToFile(String msg) {
-        new Thread(() -> {
-            try {
-                File logFile = new File("/sdcard/Download/pandrive_wallpaper.log");
-                java.io.FileWriter fw = new java.io.FileWriter(logFile, true);
-                String ts = new java.text.SimpleDateFormat("MM-dd HH:mm:ss.SSS", java.util.Locale.US)
-                        .format(new java.util.Date());
-                fw.write("[" + ts + "] " + msg + "\n");
-                fw.close();
-            } catch (Exception ignored) {}
-        }).start();
-    }
-
-    /**
      * 初始化（传入Context用于访问SharedPreferences）
      * 启动时调用，同时从SP恢复上次的天气视频索引
      */
