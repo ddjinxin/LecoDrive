@@ -158,6 +158,7 @@ public class DataHub {
     private float fuelConsumption = 0f;     // 当前综合油耗(仅行驶效率，L/100km)
     private float lastRefuelAmount;         // 加油后的总油量(L或kWh)：旧剩余 + 新加的
     private float fuelUsedAtRefuel;         // 加油时的总消耗起点(driveFuelUsed+idleFuelUsed)
+    private float tankCapacity = 0f;        // 油箱容量(L或kWh)，用户设置一次，用于无加油记录时校准续航做分母
     // 近期油耗：窗口内非怠速秒瞬时查表油耗的滑动平均
     private int recentFuelWindowSec = 120;          // 周期(秒)，默认120，可配 60/120/180/240/300
     private float[] recentSamples;                  // 环形数组样本池
@@ -207,6 +208,7 @@ public class DataHub {
     private final List<OnLocationListener> locationListeners = new ArrayList<>();
 
     private static DataHub instance;
+    private boolean dataLoadedFromBackup = false;  // 是否已从备份文件成功加载过数据，未加载前不允许写文件
     private final Context appContext;
     private BroadcastReceiver amapDataReceiver;
 
@@ -375,7 +377,8 @@ public class DataHub {
             return true;
         }
         // 确实没有备份文件 → 生成一份默认备份（此时权限已拿到，可以安全写入）
-        persistBackup();
+        dataLoadedFromBackup = true;  // 标记为已加载，允许后续正常写入
+        persistBackupForce();
         Log.i(TAG, "授权后重试: 无备份文件，已生成默认备份");
         return false;
     }
@@ -403,6 +406,7 @@ public class DataHub {
             idleFuelUsed         = (float) root.optDouble("idle_fuel_used", 0f);
             fuelCalcKm           = (float) root.optDouble("fuel_calc_km", 0f);
             fuelConsumption      = (float) root.optDouble("fuel_consumption", 0f);
+            tankCapacity         = (float) root.optDouble("tank_capacity", 0f);
             int winSec           = root.optInt("recent_fuel_window_sec", 120);
             setRecentFuelWindowSec(winSec);  // 初始化样本池
             JSONArray thresholds = root.optJSONArray("fuel_speed_thresholds");
@@ -428,6 +432,7 @@ public class DataHub {
                 System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
             }
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
+            dataLoadedFromBackup = true;
             return true;
         } catch (Exception e) {
             Log.e(TAG, "读取备份文件失败，改用默认值: " + e.getMessage());
@@ -450,8 +455,15 @@ public class DataHub {
         driveFuelUsed        = 0f;
         idleFuelUsed         = 0f;
         fuelCalcKm           = 0f;
+        tankCapacity         = 0f;
         recentFuelWindowSec  = 120;
-        setRecentFuelWindowSec(120);  // 初始化样本池
+        // 直接初始化样本池，不调 setRecentFuelWindowSec() 以避免间接触发 persistBackup()
+        synchronized (recentLock) {
+            recentSamples = new float[120];
+            recentSampleCount = 0;
+            recentSampleHead  = 0;
+            recentSampleSum   = 0f;
+        }
         Log.i(TAG, "已用出厂默认值初始化内存字段");
     }
 
@@ -470,12 +482,22 @@ public class DataHub {
         e.putFloat("idle_fuel_used", idleFuelUsed);
         e.putFloat("fuel_calc_km", fuelCalcKm);
         e.putFloat("fuel_consumption", fuelConsumption);
+        e.putFloat("tank_capacity", tankCapacity);
         e.putInt("recent_fuel_window_sec", recentFuelWindowSec);
         e.apply();
     }
 
-    /** 将所有字段写入备份文件（覆盖写）。失败仅打日志不抛异常 */
+    /** 将所有字段写入备份文件（覆盖写）。未成功加载过数据时不写，防止零值覆盖。失败仅打日志不抛异常 */
     public void persistBackup() {
+        if (!dataLoadedFromBackup) {
+            Log.w(TAG, "数据尚未从备份加载，跳过 persistBackup 防止零值覆盖");
+            return;
+        }
+        persistBackupForce();
+    }
+
+    /** 强制写入备份文件（不论加载状态），仅用于首次生成默认备份等场景 */
+    private void persistBackupForce() {
         try {
             File dir = new File(BACKUP_DIR);
             if (!dir.exists() && !dir.mkdirs()) {
@@ -502,6 +524,7 @@ public class DataHub {
             root.put("idle_fuel_used", idleFuelUsed);
             root.put("fuel_calc_km", fuelCalcKm);
             root.put("fuel_consumption", fuelConsumption);
+            root.put("tank_capacity", tankCapacity);
             root.put("recent_fuel_window_sec", recentFuelWindowSec);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
@@ -530,9 +553,17 @@ public class DataHub {
     }
 
     private void writeFile(File f, String content) throws Exception {
-        try (FileOutputStream fos = new FileOutputStream(f)) {
+        File tmp = new File(f.getParentFile(), f.getName() + ".tmp");
+        try (FileOutputStream fos = new FileOutputStream(tmp)) {
             fos.write(content.getBytes("UTF-8"));
             fos.flush();
+            fos.getFD().sync();  // 强制刷入磁盘，防止断电丢失
+        }
+        // 原子替换：rename 是原子操作，要么成功替换要么原文件不变
+        if (!tmp.renameTo(f)) {
+            // rename 失败（跨挂载点等），回退到先删后写的非原子模式
+            if (f.exists()) f.delete();
+            tmp.renameTo(f);
         }
     }
 
@@ -546,6 +577,12 @@ public class DataHub {
     public float getFuelConsumption() { return fuelConsumption; }
     public float getIdleFuelRate() { return idleFuelRate; }
     public float getLastRefuelAmount() { return lastRefuelAmount; }
+    public float getTankCapacity() { return tankCapacity; }
+    public void setTankCapacity(float capacity) {
+        tankCapacity = capacity;
+        editSettings().putFloat("tank_capacity", tankCapacity).apply();
+        persistBackup();
+    }
     /** 剩余油量 = 加油总量 - (行驶消耗 + 怠速消耗 - 加油时起点) */
     public float getRemainingEnergy() {
         float totalUsed = driveFuelUsed + idleFuelUsed;
@@ -653,16 +690,20 @@ public class DataHub {
 
     /** 仅修正续航（不加油）：用近期油耗把目标续航反推为剩余油量，
      *  调整 fuelUsedAtRefuel 使 getRemainingEnergy() 等于该剩余油量。
-     *  无加油记录时（全新安装）把目标续航反推后的总油量暂作 lastRefuelAmount。 */
+     *  无加油记录时（全新安装）用油箱容量做总量，避免分母=分子导致百分比恒为100%。 */
     public void calibrateRange(float rangeKm) {
         float effectiveConsumption = getRecentConsumption();
         if (effectiveConsumption <= 0.01f) effectiveConsumption = getDefaultFuelConsumption();
         float remainingLiters = rangeKm * effectiveConsumption / 100f;
         if (lastRefuelAmount > 0) {
-            // 已有加油记录：调整起点使剩余油量 = remainingLiters
+            // 已有加油记录：调整起点使剩余油量 = remainingLiters，lastRefuelAmount 不变
             fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed - (lastRefuelAmount - remainingLiters);
+        } else if (tankCapacity > 0) {
+            // 全新安装且已设油箱容量：用油箱容量做总量，百分比 = 剩余/油箱容量
+            lastRefuelAmount = tankCapacity;
+            fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed - (tankCapacity - remainingLiters);
         } else {
-            // 全新安装：把目标续航反推为暂作总量，起点设为当前累计消耗
+            // 全新安装且未设油箱容量：回退旧逻辑（总量=剩余量，百分比=100%）
             lastRefuelAmount = remainingLiters;
             fuelUsedAtRefuel = driveFuelUsed + idleFuelUsed;
         }

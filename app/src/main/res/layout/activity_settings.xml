@@ -167,7 +167,7 @@
             android:background="#FF2A4A2A"
             android:layout_marginBottom="8dp" />
 
-        <!-- Refuel: 加油量 + 加油时续航 (默认隐藏，点按钮后显示) -->
+        <!-- Refuel: 油箱容量 + 加油量 + 加油时续航 (默认隐藏，点按钮后显示) -->
         <LinearLayout
             android:id="@+id/refuel_section"
             android:layout_width="match_parent"
@@ -180,6 +180,14 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="油箱容量(L)"
+                    android:textSize="14sp"
+                    android:textColor="#FFCCCCCC" />
 
                 <TextView
                     android:id="@+id/label_refuel_amount"
@@ -206,6 +214,20 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginBottom="16dp">
+
+                <EditText
+                    android:id="@+id/edit_tank_capacity"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:inputType="numberDecimal"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="18sp"
+                    android:background="#FF2A2A4A"
+                    android:padding="8dp"
+                    android:layout_marginRight="8dp"
+                    android:hint="如62"
+                    android:textColorHint="#FF666666" />
 
                 <EditText
                     android:id="@+id/edit_refuel_amount"

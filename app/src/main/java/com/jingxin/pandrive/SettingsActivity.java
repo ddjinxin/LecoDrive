@@ -29,6 +29,7 @@ public class SettingsActivity extends Activity {
 
     private EditText editBaseMileage;
     private EditText editIdleFuelRate;
+    private EditText editTankCapacity;
     private LinearLayout fuelTableContainer;
     private EditText[] fuelEdits;
     private DataHub dataHub;
@@ -55,6 +56,7 @@ public class SettingsActivity extends Activity {
 
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);
+        editTankCapacity = findViewById(R.id.edit_tank_capacity);
         fuelTableContainer = findViewById(R.id.fuel_table_container);
         Button btnSave = findViewById(R.id.btn_save);
         Button btnRefuel = findViewById(R.id.btn_refuel);
@@ -381,6 +383,13 @@ public class SettingsActivity extends Activity {
 
     private void showRefuelSection() {
         boolean isElec = radioElec.isChecked();
+        // 油箱容量回显
+        if (dataHub.getTankCapacity() > 0) {
+            editTankCapacity.setText(String.valueOf((int) dataHub.getTankCapacity()));
+        } else {
+            editTankCapacity.setText("");
+        }
+        editTankCapacity.setHint(isElec ? "如75" : "如62");
         editRefuelAmount.setText("");
         editRefuelAmount.setHint(isElec ? "充电量(kWh)" : "加油量(L)");
         // 回显当前剩余续航（由 lastRefuelAmount/fuelUsedAtRefuel 推导，与首页一致）
@@ -458,6 +467,12 @@ public class SettingsActivity extends Activity {
 
         // Save refuel data (if refuel section is visible = user clicked refuel)
         if (refuelSection.getVisibility() == View.VISIBLE) {
+            // Save 油箱容量
+            try {
+                float capacity = Float.parseFloat(editTankCapacity.getText().toString().trim());
+                if (capacity > 0) dataHub.setTankCapacity(capacity);
+            } catch (NumberFormatException ignored) {}
+
             try {
                 float range = Float.parseFloat(editRefuelRange.getText().toString().trim());
                 if (range > 0) {
