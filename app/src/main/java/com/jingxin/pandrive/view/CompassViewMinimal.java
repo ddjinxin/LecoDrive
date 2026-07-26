@@ -168,12 +168,6 @@ public class CompassViewMinimal extends View implements ICompassView {
         CompassHelper.drawLocationInfo(canvas, centerX, infoY, gaugeSize, isNightMode, latitude, longitude, altitude);
     }
 
-    // ========== 工具方法 ==========
-
-    private String getDirectionName(int degree) {
-        return CompassHelper.getDirectionName(degree);
-    }
-
     // ========== 公共接口 ==========
 
     @Override

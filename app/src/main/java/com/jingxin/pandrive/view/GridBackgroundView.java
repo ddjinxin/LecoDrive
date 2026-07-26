@@ -201,11 +201,6 @@ public class GridBackgroundView extends FrameLayout {
         invalidate();
     }
 
-    // 兼容旧接口（视频切换，暂不使用）
-    public void switchVideo(String videoPath) {
-        // 暂不播放视频
-    }
-
     public void release() {
         releaseWallpaperResources();
     }

@@ -539,11 +539,6 @@ public class MainActivity extends Activity implements
     }
 
     @Override
-    protected void onNewIntent(Intent intent) {
-        super.onNewIntent(intent);
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
         if (checkFailed) return;

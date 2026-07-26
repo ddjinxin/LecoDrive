@@ -104,7 +104,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;单击导航区域：随机切换3D车型。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
+            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"

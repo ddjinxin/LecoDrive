@@ -342,46 +342,7 @@ public class SettingsActivity extends Activity {
         }
     }
 
-    private void copyWallpaperFromPath(String srcPath, String type) {
-        File srcFile = new File(srcPath);
-        String extension = getExtensionFromName(srcFile.getName());
-        File dir = GridBackgroundView.ensureWallpaperDir();
-        if (dir == null) {
-            Toast.makeText(this, "无法创建壁纸目录", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        // 删除同前缀旧壁纸
-        String[] allExts = {".jpg", ".jpeg", ".png", ".webp", ".mp4", ".3gp", ".webm"};
-        for (String ext : allExts) {
-            File old = new File(dir, type + ext);
-            if (old.exists()) old.delete();
-        }
-        File target = new File(dir, type + extension);
-        try (FileInputStream is = new FileInputStream(srcFile);
-             FileOutputStream os = new FileOutputStream(target)) {
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = is.read(buffer)) > 0) {
-                os.write(buffer, 0, len);
-            }
-            String label = "day".equals(type) ? "白天" : "夜间";
-            Toast.makeText(this, label + "壁纸设置成功", Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "复制壁纸文件失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            if (target.exists()) target.delete();
-        }
-        updateWallpaperStatus();
-    }
-
-    private String getExtensionFromName(String fileName) {
-        int dot = fileName.lastIndexOf('.');
-        if (dot >= 0) {
-            String ext = fileName.substring(dot).toLowerCase();
-            String[] supported = {".jpg", ".jpeg", ".png", ".webp", ".mp4", ".3gp", ".webm"};
-            for (String s : supported) { if (s.equals(ext)) return s; }
-        }
-        return ".jpg";
-    }
+    // ==================== Wallpaper import via FilePickerActivity ====================
 
     // ==================== 原有逻辑 ====================
 
@@ -446,10 +407,12 @@ public class SettingsActivity extends Activity {
         int vType = radioElec.isChecked() ? DataHub.VEHICLE_ELEC : DataHub.VEHICLE_FUEL;
         dataHub.setVehicleType(vType);
 
-        // Save total mileage
+        // Save total mileage（仅在值变化时才调用，避免误清零今日/实时行程）
         try {
             float totalKm = Float.parseFloat(editBaseMileage.getText().toString().trim());
-            dataHub.setTotalMileage(totalKm);
+            if (Math.abs(totalKm - dataHub.getTotalDistanceKm()) > 0.01f) {
+                dataHub.setTotalMileage(totalKm);
+            }
         } catch (NumberFormatException ignored) {}
 
         // Save idle energy rate

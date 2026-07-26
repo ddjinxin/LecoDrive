@@ -390,9 +390,10 @@ public class DataHub {
             // 里程三字段（统一以备份文件为权威来源）
             totalDistance = (float) root.optDouble("total_distance", 0f);
             todayDistance = (float) root.optDouble("today_distance", 0f);
-            todayDate     = root.optString("today_date", "");
-            // 跨天判断：存的日期 != 今天 → 今日行程清零，更新日期
+            // 跨天判断：默认值用当前日期，避免字段缺失时空串≠今天误判清零
             String currentDate = new SimpleDateFormat("yyyyMMdd", Locale.US).format(new Date());
+            todayDate     = root.optString("today_date", currentDate);
+            // 跨天判断：存的日期 != 今天 → 今日行程清零，更新日期
             if (!currentDate.equals(todayDate)) {
                 todayDistance = 0f;
                 todayDate = currentDate;
@@ -713,14 +714,6 @@ public class DataHub {
                 .apply();
         persistBackup();
         notifyFuelChanged();
-    }
-
-    /** 取有效油耗：优先综合油耗，其次GPS速度查表，最后默认值 */
-    private float getEffectiveFuelConsumption() {
-        if (fuelConsumption > 0.01f) return fuelConsumption;
-        int speed = Math.round(gpsSpeed * 3.6f);
-        if (speed > 0) return lookupFuelBySpeed(speed);
-        return getDefaultFuelConsumption();
     }
 
     /** 默认值：油耗表中间段平均（速度也为0时的兜底） */

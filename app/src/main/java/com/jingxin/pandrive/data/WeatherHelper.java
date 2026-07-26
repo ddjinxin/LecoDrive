@@ -514,21 +514,6 @@ public class WeatherHelper {
         }, "ensureWeatherVideos").start();
     }
 
-    /**
-     * 检查网络是否可用
-     */
-    private boolean isNetworkAvailable() {
-        try {
-            android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
-                    appContext.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm == null) return false;
-            android.net.NetworkInfo info = cm.getActiveNetworkInfo();
-            return info != null && info.isConnected();
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
     // ==================== 查询方法 ====================
 
     /**

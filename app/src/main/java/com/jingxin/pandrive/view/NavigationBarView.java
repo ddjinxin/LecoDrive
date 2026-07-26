@@ -170,7 +170,7 @@ public class NavigationBarView extends FrameLayout implements
         tvCruiseRoadName.setSingleLine(true);
         tvCruiseRoadName.setEllipsize(android.text.TextUtils.TruncateAt.END);
         speedRow.addView(tvCruiseRoadName, new LinearLayout.LayoutParams(
-                0, LayoutParams.WRAP_CONTENT, 1f));
+                LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
 
         LinearLayout.LayoutParams speedRowParams = new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
