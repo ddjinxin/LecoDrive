@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '53f86fb1-78ee-4a98-90ab-05c69872d5d5'
-  PropagateID: '53f86fb1-78ee-4a98-90ab-05c69872d5d5'
-  ReservedCode1: '200505ac-b162-498d-be8c-08eb35b05f71'
-  ReservedCode2: '200505ac-b162-498d-be8c-08eb35b05f71'
+  ProduceID: 'f1fccb31-e080-4b7b-b83e-f5be8e0bbd3b'
+  PropagateID: 'f1fccb31-e080-4b7b-b83e-f5be8e0bbd3b'
+  ReservedCode1: 'ad1c8307-80bb-4361-9069-297faaf4bc36'
+  ReservedCode2: 'ad1c8307-80bb-4361-9069-297faaf4bc36'
 ---
 
 <div align="center">
@@ -38,6 +38,24 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 
 ### Improvements
 - Settings page no longer auto-focuses any input field on entry
+
+---
+
+## 📢 v1.0.3
+
+### New Features
+- **Adjustable 5-zone layout proportions** — Date/time, speedometer, compass clock, navigation, and 3D car/lane proportions are all customizable in Settings (independent landscape/portrait configs, totaling 100%)
+- **Dynamic weather text positioning** — Wind direction/speed and humidity text positions auto-adjust to lane area proportions, no longer hardcoded
+
+### Bug Fixes
+- **Today's mileage falsely cleared** — Settings page save no longer unconditionally clears today's mileage and realtime trip
+- **Cruise road name display truncated** — Fixed road name width=0 causing it not to show
+- **False day-rollover clearing** — Fixed `today_date` defaulting to empty string causing false cross-day detection on first launch
+
+### Others
+- Help docs updated with layout proportion instructions
+- Settings page labels bolded for better readability
+- Removed 8 instances of dead code
 <!-- LATEST_RELEASE_END -->
 
 ---

@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'f50d05b7-3a96-4fb1-898f-6fe6bcebe2f7'
-  PropagateID: 'f50d05b7-3a96-4fb1-898f-6fe6bcebe2f7'
-  ReservedCode1: '1ec29048-82e8-419d-9d2e-eb4143c38f3c'
-  ReservedCode2: '1ec29048-82e8-419d-9d2e-eb4143c38f3c'
+  ProduceID: '38481320-c9f2-489e-84be-c1f1dc974388'
+  PropagateID: '38481320-c9f2-489e-84be-c1f1dc974388'
+  ReservedCode1: '8c4ed4e8-cecb-4d19-b255-10295b451878'
+  ReservedCode2: '8c4ed4e8-cecb-4d19-b255-10295b451878'
 ---
 
 <div align="center">
@@ -38,6 +38,24 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 
 ### 优化
 - 进入设置页不再自动聚焦到任何输入框
+
+---
+
+## 📢 v1.0.3
+
+### 新功能
+- **五区域布局比例可调** — 日期时间、仪表盘、指南针时钟、导航、3D车道线五个区域比例可在设置页自定义（横屏/竖屏独立配置，合计100%）
+- **天气文字动态跟随** — 风向风速/湿度文字位置随车道线区域比例自动调整，不再硬编码
+
+### Bug 修复
+- **今日行程误清零** — 设置页保存时不再无条件清零今日行程和实时行程
+- **巡航道路名显示不全** — 修复道路名宽度为0导致不显示的问题
+- **跨天误判清零** — 修复 today_date 默认空值导致首次启动即误判跨天清零
+
+### 其他
+- 帮助文档新增布局比例说明
+- 设置页标签加粗优化
+- 清理8处死代码
 <!-- LATEST_RELEASE_END -->
 
 ---
