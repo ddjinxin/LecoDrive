@@ -79,6 +79,11 @@ public class GridBackgroundView extends FrameLayout {
     private float[] cachedLeftEdgeMid = null;
     private float[] cachedRightEdgeMid = null;
 
+    /** 强制重算车道边缘几何（布局比例变化后调用） */
+    public void refreshEdgeGeometry() {
+        cachedW = -1;  // 强制下次 dispatchDraw 重新计算
+    }
+
     // ==================== 壁纸相关 ====================
     private Bitmap wallpaperBitmap = null;
     private String currentWallpaperPath = null;
@@ -134,11 +139,12 @@ public class GridBackgroundView extends FrameLayout {
      * 计算车道梯形边缘角度和中点位置
      */
     private void computeEdgeGeometry(int w, int h) {
-        // 车道梯形在屏幕底部区域，占比随横竖屏不同
-        // 竖屏：35%（与 section_car3d weight=35 对齐），横屏：30%（weight=30）
+        // 车道梯形在屏幕底部区域，占比从 DataHub 布局比例动态读取
         boolean isPortrait = h > w;
-        float laneTopRatio = isPortrait ? 0.65f : 0.70f;
-        float laneHRatio = isPortrait ? 0.35f : 0.30f;
+        float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
+                .getLayoutWeights(isPortrait);
+        float laneHRatio = weights[4] / 100f;          // 车道线区域占比
+        float laneTopRatio = 1f - laneHRatio;           // 上方区域合计占比
         float laneTop = h * laneTopRatio;
         float laneH = h * laneHRatio;
 

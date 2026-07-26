@@ -139,6 +139,10 @@ public class DataHub {
     private static final float[] DEFAULT_FUEL_SPEED_THRESHOLDS = {0, 20, 40, 60, 80, 105, 115, 130, 999};
     private static final float[] DEFAULT_FUEL_VALUES = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
 
+    // 布局比例默认值：日期/仪表盘/指南针/导航/车道线，合计=100
+    private static final float[] DEFAULT_LAYOUT_W_LAND = {10f, 30f, 15f, 15f, 30f};
+    private static final float[] DEFAULT_LAYOUT_W_PORT = {10f, 27f, 15f, 13f, 35f};
+
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
 
@@ -159,6 +163,9 @@ public class DataHub {
     private float lastRefuelAmount;         // 加油后的总油量(L或kWh)：旧剩余 + 新加的
     private float fuelUsedAtRefuel;         // 加油时的总消耗起点(driveFuelUsed+idleFuelUsed)
     private float tankCapacity = 0f;        // 油箱容量(L或kWh)，用户设置一次，用于无加油记录时校准续航做分母
+    // 布局比例：[日期时间, 仪表盘, 指南针, 导航, 车道线]，合计=100
+    private float[] layoutWeightsLand = DEFAULT_LAYOUT_W_LAND.clone();
+    private float[] layoutWeightsPort = DEFAULT_LAYOUT_W_PORT.clone();
     // 近期油耗：窗口内非怠速秒瞬时查表油耗的滑动平均
     private int recentFuelWindowSec = 120;          // 周期(秒)，默认120，可配 60/120/180/240/300
     private float[] recentSamples;                  // 环形数组样本池
@@ -432,6 +439,19 @@ public class DataHub {
                 System.arraycopy(DEFAULT_FUEL_SPEED_THRESHOLDS, 0, fuelSpeedThresholds, 0, 9);
                 System.arraycopy(DEFAULT_FUEL_VALUES, 0, fuelValues, 0, 9);
             }
+            // 布局比例
+            JSONArray layoutLand = root.optJSONArray("layout_w_land");
+            JSONArray layoutPort = root.optJSONArray("layout_w_port");
+            if (layoutLand != null && layoutLand.length() == 5) {
+                float sum = 0;
+                for (int i = 0; i < 5; i++) { layoutWeightsLand[i] = (float) layoutLand.optDouble(i); sum += layoutWeightsLand[i]; }
+                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 5);
+            }
+            if (layoutPort != null && layoutPort.length() == 5) {
+                float sum = 0;
+                for (int i = 0; i < 5; i++) { layoutWeightsPort[i] = (float) layoutPort.optDouble(i); sum += layoutWeightsPort[i]; }
+                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
+            }
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
             dataLoadedFromBackup = true;
             return true;
@@ -458,6 +478,8 @@ public class DataHub {
         fuelCalcKm           = 0f;
         tankCapacity         = 0f;
         recentFuelWindowSec  = 120;
+        System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 5);
+        System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
         // 直接初始化样本池，不调 setRecentFuelWindowSec() 以避免间接触发 persistBackup()
         synchronized (recentLock) {
             recentSamples = new float[120];
@@ -527,6 +549,14 @@ public class DataHub {
             root.put("fuel_consumption", fuelConsumption);
             root.put("tank_capacity", tankCapacity);
             root.put("recent_fuel_window_sec", recentFuelWindowSec);
+            JSONArray layoutLand = new JSONArray();
+            JSONArray layoutPort = new JSONArray();
+            for (int i = 0; i < 5; i++) {
+                layoutLand.put(layoutWeightsLand[i]);
+                layoutPort.put(layoutWeightsPort[i]);
+            }
+            root.put("layout_w_land", layoutLand);
+            root.put("layout_w_port", layoutPort);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
@@ -583,6 +613,29 @@ public class DataHub {
         tankCapacity = capacity;
         editSettings().putFloat("tank_capacity", tankCapacity).apply();
         persistBackup();
+    }
+
+    /** 获取布局比例（5项：日期/仪表盘/指南针/导航/车道线） */
+    public float[] getLayoutWeights(boolean isPortrait) {
+        return isPortrait ? layoutWeightsPort.clone() : layoutWeightsLand.clone();
+    }
+    /** 获取布局比例默认值（5项） */
+    public float[] getDefaultLayoutWeights(boolean isPortrait) {
+        return isPortrait ? DEFAULT_LAYOUT_W_PORT.clone() : DEFAULT_LAYOUT_W_LAND.clone();
+    }
+    /** 设置布局比例，数组长度必须=5，自动校验合计=100 */
+    public boolean setLayoutWeights(boolean isPortrait, float[] weights) {
+        if (weights == null || weights.length != 5) return false;
+        float sum = 0;
+        for (float w : weights) {
+            if (w < 0) return false;
+            sum += w;
+        }
+        if (Math.abs(sum - 100f) > 0.01f) return false;
+        if (isPortrait) layoutWeightsPort = weights.clone();
+        else layoutWeightsLand = weights.clone();
+        persistBackup();
+        return true;
     }
     /** 剩余油量 = 加油总量 - (行驶消耗 + 怠速消耗 - 加油时起点) */
     public float getRemainingEnergy() {

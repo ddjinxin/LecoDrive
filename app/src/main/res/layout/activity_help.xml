@@ -90,6 +90,15 @@
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="布局比例：主界面五个区域（日期时间、仪表盘、指南针、导航、车道线）的高度占比支持横屏和竖屏分别自定义，可根据车机屏幕尺寸和个人偏好自由调整，充分发挥界面灵活性。调整后天气文字位置也会自动跟随车道线区域动态变化。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="4dp"
             android:layout_marginBottom="16dp" />
 
         <!-- 二、操作手势 -->
@@ -204,6 +213,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="电车的大体逻辑也是一样的。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="布局比例：横屏和竖屏分别设置，在对应区域填入五个数字（日期时间、仪表盘、指南针、导航、车道线），五个数字合计必须等于100。填好后点击保存立即生效，主界面各区域按新比例重新分配高度。如需恢复系统默认比例，点击对应行的&quot;默认&quot;按钮即可。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"

@@ -42,6 +42,8 @@ public class SettingsActivity extends Activity {
     private TextView labelNightWallpaperStatus;
     private Button btnWeatherAnimation;
     private boolean weatherAnimationEnabled;
+    private EditText[] editLayoutLand = new EditText[5];
+    private EditText[] editLayoutPort = new EditText[5];
 
     // 油车：不含0km/h（8行），电车：含0km/h（9行）
     private static final String[] SPEED_LABELS_FUEL = {"20", "40", "60", "80", "105", "115", "130", "130+"};
@@ -79,6 +81,22 @@ public class SettingsActivity extends Activity {
         else if (curWin == 240) rid = R.id.radio_recent_240;
         else if (curWin == 300) rid = R.id.radio_recent_300;
         recentFuelWindowGroup.check(rid);
+
+        // 布局比例输入框
+        int[] landIds = {R.id.edit_layout_land_0, R.id.edit_layout_land_1, R.id.edit_layout_land_2,
+                R.id.edit_layout_land_3, R.id.edit_layout_land_4};
+        int[] portIds = {R.id.edit_layout_port_0, R.id.edit_layout_port_1, R.id.edit_layout_port_2,
+                R.id.edit_layout_port_3, R.id.edit_layout_port_4};
+        float[] curLand = dataHub.getLayoutWeights(false);
+        float[] curPort = dataHub.getLayoutWeights(true);
+        for (int i = 0; i < 5; i++) {
+            editLayoutLand[i] = findViewById(landIds[i]);
+            editLayoutPort[i] = findViewById(portIds[i]);
+            editLayoutLand[i].setText(String.valueOf((int) curLand[i]));
+            editLayoutPort[i].setText(String.valueOf((int) curPort[i]));
+        }
+        findViewById(R.id.btn_layout_land_default).setOnClickListener(v -> fillLayoutDefaults(false));
+        findViewById(R.id.btn_layout_port_default).setOnClickListener(v -> fillLayoutDefaults(true));
 
         // 壁纸设置
         Button btnDayWallpaper = findViewById(R.id.btn_day_wallpaper);
@@ -484,8 +502,54 @@ public class SettingsActivity extends Activity {
         }
         dataHub.setFuelValues(newValues);
 
+        // Save 布局比例（校验合计=100）
+        if (!saveLayoutWeights()) return;
+
         setResult(RESULT_OK);
         finish();
+    }
+
+    /** 从输入框读取5个数字，校验合计=100，返回null表示校验失败 */
+    private float[] parseLayoutWeights(EditText[] edits) {
+        float[] w = new float[5];
+        float sum = 0;
+        for (int i = 0; i < 5; i++) {
+            try {
+                w[i] = Float.parseFloat(edits[i].getText().toString().trim());
+            } catch (NumberFormatException e) {
+                return null;
+            }
+            if (w[i] < 0) return null;
+            sum += w[i];
+        }
+        if (Math.abs(sum - 100f) > 0.01f) return null;
+        return w;
+    }
+
+    /** 保存横竖屏布局比例，校验失败弹Toast并返回false */
+    private boolean saveLayoutWeights() {
+        float[] land = parseLayoutWeights(editLayoutLand);
+        if (land == null) {
+            Toast.makeText(this, "横屏布局比例合计需为100", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        float[] port = parseLayoutWeights(editLayoutPort);
+        if (port == null) {
+            Toast.makeText(this, "竖屏布局比例合计需为100", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        dataHub.setLayoutWeights(false, land);
+        dataHub.setLayoutWeights(true, port);
+        return true;
+    }
+
+    /** 填入默认布局比例 */
+    private void fillLayoutDefaults(boolean isPortrait) {
+        float[] def = dataHub.getDefaultLayoutWeights(isPortrait);
+        EditText[] edits = isPortrait ? editLayoutPort : editLayoutLand;
+        for (int i = 0; i < 5; i++) {
+            edits[i].setText(String.valueOf((int) def[i]));
+        }
     }
 
     private void addFuelItem(LinearLayout row, int index, String[] labels, float[] values) {

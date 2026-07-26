@@ -394,41 +394,30 @@ public class MainActivity extends Activity implements
     }
 
     /**
-     * 根据横竖屏调整布局比例
-     * 竖屏：日期10% + 仪表盘27% + 指南针/时钟15% + 导航13% + 车道线35%
-     * 横屏：日期10% + 仪表盘30% + 指南针/时钟15% + 导航15% + 车道线30%（XML默认值）
+     * 根据横竖屏从DataHub读取布局比例，应用到5个区域
+     * 顺序：日期时间/仪表盘/指南针/导航/车道线，合计=100
      */
     private void applyLayoutWeights() {
         boolean isPortrait = getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_PORTRAIT;
 
+        float[] weights = dataHub.getLayoutWeights(isPortrait);
+
         View sectionDatetime = findViewById(R.id.section_datetime);
-        LinearLayout sectionGauges = findViewById(R.id.section_gauges);
+        View speedometer = findViewById(R.id.speedometer_view);
+        View sectionCompassClock = findViewById(R.id.section_compass_clock);
         View sectionNav = findViewById(R.id.section_navigation);
         View sectionCar3d = findViewById(R.id.section_car3d);
-        View speedometer = findViewById(R.id.speedometer_view);
-        // section_gauges 的第二个子View是包含指南针+时钟的FrameLayout
-        View compassClockContainer = ((LinearLayout) sectionGauges).getChildAt(1);
 
-        if (isPortrait) {
-            // 竖屏：仪表盘27% + 指南针/时钟15% = 42%，内部分割 27:15 = 9:5
-            setVerticalWeight(sectionDatetime, 10f);
-            setVerticalWeight(sectionGauges, 42f);
-            setVerticalWeight(sectionNav, 13f);
-            setVerticalWeight(sectionCar3d, 35f);
-            sectionGauges.setWeightSum(14f);
-            setVerticalWeight(speedometer, 9f);
-            setVerticalWeight(compassClockContainer, 5f);
-        } else {
-            // 横屏：XML默认值
-            setVerticalWeight(sectionDatetime, 10f);
-            setVerticalWeight(sectionGauges, 45f);
-            setVerticalWeight(sectionNav, 15f);
-            setVerticalWeight(sectionCar3d, 30f);
-            sectionGauges.setWeightSum(3f);
-            setVerticalWeight(speedometer, 2f);
-            setVerticalWeight(compassClockContainer, 1f);
-        }
+        setVerticalWeight(sectionDatetime, weights[0]);
+        setVerticalWeight(speedometer, weights[1]);
+        setVerticalWeight(sectionCompassClock, weights[2]);
+        setVerticalWeight(sectionNav, weights[3]);
+        setVerticalWeight(sectionCar3d, weights[4]);
+
+        // 通知背景重算天气文字位置
+        GridBackgroundView bgv = findViewById(R.id.grid_background);
+        if (bgv != null) bgv.refreshEdgeGeometry();
     }
 
     private void setVerticalWeight(View view, float weight) {
@@ -542,6 +531,7 @@ public class MainActivity extends Activity implements
     protected void onResume() {
         super.onResume();
         if (checkFailed) return;
+        applyLayoutWeights();
         dataHub.registerSensors();
         dataHub.registerLocation();
         dataHub.startFuelSampling();

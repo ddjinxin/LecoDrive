@@ -26,6 +26,7 @@
             android:layout_height="wrap_content"
             android:text="壁纸设置"
             android:textSize="16sp"
+            android:textStyle="bold"
             android:textColor="#FFCCCCCC"
             android:layout_marginBottom="8dp" />
 
@@ -329,6 +330,7 @@
             android:layout_height="wrap_content"
             android:text="近期油耗周期(秒)"
             android:textSize="14sp"
+            android:textStyle="bold"
             android:textColor="#FFCCCCCC"
             android:layout_marginBottom="4dp" />
 
@@ -394,6 +396,7 @@
             android:layout_height="wrap_content"
             android:text="油耗设置 (L/100km)"
             android:textSize="16sp"
+            android:textStyle="bold"
             android:textColor="#FFCCCCCC"
             android:layout_marginBottom="8dp" />
 
@@ -402,6 +405,239 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
+
+        <!-- 布局比例设置（5项合计=100） -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp"
+            android:text="横屏布局（合计=100）"
+            android:textColor="#FFCCCCCC"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- 横屏区域名称 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginRight="56dp">
+
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="日期" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="仪表盘" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="指南针" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="车道线" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- 横屏输入框 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/edit_layout_land_0"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_land_1"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_land_2"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_land_3"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_land_4"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_layout_land_default"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp"
+            android:text="竖屏布局（合计=100）"
+            android:textColor="#FFCCCCCC"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- 竖屏区域名称 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginRight="56dp">
+
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="日期" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="仪表盘" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="指南针" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="车道线" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- 竖屏输入框 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/edit_layout_port_0"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_port_1"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_port_2"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_port_3"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_port_4"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <Button
+                android:id="@+id/btn_layout_port_default"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
 
         <!-- Check Update / Cancel / Save / Help Buttons -->
         <LinearLayout
