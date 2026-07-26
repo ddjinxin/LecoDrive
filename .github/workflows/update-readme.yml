@@ -14,12 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Update README with latest release notes
+      - name: Update README (CN & EN) with latest release notes
         run: |
           python3 - << 'PYEOF'
           import json, re, os
 
-          # 从 GitHub 事件 payload 读取 Release 信息
           with open(os.environ['GITHUB_EVENT_PATH'], 'r') as f:
               event = json.load(f)
 
@@ -27,39 +26,73 @@ jobs:
           tag = release.get('tag_name', 'unknown')
           body = release.get('body', '') or ''
 
-          with open('README.md', 'r', encoding='utf-8') as f:
-              content = f.read()
-
-          new_block = f"""<!-- LATEST_RELEASE_START -->
-## 📢 最新版本 ({tag})
-
-{body}
-<!-- LATEST_RELEASE_END -->"""
-
-          pattern = r'<!-- LATEST_RELEASE_START -->.*?<!-- LATEST_RELEASE_END -->'
-          if re.search(pattern, content, re.DOTALL):
-              content = re.sub(pattern, lambda m: new_block, content, flags=re.DOTALL)
+          # 用 <!--EN--> 分隔中英文：前半段中文，后半段英文
+          if '<!--EN-->' in body:
+              zh_body, en_body = body.split('<!--EN-->', 1)
+              zh_body, en_body = zh_body.strip(), en_body.strip()
+              has_en = True
           else:
-              # 标记不存在时，插入到"项目简介"之前
+              zh_body, en_body = body.strip(), ''
+              has_en = False
+
+          # ---- 更新中文 README.md ----
+          zh_block = f"""<!-- LATEST_RELEASE_START -->
+          ## 📢 最新版本 ({tag})
+
+          {zh_body}
+          <!-- LATEST_RELEASE_END -->"""
+
+          with open('README.md', 'r', encoding='utf-8') as f:
+              zh_content = f.read()
+
+          zh_pattern = r'<!-- LATEST_RELEASE_START -->.*?<!-- LATEST_RELEASE_END -->'
+          if re.search(zh_pattern, zh_content, re.DOTALL):
+              zh_content = re.sub(zh_pattern, lambda m: zh_block, zh_content, flags=re.DOTALL)
+          else:
               marker = '## 📖 项目简介'
-              idx = content.find(marker)
+              idx = zh_content.find(marker)
               if idx != -1:
-                  content = content[:idx] + new_block + '\n\n---\n\n' + content[idx:]
+                  zh_content = zh_content[:idx] + zh_block + '\n\n---\n\n' + zh_content[idx:]
 
           with open('README.md', 'w', encoding='utf-8') as f:
-              f.write(content)
+              f.write(zh_content)
+          print(f'README.md (中文) updated with release {tag}')
 
-          print(f'README.md updated with release {tag}')
+          # ---- 更新英文 README_EN.md ----
+          if has_en:
+              en_block = f"""<!-- LATEST_RELEASE_START -->
+          ## 📢 Latest Release ({tag})
+
+          {en_body}
+          <!-- LATEST_RELEASE_END -->"""
+
+              with open('README_EN.md', 'r', encoding='utf-8') as f:
+                  en_content = f.read()
+
+              en_pattern = r'<!-- LATEST_RELEASE_START -->.*?<!-- LATEST_RELEASE_END -->'
+              if re.search(en_pattern, en_content, re.DOTALL):
+                  en_content = re.sub(en_pattern, lambda m: en_block, en_content, flags=re.DOTALL)
+              else:
+                  marker = '## 📖 Overview'
+                  idx = en_content.find(marker)
+                  if idx != -1:
+                      en_content = en_content[:idx] + en_block + '\n\n---\n\n' + en_content[idx:]
+
+              with open('README_EN.md', 'w', encoding='utf-8') as f:
+                  f.write(en_content)
+              print(f'README_EN.md (English) updated with release {tag}')
+          else:
+              print('No <!--EN--> separator found, English README not updated')
           PYEOF
 
       - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add README.md
+          git add README.md README_EN.md
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs: auto-update README with release notes"
+            git commit -m "docs: auto-update README (CN & EN) with release notes"
             git push
           fi
