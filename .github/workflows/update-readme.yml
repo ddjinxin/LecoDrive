@@ -1,0 +1,65 @@
+name: Update README on Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update README with latest release notes
+        run: |
+          python3 - << 'PYEOF'
+          import json, re, os
+
+          # 从 GitHub 事件 payload 读取 Release 信息
+          with open(os.environ['GITHUB_EVENT_PATH'], 'r') as f:
+              event = json.load(f)
+
+          release = event.get('release', {})
+          tag = release.get('tag_name', 'unknown')
+          body = release.get('body', '') or ''
+
+          with open('README.md', 'r', encoding='utf-8') as f:
+              content = f.read()
+
+          new_block = f"""<!-- LATEST_RELEASE_START -->
+## 📢 最新版本 ({tag})
+
+{body}
+<!-- LATEST_RELEASE_END -->"""
+
+          pattern = r'<!-- LATEST_RELEASE_START -->.*?<!-- LATEST_RELEASE_END -->'
+          if re.search(pattern, content, re.DOTALL):
+              content = re.sub(pattern, lambda m: new_block, content, flags=re.DOTALL)
+          else:
+              # 标记不存在时，插入到"项目简介"之前
+              marker = '## 📖 项目简介'
+              idx = content.find(marker)
+              if idx != -1:
+                  content = content[:idx] + new_block + '\n\n---\n\n' + content[idx:]
+
+          with open('README.md', 'w', encoding='utf-8') as f:
+              f.write(content)
+
+          print(f'README.md updated with release {tag}')
+          PYEOF
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: auto-update README with release notes"
+            git push
+          fi
