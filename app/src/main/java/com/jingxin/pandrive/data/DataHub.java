@@ -309,13 +309,9 @@ public class DataHub {
     }
 
     // --- Total mileage (累计里程, in km) ---
-    /** 设置累计里程：用户在设置页输入当前车表读数，直接覆盖累计值，并清零今日/本次行程（已包含在新累计值中） */
+    /** 设置累计里程：用户在设置页输入当前车表读数，直接覆盖累计值，不影响今日/本次行程 */
     public void setTotalMileage(float km) {
         totalDistance = km * 1000f;  // km → 米
-        todayDistance = 0f;          // 清零（已包含在新累计值里）
-        tripDistance = 0f;           // 清零（同理）
-        hasPrevLocation = false;     // 下一个GPS点作为新起点
-        prevLocationTime = 0;
         persistBackup();
         notifyMileageChanged();
     }

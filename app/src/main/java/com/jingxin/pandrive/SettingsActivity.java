@@ -45,6 +45,9 @@ public class SettingsActivity extends Activity {
     private EditText[] editLayoutLand = new EditText[5];
     private EditText[] editLayoutPort = new EditText[5];
 
+    /** 进入设置页时的累计里程快照，用于保存时判断用户是否真正修改了 */
+    private float initialTotalKm;
+
     // 油车：不含0km/h（8行），电车：含0km/h（9行）
     private static final String[] SPEED_LABELS_FUEL = {"20", "40", "60", "80", "105", "115", "130", "130+"};
     private static final String[] SPEED_LABELS_ELEC = {"0", "20", "40", "60", "80", "105", "115", "130", "130+"};
@@ -121,7 +124,8 @@ public class SettingsActivity extends Activity {
         updateWallpaperStatus();
 
         // Load current values
-        editBaseMileage.setText(String.format("%.1f", dataHub.getTotalDistanceKm()));
+        initialTotalKm = dataHub.getTotalDistanceKm();
+        editBaseMileage.setText(String.format("%.1f", initialTotalKm));
         editIdleFuelRate.setText(String.valueOf(dataHub.getIdleFuelRate()));
 
         // Set vehicle type radio
@@ -425,10 +429,10 @@ public class SettingsActivity extends Activity {
         int vType = radioElec.isChecked() ? DataHub.VEHICLE_ELEC : DataHub.VEHICLE_FUEL;
         dataHub.setVehicleType(vType);
 
-        // Save total mileage（仅在值变化时才调用，避免误清零今日/实时行程）
+        // Save total mileage（仅与进入时快照比较，避免后台GPS累加导致误判修改）
         try {
             float totalKm = Float.parseFloat(editBaseMileage.getText().toString().trim());
-            if (Math.abs(totalKm - dataHub.getTotalDistanceKm()) > 0.01f) {
+            if (Math.abs(totalKm - initialTotalKm) > 0.01f) {
                 dataHub.setTotalMileage(totalKm);
             }
         } catch (NumberFormatException ignored) {}
