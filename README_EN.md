@@ -25,7 +25,7 @@ AIGC:
 
 ## 📸 Demo
 
-https://pd.qq.com/s/c37t0jlqx
+https://pd.qq.com/s/8wejgtf1k?b=2
 
 ---
 
