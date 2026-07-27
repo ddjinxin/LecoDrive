@@ -85,6 +85,14 @@ public class SettingsActivity extends Activity {
         else if (curWin == 300) rid = R.id.radio_recent_300;
         recentFuelWindowGroup.check(rid);
 
+        // 近期油耗统计方式：按时间周期 / 按30公里周期
+        labelRecentFuelWindow = findViewById(R.id.label_recent_fuel_window);
+        recentFuelModeGroup = findViewById(R.id.recent_fuel_mode_group);
+        recentFuelModeGroup.check(dataHub.getRecentFuelMode() == DataHub.RECENT_MODE_DISTANCE
+                ? R.id.radio_mode_distance : R.id.radio_mode_time);
+        updateWindowGroupEnabled();
+        recentFuelModeGroup.setOnCheckedChangeListener((group, checkedId) -> updateWindowGroupEnabled());
+
         // 布局比例输入框
         int[] landIds = {R.id.edit_layout_land_0, R.id.edit_layout_land_1, R.id.edit_layout_land_2,
                 R.id.edit_layout_land_3, R.id.edit_layout_land_4};
@@ -188,6 +196,8 @@ public class SettingsActivity extends Activity {
     private TextView labelRefuelAmount;
     private TextView labelRefuelRange;
     private RadioGroup recentFuelWindowGroup;
+    private RadioGroup recentFuelModeGroup;
+    private TextView labelRecentFuelWindow;
 
     // ==================== 天气动画 ====================
 
@@ -424,6 +434,18 @@ public class SettingsActivity extends Activity {
         }
     }
 
+    /** 按时间模式时启用秒数单选组，按30公里模式时置灰秒数单选组及其标签 */
+    private void updateWindowGroupEnabled() {
+        boolean isTimeMode = recentFuelModeGroup.getCheckedRadioButtonId() == R.id.radio_mode_time;
+        recentFuelWindowGroup.setEnabled(isTimeMode);
+        labelRecentFuelWindow.setEnabled(isTimeMode);
+        labelRecentFuelWindow.setAlpha(isTimeMode ? 1f : 0.4f);
+        recentFuelWindowGroup.setAlpha(isTimeMode ? 1f : 0.4f);
+        for (int i = 0; i < recentFuelWindowGroup.getChildCount(); i++) {
+            recentFuelWindowGroup.getChildAt(i).setEnabled(isTimeMode);
+        }
+    }
+
     private void saveAndFinish() {
         // Save vehicle type
         int vType = radioElec.isChecked() ? DataHub.VEHICLE_ELEC : DataHub.VEHICLE_FUEL;
@@ -452,6 +474,14 @@ public class SettingsActivity extends Activity {
         else if (checkedWinId == R.id.radio_recent_300) winSec = 300;
         if (winSec != dataHub.getRecentFuelWindowSec()) {
             dataHub.setRecentFuelWindowSec(winSec);
+        }
+
+        // Save 近期油耗统计方式
+        int modeCheckedId = recentFuelModeGroup.getCheckedRadioButtonId();
+        int fuelMode = (modeCheckedId == R.id.radio_mode_distance)
+                ? DataHub.RECENT_MODE_DISTANCE : DataHub.RECENT_MODE_TIME;
+        if (fuelMode != dataHub.getRecentFuelMode()) {
+            dataHub.setRecentFuelMode(fuelMode);
         }
 
         // Save refuel data (if refuel section is visible = user clicked refuel)

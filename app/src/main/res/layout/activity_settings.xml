@@ -328,6 +328,7 @@
 
         <!-- 近期油耗周期选择 -->
         <TextView
+            android:id="@+id/label_recent_fuel_window"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="近期油耗周期(秒)"
@@ -386,6 +387,45 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="300"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp" />
+
+        </RadioGroup>
+
+        <!-- 近期油耗统计方式 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="近期油耗统计方式"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFCCCCCC"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp" />
+
+        <RadioGroup
+            android:id="@+id/recent_fuel_mode_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="24dp">
+
+            <RadioButton
+                android:id="@+id/radio_mode_time"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="按时间周期"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:checked="true" />
+
+            <RadioButton
+                android:id="@+id/radio_mode_distance"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="按30公里周期"
                 android:textColor="#FFFFFFFF"
                 android:textSize="14sp" />
 

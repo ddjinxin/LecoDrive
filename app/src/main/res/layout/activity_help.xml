@@ -194,6 +194,15 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="近期油耗统计方式：可选择&quot;按时间周期&quot;或&quot;按30公里周期&quot;两种方式计算近期油耗。按时间周期使用上面设置的秒数窗口（如120秒），适合市区走走停停场景；按30公里周期使用最近行驶的30公里作为窗口，与车机仪表盘逻辑一致，更适合高速稳态行驶场景。选择&quot;按30公里周期&quot;时，秒数单选组将自动置灰失效。数据在每60秒自动持久化到独立文件，重启后恢复。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="分段油耗设置：根据不同的车，各人自行估计设置。20以下是多少油耗，20-40是多少，40-60是多少……每秒系统会取一次数"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"

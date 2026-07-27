@@ -133,6 +133,8 @@ public class DataHub {
     // 首次不存在时用出厂默认值新建；之后每次修改覆盖写回
     private static final String BACKUP_DIR = "/sdcard/Download/LecoDrive/";
     private static final String BACKUP_FILE = BACKUP_DIR + "settings.json";
+    private static final String DISTANCE_SAMPLES_FILE = BACKUP_DIR + "recent_distance_samples.json";
+    private static final String TIME_SAMPLES_FILE = BACKUP_DIR + "recent_time_samples.json";
 
     // ===== 出厂初始值（仅首次安装/首次运行时使用，之后以备份文件为准）=====
     private static final float DEFAULT_IDLE_FUEL_RATE = 1.2f;
@@ -173,6 +175,20 @@ public class DataHub {
     private int recentSampleHead = 0;               // 环形数组头指针（下一个写入位置）
     private float recentSampleSum = 0f;             // 当前样本和（O(1) 算平均）
     private final Object recentLock = new Object(); // 读写同步锁
+    // 近期油耗统计方式：0=按时间周期，1=按30公里周期
+    public static final int RECENT_MODE_TIME = 0;
+    public static final int RECENT_MODE_DISTANCE = 1;
+    private int recentFuelMode = RECENT_MODE_TIME;  // 默认按时间
+    // 30公里距离窗口：存(距离km, 油耗L)对的环形队列
+    private static final float DISTANCE_WINDOW_KM = 30f;       // 窗口大小
+    private static final int DISTANCE_SAMPLE_CAPACITY = 3600;  // 最大样本数（1小时@1秒）
+    private float[] distSamples;                    // 每秒行驶距离(km)
+    private float[] fuelDistSamples;                // 每秒油耗量(L)
+    private int distSampleHead = 0;                     // 环形数组头指针
+    private int distSampleCount = 0;                // 有效样本数
+    private float windowDistSum = 0f;               // 窗口内累计距离
+    private float windowFuelSum = 0f;               // 窗口内累计油耗
+    private final Object distLock = new Object();   // 读写同步锁
     private static final long FUEL_TICK_MS = 1000;  // 每1秒计算一次
     private static final long FUEL_UI_INTERVAL_MS = 60000;  // 每60秒刷新UI
     private long lastFuelTickTime = 0;
@@ -413,6 +429,7 @@ public class DataHub {
             tankCapacity         = (float) root.optDouble("tank_capacity", 0f);
             int winSec           = root.optInt("recent_fuel_window_sec", 120);
             setRecentFuelWindowSec(winSec);  // 初始化样本池
+            recentFuelMode       = root.optInt("recent_fuel_mode", RECENT_MODE_TIME);
             JSONArray thresholds = root.optJSONArray("fuel_speed_thresholds");
             JSONArray values     = root.optJSONArray("fuel_values");
             if (thresholds != null && values != null && values.length() == 9
@@ -450,6 +467,8 @@ public class DataHub {
             }
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
             dataLoadedFromBackup = true;
+            loadDistanceSamples();  // 恢复30公里窗口样本
+            loadTimeSamples();      // 恢复时间窗口样本
             return true;
         } catch (Exception e) {
             Log.e(TAG, "读取备份文件失败，改用默认值: " + e.getMessage());
@@ -503,6 +522,7 @@ public class DataHub {
         e.putFloat("fuel_consumption", fuelConsumption);
         e.putFloat("tank_capacity", tankCapacity);
         e.putInt("recent_fuel_window_sec", recentFuelWindowSec);
+        e.putInt("recent_fuel_mode", recentFuelMode);
         e.apply();
     }
 
@@ -553,9 +573,140 @@ public class DataHub {
             }
             root.put("layout_w_land", layoutLand);
             root.put("layout_w_port", layoutPort);
+            root.put("recent_fuel_mode", recentFuelMode);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
+        }
+    }
+
+    /** 持久化30公里窗口样本到独立JSON文件 */
+    public void persistDistanceSamples() {
+        try {
+            synchronized (distLock) {
+                if (distSamples == null || distSampleCount == 0) return;
+                JSONObject root = new JSONObject();
+                JSONArray distArr = new JSONArray();
+                JSONArray fuelArr = new JSONArray();
+                for (int i = 0; i < distSampleCount; i++) {
+                    int idx = (distSampleHead - distSampleCount + i + distSamples.length) % distSamples.length;
+                    distArr.put(distSamples[idx]);
+                    fuelArr.put(fuelDistSamples[idx]);
+                }
+                root.put("dist_samples", distArr);
+                root.put("fuel_samples", fuelArr);
+                root.put("count", distSampleCount);
+                writeFile(new File(DISTANCE_SAMPLES_FILE), root.toString());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "写入30公里窗口样本文件失败: " + e.getMessage());
+        }
+    }
+
+    /** 从独立JSON文件恢复30公里窗口样本 */
+    private void loadDistanceSamples() {
+        try {
+            File f = new File(DISTANCE_SAMPLES_FILE);
+            if (!f.exists()) return;
+            JSONObject root = new JSONObject(readFile(f));
+            int count = root.optInt("count", 0);
+            if (count <= 0) return;
+            JSONArray distArr = root.optJSONArray("dist_samples");
+            JSONArray fuelArr = root.optJSONArray("fuel_samples");
+            if (distArr == null || fuelArr == null || distArr.length() < count || fuelArr.length() < count) return;
+
+            if (distSamples == null) {
+                distSamples = new float[DISTANCE_SAMPLE_CAPACITY];
+                fuelDistSamples = new float[DISTANCE_SAMPLE_CAPACITY];
+            }
+            // 恢复样本到环形数组，按顺序写入
+            distSampleHead = 0;
+            distSampleCount = 0;
+            windowDistSum = 0f;
+            windowFuelSum = 0f;
+            for (int i = 0; i < count && i < distSamples.length; i++) {
+                float d = (float) distArr.optDouble(i, 0);
+                float fuel = (float) fuelArr.optDouble(i, 0);
+                distSamples[distSampleHead] = d;
+                fuelDistSamples[distSampleHead] = fuel;
+                distSampleHead = (distSampleHead + 1) % distSamples.length;
+                if (distSampleCount < distSamples.length) distSampleCount++;
+                windowDistSum += d;
+                windowFuelSum += fuel;
+            }
+            // 恢复后淘汰超窗数据（防止文件中数据超过30km）
+            while (windowDistSum > DISTANCE_WINDOW_KM && distSampleCount > 0) {
+                int oldest = (distSampleHead - distSampleCount + distSamples.length) % distSamples.length;
+                windowDistSum -= distSamples[oldest];
+                windowFuelSum -= fuelDistSamples[oldest];
+                distSampleCount--;
+            }
+            Log.i(TAG, "已恢复30公里窗口样本: " + distSampleCount + "条, 窗口距离=" + windowDistSum + "km");
+        } catch (Exception e) {
+            Log.e(TAG, "读取30公里窗口样本文件失败: " + e.getMessage());
+        }
+    }
+
+    /** 持久化时间窗口样本到独立JSON文件 */
+    public void persistTimeSamples() {
+        try {
+            synchronized (recentLock) {
+                if (recentSamples == null || recentSampleCount == 0) return;
+                JSONObject root = new JSONObject();
+                JSONArray arr = new JSONArray();
+                for (int i = 0; i < recentSampleCount; i++) {
+                    int idx = (recentSampleHead - recentSampleCount + i + recentSamples.length) % recentSamples.length;
+                    arr.put(recentSamples[idx]);
+                }
+                root.put("samples", arr);
+                root.put("count", recentSampleCount);
+                root.put("window_sec", recentFuelWindowSec);
+                writeFile(new File(TIME_SAMPLES_FILE), root.toString());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "写入时间窗口样本文件失败: " + e.getMessage());
+        }
+    }
+
+    /** 从独立JSON文件恢复时间窗口样本 */
+    private void loadTimeSamples() {
+        try {
+            File f = new File(TIME_SAMPLES_FILE);
+            if (!f.exists()) return;
+            JSONObject root = new JSONObject(readFile(f));
+            int fileWinSec = root.optInt("window_sec", recentFuelWindowSec);
+            int count = root.optInt("count", 0);
+            if (count <= 0) return;
+            JSONArray arr = root.optJSONArray("samples");
+            if (arr == null || arr.length() < count) return;
+
+            // 窗口大小已变（用户改过周期），旧文件样本失效，删除
+            if (fileWinSec != recentFuelWindowSec) {
+                f.delete();
+                Log.i(TAG, "时间窗口大小已变为" + recentFuelWindowSec + "秒，丢弃旧样本文件");
+                return;
+            }
+
+            synchronized (recentLock) {
+                if (recentSamples == null || recentSamples.length != recentFuelWindowSec) {
+                    recentSamples = new float[recentFuelWindowSec];
+                }
+                recentSampleHead = 0;
+                recentSampleCount = 0;
+                recentSampleSum = 0f;
+                // 只加载最近的 recentFuelWindowSec 个样本
+                int start = Math.max(0, count - recentFuelWindowSec);
+                for (int i = start; i < count && recentSampleCount < recentSamples.length; i++) {
+                    float rate = (float) arr.optDouble(i, 0);
+                    recentSamples[recentSampleHead] = rate;
+                    recentSampleSum += rate;
+                    recentSampleHead = (recentSampleHead + 1) % recentSamples.length;
+                    if (recentSampleCount < recentSamples.length) recentSampleCount++;
+                }
+            }
+            Log.i(TAG, "已恢复时间窗口样本: " + recentSampleCount + "条, 窗口=" + recentFuelWindowSec + "秒");
+        } catch (Exception e) {
+            Log.e(TAG, "读取时间窗口样本文件失败: " + e.getMessage());
         }
     }
 
@@ -566,6 +717,8 @@ public class DataHub {
     public void persistAll() {
         persistSettingsToSP();
         persistBackup();
+        persistDistanceSamples();
+        persistTimeSamples();
     }
 
     // 简单的文件读写工具
@@ -673,6 +826,20 @@ public class DataHub {
         }
         editSettings().putInt("recent_fuel_window_sec", recentFuelWindowSec).apply();
         persistBackup();
+        // 窗口大小已变，删除旧时间样本文件（loadTimeSamples也会校验，这里主动清理）
+        new File(TIME_SAMPLES_FILE).delete();
+    }
+
+    public int getRecentFuelMode() { return recentFuelMode; }
+    /** 设置近期油耗统计方式：0=按时间周期，1=按30公里周期 */
+    public void setRecentFuelMode(int mode) {
+        if (mode != RECENT_MODE_TIME && mode != RECENT_MODE_DISTANCE) {
+            mode = RECENT_MODE_TIME;
+        }
+        recentFuelMode = mode;
+        editSettings().putInt("recent_fuel_mode", recentFuelMode).apply();
+        persistBackup();
+        notifyFuelChanged();
     }
 
     /** 行驶秒 tick 调用：把瞬时查表油耗入队，超周期自动淘汰最老样本 */
@@ -699,16 +866,53 @@ public class DataHub {
         }
     }
 
+    /** 行驶秒 tick 调用：把(距离, 油耗)入30公里窗口队列，累计距离超30km时淘汰最老样本 */
+    private void recordDistanceSample(float distKm, float fuelUsed) {
+        synchronized (distLock) {
+            if (distSamples == null) {
+                distSamples = new float[DISTANCE_SAMPLE_CAPACITY];
+                fuelDistSamples = new float[DISTANCE_SAMPLE_CAPACITY];
+                distSampleHead = 0;
+                distSampleCount = 0;
+                windowDistSum = 0f;
+                windowFuelSum = 0f;
+            }
+            // 写入新样本
+            distSamples[distSampleHead] = distKm;
+            fuelDistSamples[distSampleHead] = fuelUsed;
+            distSampleHead = (distSampleHead + 1) % distSamples.length;
+            if (distSampleCount < distSamples.length) distSampleCount++;
+            windowDistSum += distKm;
+            windowFuelSum += fuelUsed;
+
+            // 淘汰最老样本，直到窗口距离 ≤ 30km
+            while (windowDistSum > DISTANCE_WINDOW_KM && distSampleCount > 0) {
+                int oldest = (distSampleHead - distSampleCount + distSamples.length) % distSamples.length;
+                windowDistSum -= distSamples[oldest];
+                windowFuelSum -= fuelDistSamples[oldest];
+                distSampleCount--;
+            }
+        }
+    }
+
     /**
-     * 取近期油耗（L/100km 或 kWh/100km），三层回退：
-     * 1. 窗口内有样本 → 算术平均
-     * 2. 无样本（周期内全怠速）→ 综合油耗
-     * 3. 综合油耗也是0（从未行驶过）→ 默认油耗（中间段平均）
+     * 取近期油耗（L/100km 或 kWh/100km）：
+     * 按时间模式 → 120秒窗口算术平均
+     * 按距离模式 → 30公里窗口加权平均（总油耗÷总距离×100）
+     * 共同回退：窗口空 → 综合油耗 → 默认值（中间段平均）
      */
     public float getRecentConsumption() {
-        synchronized (recentLock) {
-            if (recentSampleCount > 0) {
-                return recentSampleSum / recentSampleCount;
+        if (recentFuelMode == RECENT_MODE_DISTANCE) {
+            synchronized (distLock) {
+                if (windowDistSum > 0.01f) {
+                    return windowFuelSum / windowDistSum * 100f;
+                }
+            }
+        } else {
+            synchronized (recentLock) {
+                if (recentSampleCount > 0) {
+                    return recentSampleSum / recentSampleCount;
+                }
             }
         }
         if (fuelConsumption > 0.01f) return fuelConsumption;
@@ -826,8 +1030,10 @@ public class DataHub {
             float rate = lookupFuelBySpeed(speed);
             driveFuelUsed += distKm * rate / 100f;
             fuelCalcKm += distKm;
-            // 瞬时查表油耗入近期油耗样本池
+            // 瞬时查表油耗入近期油耗样本池（时间窗口）
             recordRecentSample(rate);
+            // 距离+油耗入30公里窗口（距离窗口）
+            recordDistanceSample(distKm, distKm * rate / 100f);
         }
 
         // 综合油耗 = 纯行驶效率（只看行驶消耗和行驶距离，不含怠速）
@@ -868,6 +1074,8 @@ public class DataHub {
                 .putFloat("fuel_calc_km", fuelCalcKm)
                 .apply();
         persistBackup();  // 每60秒同步到备份文件，断电最多丢60秒累加数据
+        persistDistanceSamples();  // 同步30公里窗口样本
+        persistTimeSamples();      // 同步时间窗口样本
     }
 
     private void notifyFuelChanged() {
