@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '38481320-c9f2-489e-84be-c1f1dc974388'
-  PropagateID: '38481320-c9f2-489e-84be-c1f1dc974388'
-  ReservedCode1: '8c4ed4e8-cecb-4d19-b255-10295b451878'
-  ReservedCode2: '8c4ed4e8-cecb-4d19-b255-10295b451878'
+  ProduceID: '76bf3eb8-9e88-4c6b-92dd-8c347da70620'
+  PropagateID: '76bf3eb8-9e88-4c6b-92dd-8c347da70620'
+  ReservedCode1: '11d9f467-ec92-4f4a-a93f-dab3208d7565'
+  ReservedCode2: '11d9f467-ec92-4f4a-a93f-dab3208d7565'
 ---
 
 <div align="center">
@@ -30,7 +30,18 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.3.1)
+## 📢 最新版本 (v1.0.4)
+
+### 新功能
+- **30公里距离窗口近油耗** — 新增按30公里距离窗口计算近期油耗的方式（总油耗÷总距离×100），与原120秒时间窗口可切换
+- **近期油耗窗口样本持久化** — 时间窗口和距离窗口样本均持久化到独立JSON文件，应用重启后自动恢复，跨重启不丢失
+
+### 设置页
+- 新增近期油耗统计方式选择（时间周期 / 30公里距离周期）
+
+---
+
+## 📢 v1.0.3.1
 
 ### Bug 修复
 - **今日行程/实时行程误清零** — 设置页保存时不再清零今日行程和实时行程，`setTotalMileage()` 移除了清零逻辑
