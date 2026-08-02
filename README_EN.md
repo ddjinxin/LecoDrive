@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'f1fccb31-e080-4b7b-b83e-f5be8e0bbd3b'
-  PropagateID: 'f1fccb31-e080-4b7b-b83e-f5be8e0bbd3b'
-  ReservedCode1: 'ad1c8307-80bb-4361-9069-297faaf4bc36'
-  ReservedCode2: 'ad1c8307-80bb-4361-9069-297faaf4bc36'
+  ProduceID: '07f202cd-a9ac-4777-bc78-f96ceb994b59'
+  PropagateID: '07f202cd-a9ac-4777-bc78-f96ceb994b59'
+  ReservedCode1: 'd865190d-91f1-4a1a-97ec-41d9138f0dc6'
+  ReservedCode2: 'd865190d-91f1-4a1a-97ec-41d9138f0dc6'
 ---
 
 <div align="center">
@@ -30,7 +30,18 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.3.1)
+## 📢 Latest Release (v1.0.4)
+
+### New Features
+- **30 km distance-window recent fuel consumption** — Added a distance-based mode that calculates recent fuel economy over the last 30 km (total fuel ÷ total distance × 100), switchable with the existing 120-second time window
+- **Recent fuel window sample persistence** — Both time-window and distance-window samples are persisted to standalone JSON files, automatically restored on app restart
+
+### Settings
+- Added recent fuel consumption mode selector (time period / 30 km distance period)
+
+---
+
+## 📢 v1.0.3.1
 
 ### Bug Fixes
 - **Today's mileage / realtime trip falsely cleared** — Saving from Settings no longer clears today's mileage and realtime trip; `setTotalMileage()` decoupled from clearing logic
