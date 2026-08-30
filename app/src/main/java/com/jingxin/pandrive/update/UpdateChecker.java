@@ -97,8 +97,6 @@ public class UpdateChecker {
     // 通知推送
     private static final String CHANNEL_ID = "pandrive_update";
     private static final int NOTIFY_ID_UPDATE = 2001;
-    // 通知点击广播 action
-    public static final String ACTION_SHOW_UPDATE = "com.jingxin.pandrive.SHOW_UPDATE";
 
     private static UpdateChecker instance;
     private final Context appContext;
@@ -767,6 +765,11 @@ public class UpdateChecker {
     // ==================== 待安装版本 & 通知推送 ====================
 
     /**
+     * 通知点击 Intent 的 action（MainActivity onNewIntent/onCreate 据此弹安装窗）。
+     */
+    public static final String ACTION_INSTALL_UPDATE = "com.jingxin.pandrive.INSTALL_UPDATE";
+
+    /**
      * 启动时检查待安装版本（上次后台推送未处理），有则弹窗。
      */
     public void onPendingUpdate(Activity activity) {
@@ -833,7 +836,7 @@ public class UpdateChecker {
     }
 
     /**
-     * 推送更新通知（点击后弹安装窗）。
+     * 推送更新通知（点击后直接启动 MainActivity 弹安装窗）。
      */
     private void postUpdateNotification(ReleaseInfo info) {
         NotificationManager nm = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -845,9 +848,12 @@ public class UpdateChecker {
             nm.createNotificationChannel(channel);
         }
 
-        Intent intent = new Intent(ACTION_SHOW_UPDATE);
-        intent.setPackage(appContext.getPackageName());
-        PendingIntent pi = PendingIntent.getBroadcast(appContext, 0, intent,
+        // 通知点击 → 启动 MainActivity（singleTop），携带 action 供 onNewIntent 识别
+        Intent intent = new Intent(appContext, com.jingxin.pandrive.MainActivity.class);
+        intent.setAction(ACTION_INSTALL_UPDATE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pi = PendingIntent.getActivity(appContext, 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT |
                 (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
 
         Notification.Builder builder;

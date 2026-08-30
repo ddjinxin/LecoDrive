@@ -42,6 +42,7 @@
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout"
             android:resizeableActivity="true"
+            android:launchMode="singleTop"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
