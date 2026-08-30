@@ -17,6 +17,7 @@ import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
+import com.jingxin.pandrive.view.LaneColorHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,6 +45,9 @@ public class SettingsActivity extends Activity {
     private boolean weatherAnimationEnabled;
     private EditText[] editLayoutLand = new EditText[5];
     private EditText[] editLayoutPort = new EditText[5];
+
+    /** 车道背景色辅助器 */
+    private LaneColorHelper laneColorHelper;
 
     /** 进入设置页时的累计里程快照，用于保存时判断用户是否真正修改了 */
     private float initialTotalKm;
@@ -108,6 +112,16 @@ public class SettingsActivity extends Activity {
         }
         findViewById(R.id.btn_layout_land_default).setOnClickListener(v -> fillLayoutDefaults(false));
         findViewById(R.id.btn_layout_port_default).setOnClickListener(v -> fillLayoutDefaults(true));
+
+        // 车道背景色
+        laneColorHelper = new LaneColorHelper(this, getWindow().getDecorView(), () -> {
+            // 颜色变化时刷新主界面的 LaneView
+            GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv != null) {
+                View lane = gv.findViewById(R.id.lane_view);
+                if (lane != null) lane.invalidate();
+            }
+        });
 
         // 壁纸设置
         Button btnDayWallpaper = findViewById(R.id.btn_day_wallpaper);

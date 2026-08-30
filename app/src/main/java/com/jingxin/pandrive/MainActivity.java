@@ -61,6 +61,8 @@ public class MainActivity extends Activity implements
 
     // 悬浮布局刷新广播接收器
     private android.content.BroadcastReceiver floatLayoutReceiver;
+    // 更新通知点击广播接收器
+    private android.content.BroadcastReceiver updateReceiver;
 
     private DateTimeView dateTimeView;
     private SpeedometerView speedometerView;
@@ -211,6 +213,12 @@ public class MainActivity extends Activity implements
 
         // 注册悬浮布局刷新广播接收器（非悬浮模式下不触发，不影响原有逻辑）
         registerFloatLayoutReceiver();
+
+        // 注册更新通知点击广播接收器（收到后弹安装窗）
+        registerUpdateReceiver();
+
+        // 启动时检查是否有已下载待安装的更新（上次后台推送未处理）
+        UpdateChecker.getInstance(this).onPendingUpdate(this);
     }
 
     /**
@@ -237,6 +245,40 @@ public class MainActivity extends Activity implements
         } else {
             registerReceiver(floatLayoutReceiver, filter);
         }
+    }
+
+    /**
+     * 注册更新通知点击广播接收器。
+     * 点击通知后由 MainActivity 弹安装窗（可能处于悬浮态，需先退出悬浮）。
+     */
+    private void registerUpdateReceiver() {
+        if (updateReceiver != null) return;
+        updateReceiver = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (UpdateChecker.ACTION_SHOW_UPDATE.equals(intent.getAction())) {
+                    UpdateChecker.cancelUpdateNotification(context);
+                    showPendingUpdateDialog();
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(UpdateChecker.ACTION_SHOW_UPDATE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(updateReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(updateReceiver, filter);
+        }
+    }
+
+    /**
+     * 有待安装版本时弹安装窗（启动时 / 通知点击时）。
+     */
+    private void showPendingUpdateDialog() {
+        if (checkFailed) return;
+        UpdateChecker checker = UpdateChecker.getInstance(this);
+        UpdateChecker.PendingUpdate pending = checker.getPendingUpdate();
+        if (pending == null) return;
+        checker.showPendingInstallDialog(this, pending);
     }
 
     private void setupGL() {
@@ -798,6 +840,10 @@ public class MainActivity extends Activity implements
         if (floatLayoutReceiver != null) {
             try { unregisterReceiver(floatLayoutReceiver); } catch (Exception ignored) {}
             floatLayoutReceiver = null;
+        }
+        if (updateReceiver != null) {
+            try { unregisterReceiver(updateReceiver); } catch (Exception ignored) {}
+            updateReceiver = null;
         }
         themeController.removeListener(this);
         dataHub.removeSpeedListener(this);

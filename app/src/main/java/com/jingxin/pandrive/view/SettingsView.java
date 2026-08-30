@@ -57,6 +57,9 @@ public class SettingsView extends ScrollView {
     private EditText[] editLayoutPort = new EditText[5];
     private float initialTotalKm;
 
+    /** 车道背景色辅助器 */
+    private LaneColorHelper laneColorHelper;
+
     private EditText editRefuelAmount;
     private EditText editRefuelRange;
     private View refuelSection;
@@ -131,6 +134,16 @@ public class SettingsView extends ScrollView {
         findViewById(R.id.btn_layout_land_default).setOnClickListener(v -> fillLayoutDefaults(false));
         findViewById(R.id.btn_layout_port_default).setOnClickListener(v -> fillLayoutDefaults(true));
 
+        // 车道背景色
+        laneColorHelper = new LaneColorHelper(getContext(), this, () -> {
+            // 悬浮态：直接刷新 GridBackgroundView 上的 LaneView
+            GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv != null) {
+                View lane = gv.findViewById(R.id.lane_view);
+                if (lane != null) lane.invalidate();
+            }
+        });
+
         Button btnDayWallpaper = findViewById(R.id.btn_day_wallpaper);
         Button btnNightWallpaper = findViewById(R.id.btn_night_wallpaper);
         Button btnDefaultWallpaper = findViewById(R.id.btn_default_wallpaper);
@@ -176,8 +189,9 @@ public class SettingsView extends ScrollView {
 
         Button btnCheckUpdate = findViewById(R.id.btn_check_update);
         btnCheckUpdate.setOnClickListener(v -> {
-            // 悬浮态下无 Activity，用 Toast 提示退出悬浮后操作
-            Toast.makeText(getContext(), "请退出悬浮模式后检查更新", Toast.LENGTH_SHORT).show();
+            // 悬浮态下无 Activity，走后台静默检查：发现新版本下载后推送通知，点击通知弹安装窗
+            UpdateChecker.getInstance(getContext()).checkSilently();
+            Toast.makeText(getContext(), "正在后台检查更新，有新版本将推送通知", Toast.LENGTH_SHORT).show();
         });
 
         Button btnHelp = findViewById(R.id.btn_help);

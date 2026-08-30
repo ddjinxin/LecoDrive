@@ -177,8 +177,13 @@ public class LaneView extends View implements DataHub.OnSpeedListener {
         roadPath.lineTo(centerX - farWidth / 2, 0);
         roadPath.close();
 
-        int topColor = isNightMode ? 0xFF050810 : 0xFF2A2D30;
-        int bottomColor = isNightMode ? 0xFF0A0F18 : 0xFF3A3D42;
+        DataHub dh = DataHub.getInstance(getContext());
+        int alpha = dh.getLaneAlpha();
+        int baseTop    = isNightMode ? dh.getLaneNightTopColor()    : dh.getLaneDayTopColor();
+        int baseBottom = isNightMode ? dh.getLaneNightBottomColor() : dh.getLaneDayBottomColor();
+        // 用用户设置的透明度覆盖颜色的 alpha 通道
+        int topColor    = (baseTop    & 0x00FFFFFF) | (alpha << 24);
+        int bottomColor = (baseBottom & 0x00FFFFFF) | (alpha << 24);
 
         if (cachedRoadGradient == null || cachedRoadW != w || cachedRoadH != h
                 || cachedRoadTopColor != topColor || cachedRoadBottomColor != bottomColor) {

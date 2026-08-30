@@ -10,11 +10,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import com.jingxin.pandrive.data.DataHub;
 
+import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.util.CompatUtils;
 
 import java.lang.reflect.Method;
@@ -43,6 +46,11 @@ public class PanDriveService extends Service {
     private BroadcastReceiver amapReceiver;
     private BroadcastReceiver exitReceiver;
 
+    // 定时检查更新
+    private static final long CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000L; // 2 小时
+    private Handler updateCheckHandler;
+    private Runnable updateCheckRunnable;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -59,6 +67,9 @@ public class PanDriveService extends Service {
 
         // 更新通知（带退出按钮）
         updateNotification();
+
+        // 启动定时检查更新（后台静默检查 + 通知推送）
+        startUpdateCheckLoop();
     }
 
     @Override
@@ -74,9 +85,41 @@ public class PanDriveService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        stopUpdateCheckLoop();
         unregisterAmapReceiver();
         unregisterExitReceiver();
         Log.d(TAG, "PanDriveService 销毁");
+    }
+
+    // ==================== 定时检查更新 ====================
+
+    /**
+     * 启动定时更新检查：服务存活期间每 2 小时后台静默检查一次，
+     * 发现新版本自动下载并推送通知。
+     */
+    private void startUpdateCheckLoop() {
+        if (updateCheckRunnable != null) return;
+        if (updateCheckHandler == null) {
+            updateCheckHandler = new Handler(Looper.getMainLooper());
+        }
+        updateCheckRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "定时检查更新");
+                UpdateChecker.getInstance(PanDriveService.this).checkSilently();
+                updateCheckHandler.postDelayed(this, CHECK_INTERVAL_MS);
+            }
+        };
+        // 首次延迟一个周期再检查（启动时 MainActivity 已检查过）
+        updateCheckHandler.postDelayed(updateCheckRunnable, CHECK_INTERVAL_MS);
+        Log.d(TAG, "定时更新检查已启动，间隔 " + (CHECK_INTERVAL_MS / 3600000) + " 小时");
+    }
+
+    private void stopUpdateCheckLoop() {
+        if (updateCheckHandler != null && updateCheckRunnable != null) {
+            updateCheckHandler.removeCallbacks(updateCheckRunnable);
+        }
+        updateCheckRunnable = null;
     }
 
     /**

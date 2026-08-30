@@ -2,6 +2,10 @@ package com.jingxin.pandrive.update;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,6 +19,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.core.content.FileProvider;
+
+import com.jingxin.pandrive.R;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,12 +41,17 @@ import java.util.concurrent.Future;
  *
  * 流程：
  * 1. checkAndDownload(activity, force) 异步调 GitHub API 拿最新 Release
- * 2. 版本相同/获取失败 → 静默
+ * 2. 版本相同/获取失败 → 静默（手动检查时Toast提示）
  * 3. 版本不同且未被永久忽略 → 后台下载 APK
  * 4. 下载成功 → 弹窗提示安装；失败 → 静默
  * 5. 用户点"稍后" → 该版本加入忽略集合，永久不再提示
  *
  * force=true 时跳过忽略集合（手动检查场景）
+ *
+ * 主动推送：
+ * - checkSilently()：无 Activity 场景（前台服务定时）后台检查 → 下载 →
+ *   持久化待安装版本 + 通知栏推送，点击通知由 MainActivity 弹窗安装
+ * - MainActivity onCreate 时检查待安装版本（上次推送未处理则弹窗）
  */
 public class UpdateChecker {
 
@@ -51,6 +62,12 @@ public class UpdateChecker {
     private static final String REPO_NAME  = "LecoDrive";
     private static final String API_URL =
             "https://api.github.com/repos/" + REPO_OWNER + "/" + REPO_NAME + "/releases/latest";
+
+    // Gitee 仓库（国内优先，访问速度快；Gitee 发布 release 后自动生效，否则回退 GitHub）
+    private static final String GITEE_OWNER = "dandingjx";
+    private static final String GITEE_NAME  = "leco-driving";
+    private static final String GITEE_API_URL =
+            "https://gitee.com/api/v5/repos/" + GITEE_OWNER + "/" + GITEE_NAME + "/releases/latest";
 
     // 国内加速镜像列表：[类型, 基址]
     // type="prefix"：前缀拼接式（base + 原始 GitHub URL）
@@ -72,12 +89,22 @@ public class UpdateChecker {
     // 永久忽略版本集合存储
     private static final String SP_NAME       = "update_prefs";
     private static final String KEY_IGNORED   = "ignored_versions";
-    private static final String KEY_LAST_CHECK= "last_check_ver";  // 本次启动已检查过的版本
+    private static final String KEY_PENDING   = "pending_version"; // 已下载待安装的版本（配合 PendingInfo）
+    private static final String KEY_PENDING_VER = "pending_ver";
+    private static final String KEY_PENDING_NOTES = "pending_notes";
+
+    // 通知推送
+    private static final String CHANNEL_ID = "pandrive_update";
+    private static final int NOTIFY_ID_UPDATE = 2001;
+    // 通知点击广播 action
+    public static final String ACTION_SHOW_UPDATE = "com.jingxin.pandrive.SHOW_UPDATE";
 
     private static UpdateChecker instance;
     private final Context appContext;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean isChecking = false;  // 防止并发检查
+    // 进程级标记：本次进程已检查过更新（进程重启自动重置，参考静心音乐 UpdateHelper）
+    private boolean launchChecked = false;
 
     private UpdateChecker(Context context) {
         appContext = context.getApplicationContext();
@@ -96,13 +123,11 @@ public class UpdateChecker {
      * 启动时自动检查（遵守"永久忽略"列表，本次启动只检查一次）。
      */
     public void checkOnLaunch(Activity activity) {
-        SharedPreferences sp = appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
-        String lastCheckVer = sp.getString(KEY_LAST_CHECK, "");
-        // 本次启动已检查过该版本，跳过
-        if (!lastCheckVer.isEmpty()) {
-            Log.d(TAG, "本次启动已检查过最新版本: " + lastCheckVer + ", 跳过");
+        if (launchChecked) {
+            Log.d(TAG, "本次启动已检查过更新，跳过");
             return;
         }
+        launchChecked = true;
         checkAndDownload(activity, false);
     }
 
@@ -111,6 +136,66 @@ public class UpdateChecker {
      */
     public void checkManually(Activity activity) {
         checkAndDownload(activity, true);
+    }
+
+    /**
+     * 后台静默检查（无 Activity 场景，如前台服务定时触发）：
+     * 发现新版本 → 后台下载 → 持久化待安装版本 → 发通知栏推送。
+     * 通知点击后由 MainActivity 弹窗安装。
+     */
+    public void checkSilently() {
+        if (isChecking) {
+            Log.d(TAG, "已有检查任务在运行，跳过 checkSilently");
+            return;
+        }
+        isChecking = true;
+
+        new Thread(() -> {
+            try {
+                String currentVer = getCurrentVersionName();
+                if (currentVer == null) {
+                    Log.e(TAG, "checkSilently: 无法获取当前版本号");
+                    isChecking = false;
+                    return;
+                }
+                ReleaseInfo info = fetchLatestRelease();
+                if (info == null) {
+                    Log.w(TAG, "checkSilently: 无法获取最新版本（网络问题）");
+                    isChecking = false;
+                    return;
+                }
+                String latestVer = normalizeVersion(info.tagName);
+                String currentNorm = normalizeVersion(currentVer);
+                if (compareVersions(currentNorm, latestVer) >= 0) {
+                    Log.i(TAG, "checkSilently: 已是最新版本");
+                    isChecking = false;
+                    return;
+                }
+                if (isVersionIgnored(info.tagName)) {
+                    Log.i(TAG, "checkSilently: 用户已忽略 " + info.tagName);
+                    isChecking = false;
+                    return;
+                }
+                Log.i(TAG, "checkSilently: 后台下载 APK: " + info.downloadUrl);
+                boolean ok = downloadApk(info.downloadUrl);
+                if (!ok) {
+                    Log.e(TAG, "checkSilently: 下载失败");
+                    isChecking = false;
+                    return;
+                }
+                // 持久化待安装版本（供 MainActivity 启动/通知点击时弹窗）
+                appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE).edit()
+                        .putString(KEY_PENDING_VER, info.tagName)
+                        .putString(KEY_PENDING_NOTES, info.notes != null ? info.notes : "")
+                        .putBoolean(KEY_PENDING, true)
+                        .apply();
+                isChecking = false;
+                postUpdateNotification(info);
+            } catch (Exception e) {
+                Log.e(TAG, "checkSilently 异常: " + e.getMessage(), e);
+                isChecking = false;
+            }
+        }).start();
     }
 
     /**
@@ -146,9 +231,7 @@ public class UpdateChecker {
                     finishCheck(activity, force, false, "无法连接更新服务器");
                     return;
                 }
-                // 记录本次启动已检查的版本
-                appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE)
-                        .edit().putString(KEY_LAST_CHECK, info.tagName).apply();
+                // 版本对比（不再持久化 last_check_ver：改用进程内存 launchChecked，进程重启自动重置）
 
                 String latestVer = normalizeVersion(info.tagName);
                 String currentNorm = normalizeVersion(currentVer);
@@ -199,26 +282,45 @@ public class UpdateChecker {
         }
     }
 
-    /** 调 GitHub API，解析最新 Release */
+    /** 调 Gitee API（优先，国内快），失败回退 GitHub API */
     private ReleaseInfo fetchLatestRelease() {
+        // 1. 先试 Gitee（国内快）
+        ReleaseInfo info = fetchFromApi(GITEE_API_URL, true);
+        if (info != null) {
+            Log.i(TAG, "从 Gitee 获取版本信息成功");
+            return info;
+        }
+        Log.w(TAG, "Gitee API 失败，回退 GitHub");
+        // 2. 回退 GitHub
+        info = fetchFromApi(API_URL, false);
+        if (info != null) {
+            Log.i(TAG, "从 GitHub 获取版本信息成功");
+        }
+        return info;
+    }
+
+    /** 通用 API 请求：isGitee=true 时不需要 Accept 头 */
+    private ReleaseInfo fetchFromApi(String apiUrl, boolean isGitee) {
         HttpURLConnection conn = null;
         try {
-            URL url = new URL(API_URL);
+            URL url = new URL(apiUrl);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-            conn.setRequestProperty("Accept", "application/vnd.github+json");
             conn.setRequestProperty("User-Agent", "LecoDrive-Updater");
+            if (!isGitee) {
+                conn.setRequestProperty("Accept", "application/vnd.github+json");
+            }
             conn.setConnectTimeout(10000);
             conn.setReadTimeout(15000);
             int code = conn.getResponseCode();
             if (code != 200) {
-                Log.w(TAG, "GitHub API 响应码: " + code);
+                Log.w(TAG, (isGitee ? "Gitee" : "GitHub") + " API 响应码: " + code);
                 return null;
             }
             String body = readStream(conn.getInputStream());
             return parseReleaseJson(body);
         } catch (Exception e) {
-            Log.e(TAG, "fetchLatestRelease 失败: " + e.getMessage());
+            Log.e(TAG, "fetchFromApi (" + (isGitee ? "Gitee" : "GitHub") + ") 失败: " + e.getMessage());
             return null;
         } finally {
             if (conn != null) conn.disconnect();
@@ -293,8 +395,12 @@ public class UpdateChecker {
         return json.substring(idx, end);
     }
 
-    /** 下载 APK：并发测速选最快镜像，按速度顺序依次尝试，全失败才回退主源 */
-    private boolean downloadApk(String originalUrl) {
+    /**
+     * 下载 APK：
+     * - 如果 downloadUrl 来自 Gitee，直接下载（国内无需镜像）
+     * - 如果来自 GitHub，走镜像测速 + 主源回退
+     */
+    private boolean downloadApk(String downloadUrl) {
         // 先清理旧 APK
         File oldFile = new File(UPDATE_FILE);
         if (oldFile.exists()) oldFile.delete();
@@ -305,6 +411,26 @@ public class UpdateChecker {
             return false;
         }
 
+        // Gitee 直链：国内访问快，直接下载
+        if (downloadUrl.contains("gitee.com")) {
+            Log.i(TAG, "从 Gitee 直链下载: " + downloadUrl);
+            if (tryDownload(downloadUrl, UPDATE_FILE, 30000)) {
+                Log.i(TAG, "Gitee 下载成功");
+                return true;
+            }
+            Log.w(TAG, "Gitee 下载失败，尝试 GitHub 镜像");
+            // Gitee 失败，转 GitHub 对应 Release 的 APK 直链
+            String githubUrl = "https://github.com/" + REPO_OWNER + "/" + REPO_NAME +
+                    "/releases/download/" + extractVersionFromUrl(downloadUrl) + "/app-release.apk";
+            return downloadFromGithubMirrors(githubUrl);
+        }
+
+        // GitHub 下载：走镜像测速
+        return downloadFromGithubMirrors(downloadUrl);
+    }
+
+    /** GitHub 镜像下载：并发测速选最快镜像，按速度顺序依次尝试，全失败回退主源 */
+    private boolean downloadFromGithubMirrors(String originalUrl) {
         // 构造所有候选 URL（镜像 + 主源兜底）
         List<String> mirrors = new ArrayList<>();
         for (String[] m : MIRRORS) {
@@ -342,6 +468,16 @@ public class UpdateChecker {
         } else { // host：域名替换
             return originalUrl.replace("https://github.com", base);
         }
+    }
+
+    /** 从 Gitee 下载 URL 中提取版本号（如 v1.0.6），用于构造 GitHub 对应直链 */
+    private String extractVersionFromUrl(String url) {
+        int idx = url.indexOf("/download/");
+        if (idx < 0) return "";
+        int start = idx + "/download/".length();
+        int end = url.indexOf("/", start);
+        if (end < 0) return "";
+        return url.substring(start, end);
     }
 
     /**
@@ -539,6 +675,120 @@ public class UpdateChecker {
             Log.e(TAG, "调起安装失败: " + e.getMessage(), e);
             Toast.makeText(activity, "调起安装失败: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    // ==================== 待安装版本 & 通知推送 ====================
+
+    /**
+     * 启动时检查待安装版本（上次后台推送未处理），有则弹窗。
+     */
+    public void onPendingUpdate(Activity activity) {
+        PendingUpdate pending = getPendingUpdate();
+        if (pending == null) return;
+        showPendingInstallDialog(activity, pending);
+    }
+
+    /**
+     * 弹安装窗（已有待安装版本时，启动 / 通知点击触发）。
+     */
+    public void showPendingInstallDialog(Activity activity, PendingUpdate pending) {
+        if (activity == null || activity.isFinishing()) return;
+
+        StringBuilder msg = new StringBuilder();
+        msg.append("发现新版本: ").append(pending.version).append("\n\n");
+        if (pending.notes != null && !pending.notes.isEmpty()) {
+            String notes = pending.notes.length() > 500
+                    ? pending.notes.substring(0, 500) + "..." : pending.notes;
+            msg.append("更新内容:\n").append(notes).append("\n\n");
+        }
+        msg.append("已下载完成，是否立即安装?");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+        builder.setTitle("应用更新");
+        builder.setMessage(msg.toString());
+        builder.setCancelable(false);
+        builder.setPositiveButton("立即安装", (DialogInterface d, int w) -> {
+            clearPendingUpdate();
+            installApk(activity);
+        });
+        builder.setNegativeButton("稍后", (DialogInterface d, int w) -> {
+            // 稍后：加入忽略列表 + 清除待安装标记（不再推送该版本）
+            addIgnoredVersion(pending.version);
+            clearPendingUpdate();
+            Log.i(TAG, "用户忽略版本: " + pending.version);
+        });
+        builder.setNeutralButton("取消", (DialogInterface d, int w) -> {
+            // 取消：清除待安装标记，下次后台检查到新版本再推送
+            clearPendingUpdate();
+        });
+        builder.show();
+    }
+
+    /**
+     * 读取待安装版本。无则返回 null。
+     */
+    public PendingUpdate getPendingUpdate() {
+        SharedPreferences sp = appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE);
+        if (!sp.getBoolean(KEY_PENDING, false)) return null;
+        PendingUpdate p = new PendingUpdate();
+        p.version = sp.getString(KEY_PENDING_VER, "");
+        p.notes = sp.getString(KEY_PENDING_NOTES, "");
+        return p;
+    }
+
+    /**
+     * 清除待安装标记（用户已安装/已忽略/已取消时调用）。
+     */
+    public void clearPendingUpdate() {
+        appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE).edit()
+                .remove(KEY_PENDING).remove(KEY_PENDING_VER).remove(KEY_PENDING_NOTES)
+                .apply();
+    }
+
+    /**
+     * 推送更新通知（点击后弹安装窗）。
+     */
+    private void postUpdateNotification(ReleaseInfo info) {
+        NotificationManager nm = (NotificationManager) appContext.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm == null) return;
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationChannel channel = new NotificationChannel(
+                    CHANNEL_ID, "应用更新", NotificationManager.IMPORTANCE_DEFAULT);
+            channel.setDescription("发现新版本时推送更新通知");
+            nm.createNotificationChannel(channel);
+        }
+
+        Intent intent = new Intent(ACTION_SHOW_UPDATE);
+        intent.setPackage(appContext.getPackageName());
+        PendingIntent pi = PendingIntent.getBroadcast(appContext, 0, intent,
+                (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
+
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= 26) {
+            builder = new Notification.Builder(appContext, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(appContext);
+        }
+        builder.setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("发现新版本 " + info.tagName)
+                .setContentText("点击查看更新内容并安装")
+                .setContentIntent(pi)
+                .setAutoCancel(true);
+        nm.notify(NOTIFY_ID_UPDATE, builder.build());
+    }
+
+    /**
+     * 应用更新通知是否已显示（用于点击广播后移除通知）。
+     */
+    public static void cancelUpdateNotification(Context context) {
+        NotificationManager nm = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (nm != null) nm.cancel(NOTIFY_ID_UPDATE);
+    }
+
+    /** 待安装版本信息 */
+    public static class PendingUpdate {
+        public String version;
+        public String notes;
     }
 
     // ==================== 永久忽略列表 ====================

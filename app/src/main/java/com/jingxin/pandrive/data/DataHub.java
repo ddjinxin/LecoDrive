@@ -145,6 +145,19 @@ public class DataHub {
     private static final float[] DEFAULT_LAYOUT_W_LAND = {10f, 30f, 15f, 15f, 30f};
     private static final float[] DEFAULT_LAYOUT_W_PORT = {10f, 27f, 15f, 13f, 35f};
 
+    // 车道背景默认色（ARGB int）—取自原 LaneView 硬编码值
+    private static final int DEFAULT_LANE_NIGHT_TOP    = 0xFF050810;
+    private static final int DEFAULT_LANE_NIGHT_BOTTOM = 0xFF0A0F18;
+    private static final int DEFAULT_LANE_DAY_TOP      = 0xFF2A2D30;
+    private static final int DEFAULT_LANE_DAY_BOTTOM   = 0xFF3A3D42;
+    private static final int DEFAULT_LANE_ALPHA        = 255;   // 0~255，255=不透明
+
+    private int laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
+    private int laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
+    private int laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
+    private int laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
+    private int laneAlpha            = DEFAULT_LANE_ALPHA;
+
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
 
@@ -465,6 +478,12 @@ public class DataHub {
                 for (int i = 0; i < 5; i++) { layoutWeightsPort[i] = (float) layoutPort.optDouble(i); sum += layoutWeightsPort[i]; }
                 if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
             }
+            // 车道背景色
+            laneNightTopColor    = root.optInt("lane_night_top", DEFAULT_LANE_NIGHT_TOP);
+            laneNightBottomColor = root.optInt("lane_night_bottom", DEFAULT_LANE_NIGHT_BOTTOM);
+            laneDayTopColor      = root.optInt("lane_day_top", DEFAULT_LANE_DAY_TOP);
+            laneDayBottomColor   = root.optInt("lane_day_bottom", DEFAULT_LANE_DAY_BOTTOM);
+            laneAlpha            = root.optInt("lane_alpha", DEFAULT_LANE_ALPHA);
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
             dataLoadedFromBackup = true;
             loadDistanceSamples();  // 恢复30公里窗口样本
@@ -495,6 +514,11 @@ public class DataHub {
         recentFuelWindowSec  = 120;
         System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 5);
         System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
+        laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
+        laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
+        laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
+        laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
+        laneAlpha            = DEFAULT_LANE_ALPHA;
         // 直接初始化样本池，不调 setRecentFuelWindowSec() 以避免间接触发 persistBackup()
         synchronized (recentLock) {
             recentSamples = new float[120];
@@ -523,6 +547,11 @@ public class DataHub {
         e.putFloat("tank_capacity", tankCapacity);
         e.putInt("recent_fuel_window_sec", recentFuelWindowSec);
         e.putInt("recent_fuel_mode", recentFuelMode);
+        e.putInt("lane_night_top", laneNightTopColor);
+        e.putInt("lane_night_bottom", laneNightBottomColor);
+        e.putInt("lane_day_top", laneDayTopColor);
+        e.putInt("lane_day_bottom", laneDayBottomColor);
+        e.putInt("lane_alpha", laneAlpha);
         e.apply();
     }
 
@@ -574,6 +603,11 @@ public class DataHub {
             root.put("layout_w_land", layoutLand);
             root.put("layout_w_port", layoutPort);
             root.put("recent_fuel_mode", recentFuelMode);
+            root.put("lane_night_top", laneNightTopColor);
+            root.put("lane_night_bottom", laneNightBottomColor);
+            root.put("lane_day_top", laneDayTopColor);
+            root.put("lane_day_bottom", laneDayBottomColor);
+            root.put("lane_alpha", laneAlpha);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
@@ -785,6 +819,41 @@ public class DataHub {
         else layoutWeightsLand = weights.clone();
         persistBackup();
         return true;
+    }
+
+    // ==================== 车道背景色 ====================
+    public int getLaneNightTopColor()    { return laneNightTopColor; }
+    public int getLaneNightBottomColor() { return laneNightBottomColor; }
+    public int getLaneDayTopColor()      { return laneDayTopColor; }
+    public int getLaneDayBottomColor()   { return laneDayBottomColor; }
+    public int getLaneAlpha()            { return laneAlpha; }
+
+    /** 恢复车道背景色默认值 */
+    public void resetLaneColors() {
+        laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
+        laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
+        laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
+        laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
+        laneAlpha            = DEFAULT_LANE_ALPHA;
+        persistBackup();
+    }
+
+    /**
+     * 设置车道背景色，非 null 字段才写入。
+     * @param nightTop    夜间顶部色(ARGB)，null 表示不改
+     * @param nightBottom 夜间底部色(ARGB)，null 表示不改
+     * @param dayTop      白天顶部色(ARGB)，null 表示不改
+     * @param dayBottom   白天底部色(ARGB)，null 表示不改
+     * @param alpha       透明度 0~255，负数表示不改
+     */
+    public void setLaneColors(Integer nightTop, Integer nightBottom,
+                              Integer dayTop, Integer dayBottom, int alpha) {
+        if (nightTop    != null) laneNightTopColor    = nightTop;
+        if (nightBottom != null) laneNightBottomColor = nightBottom;
+        if (dayTop      != null) laneDayTopColor      = dayTop;
+        if (dayBottom   != null) laneDayBottomColor   = dayBottom;
+        if (alpha >= 0) laneAlpha = Math.min(255, Math.max(0, alpha));
+        persistBackup();
     }
     /** 剩余油量 = 加油总量 - (行驶消耗 + 怠速消耗 - 加油时起点) */
     public float getRemainingEnergy() {

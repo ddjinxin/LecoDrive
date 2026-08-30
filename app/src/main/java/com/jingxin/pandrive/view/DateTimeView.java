@@ -81,9 +81,9 @@ public class DateTimeView extends View {
     }
 
     private void updateColors() {
-        colorDateText = isNightMode ? 0xFF00E5A0 : 0xFF000000;
-        colorLedActive = isNightMode ? 0xFF00E5A0 : 0xFF000000;
-        colorLedGlow = isNightMode ? 0x6000E5A0 : 0x33000000;
+        colorDateText = isNightMode ? 0xFFFFFFFF : 0xFF000000;
+        colorLedActive = isNightMode ? 0xFFFFFFFF : 0xFF000000;
+        colorLedGlow = isNightMode ? 0x60FFFFFF : 0x33000000;
 
         datePaint.setColor(colorDateText);
         ledPaint.setColor(colorLedActive);

@@ -681,6 +681,224 @@
 
         </LinearLayout>
 
+        <!-- 车道背景色设置 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp"
+            android:text="车道背景色"
+            android:textColor="#FFCCCCCC"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- 夜间顶部 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_lane_night_top_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="夜间顶部"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_lane_night_top"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_lane_night_top_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 夜间底部 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_lane_night_bottom_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="夜间底部"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_lane_night_bottom"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_lane_night_bottom_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 白天顶部 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_lane_day_top_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="白天顶部"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_lane_day_top"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_lane_day_top_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 白天底部 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_lane_day_bottom_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="白天底部"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_lane_day_bottom"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_lane_day_bottom_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 透明度滑条 + 全部恢复默认 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="透明度"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginRight="8dp" />
+
+            <SeekBar
+                android:id="@+id/seekbar_lane_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="255"
+                android:progress="255" />
+
+            <TextView
+                android:id="@+id/label_lane_alpha_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="255"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginLeft="8dp"
+                android:minWidth="36sp"
+                android:gravity="end" />
+
+            <Button
+                android:id="@+id/btn_lane_color_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="全部默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
         <!-- Check Update / Cancel / Save / Help Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
