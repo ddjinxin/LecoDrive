@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'f972cb5d-cad1-4b00-bc1b-deddfae4ed75'
-  PropagateID: 'f972cb5d-cad1-4b00-bc1b-deddfae4ed75'
-  ReservedCode1: 'd50d0d1b-07c8-49bb-a095-29c0f3ccc64e'
-  ReservedCode2: 'd50d0d1b-07c8-49bb-a095-29c0f3ccc64e'
+  ProduceID: 'b124d7be-5a70-419c-959d-78c9d5914312'
+  PropagateID: 'b124d7be-5a70-419c-959d-78c9d5914312'
+  ReservedCode1: 'd93e928a-0b57-43be-806e-0b8fbe6db611'
+  ReservedCode2: 'd93e928a-0b57-43be-806e-0b8fbe6db611'
 ---
 
 <div align="center">
@@ -30,22 +30,30 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5)
+## 📢 Latest Release (v1.0.5.2)
 
-### Proactive Update Push (inspired by JingxinMusic UpdateHelper)
+### v1.0.5.2 — Update Notification Fix
+- **Notification tap now launches Activity directly** — Previously used PendingIntent.getBroadcast which could crash or get lost when MainActivity was in background or destroyed. Changed to PendingIntent.getActivity to directly start/bring MainActivity to foreground
+- **MainActivity launchMode=singleTop** — Prevents duplicate Activity instances on notification tap
+- **Removed broadcast receiver** — Notification tap no longer depends on broadcast; uses onNewIntent/onCreate to detect action and show install dialog
+
+### v1.0.5.1 — Floating Mode Fixes + Help Page View-ification
+- **Weather text penetration fix** — Weather text drawing is skipped when a fullscreen overlay (Settings/Help) is active
+- **Toast occlusion fix** — New FloatToast class uses an overlay View instead of system Toast in floating mode, no longer blocked by the floating window
+- **Help page View-ified** — In floating mode, help page is now shown as a View overlay instead of a fullscreen Activity
+- **Help content updated** — Added descriptions for lane background colors, floating mode, and proactive update push
+- **fillViewport added to activity_help/settings.xml** — Prevents weather video from showing through padding areas
+
+### v1.0.5 — Proactive Update Push + Lane Colors + Night White (original)
 - **Launch auto-check fixed** — Fixed a critical bug where SP-persisted "already checked" flag prevented re-checking after restart; now uses in-memory flag that resets on process restart
 - **Foreground service scheduled silent check** — `PanDriveService` silently checks for updates every 2 hours; auto-downloads new versions and pushes a notification
 - **Notification-tap install dialog** — Tapping the update notification shows an install dialog (Install Now / Later / Cancel); pending updates from previous pushes are also checked on launch
 - **Gitee-first + GitHub fallback** — Update source prioritizes Gitee for version info and APK download (faster in China); automatically falls back to GitHub when Gitee has no Release
 - **Floating-mode update check enabled** — Settings page "Check Update" button in floating mode now works (silent background check + notification) instead of showing "please exit floating mode"
-
-### Custom Lane Background Colors
 - **HSV hue gradient color bars** — Four color bars for night top/bottom and day top/bottom colors; slide to pick and save instantly (ported from JingxinMusic lyric highlight color bar)
 - **Transparency slider** — Lane background opacity 0–100% adjustable
 - **Reset to default** — Per-row "Default" button + bottom "Reset All" button
-
-### Night-mode Time Area Changed to White
-- Night date / LED colors changed from neon green `#00E5A0` to white `#FFFFFF`
+- **Night-mode time area changed to white** — Night date / LED colors changed from neon green `#00E5A0` to white `#FFFFFF`
 
 ---
 

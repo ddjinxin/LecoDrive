@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '76bf3eb8-9e88-4c6b-92dd-8c347da70620'
-  PropagateID: '76bf3eb8-9e88-4c6b-92dd-8c347da70620'
-  ReservedCode1: '11d9f467-ec92-4f4a-a93f-dab3208d7565'
-  ReservedCode2: '11d9f467-ec92-4f4a-a93f-dab3208d7565'
+  ProduceID: '46dc161e-3f1f-4297-80ea-4add61469613'
+  PropagateID: '46dc161e-3f1f-4297-80ea-4add61469613'
+  ReservedCode1: '9aa51866-1495-4a8f-8466-f566706460f2'
+  ReservedCode2: '9aa51866-1495-4a8f-8466-f566706460f2'
 ---
 
 <div align="center">
@@ -30,22 +30,30 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5)
+## 📢 最新版本 (v1.0.5.2)
 
-### 主动推送更新（参考静心音乐 UpdateHelper）
+### v1.0.5.2 — 通知推送更新修复
+- **通知点击改为直接启动 Activity** — 原来用 PendingIntent.getBroadcast 发广播，MainActivity 在后台或已销毁时弹窗会崩溃或丢失。改为 PendingIntent.getActivity 直接启动/唤醒 MainActivity
+- **MainActivity 加 launchMode=singleTop** — 避免通知点击重复创建 Activity 实例
+- **删除广播接收器** — 通知点击不再依赖广播，改用 onNewIntent/onCreate 识别 action 弹安装窗
+
+### v1.0.5.1 — 悬浮态修复 + 帮助页 View 化
+- **天气文字穿透修复** — 设置页/帮助页全屏覆盖时跳过天气文字绘制，不再透过
+- **Toast 遮挡修复** — 新建 FloatToast，悬浮态用浮层 View 替代系统 Toast，不再被悬浮窗遮挡
+- **帮助页 View 化** — 悬浮态下帮助页以 View 叠加方式显示，不再全屏覆盖 Activity
+- **帮助内容更新** — 新增车道背景色/悬浮模式/主动推送更新说明
+- **activity_help/settings.xml 加 fillViewport** — 防止天气视频从 padding 区域透出
+
+### v1.0.5 — 主动推送更新 + 车道背景色 + 夜间白色（原始版本）
 - **启动自动检查更新** — 修复原有的 bug（之前用 SP 持久化标记导致检查过一次就永远不检查），改为进程内存标记，进程重启自动重置
 - **前台服务定时静默检查** — `PanDriveService` 每 2 小时后台静默检查更新，发现新版本自动下载并推送通知
 - **通知点击弹窗安装** — 点击通知弹安装窗（立即安装 / 稍后 / 取消三选项），启动时也会检查上次推送未处理的更新
 - **Gitee 优先 + GitHub 回退** — 更新源优先从 Gitee 拉取版本信息和下载 APK（国内快），Gitee 无 Release 时自动回退 GitHub
 - **悬浮态检查更新改为可用** — 悬浮模式下设置页检查更新从「请退出悬浮模式」改为后台静默检查 + 通知推送
-
-### 车道背景色自定义
 - **HSV 色相渐变条选色** — 夜间顶/底色、白天顶/底色四根色条，滑动即选即存（移植自静心音乐歌词高亮色条）
 - **透明度滑块** — 车道背景透明度 0~100% 可调
 - **一键恢复默认** — 每行独立「默认」按钮 + 底部「全部默认」按钮
-
-### 夜间时间区域改白色
-- 夜间日期 / LED 颜色从荧光绿 `#00E5A0` 改为白色 `#FFFFFF`
+- **夜间时间区域改白色** — 夜间日期 / LED 颜色从荧光绿 `#00E5A0` 改为白色 `#FFFFFF`
 
 ---
 
