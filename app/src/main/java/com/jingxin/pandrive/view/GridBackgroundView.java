@@ -13,10 +13,10 @@ import android.graphics.Shader;
 import android.media.MediaPlayer;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.graphics.SurfaceTexture;
 import android.view.Gravity;
 import android.view.Surface;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
+import android.view.TextureView;
 import android.widget.FrameLayout;
 
 import com.jingxin.pandrive.data.WeatherHelper;
@@ -87,8 +87,9 @@ public class GridBackgroundView extends FrameLayout {
     // ==================== 壁纸相关 ====================
     private Bitmap wallpaperBitmap = null;
     private String currentWallpaperPath = null;
-    private SurfaceView wallpaperSurfaceView = null;
+    private TextureView wallpaperTextureView = null;
     private MediaPlayer wallpaperMediaPlayer = null;
+    private SurfaceTexture wallpaperSurfaceTexture = null;
     private boolean wallpaperActive = false;
     private boolean videoPrepared = false;
 
@@ -389,38 +390,43 @@ public class GridBackgroundView extends FrameLayout {
         currentWallpaperPath = path;
         videoPrepared = false;
 
-        // 创建SurfaceView作为第一个子View（最底层）
-        if (wallpaperSurfaceView == null) {
-            wallpaperSurfaceView = new SurfaceView(getContext());
-            wallpaperSurfaceView.setLayoutParams(
+        // 使用 TextureView 替代 SurfaceView
+        // SurfaceView 会创建独立的 Surface 窗口，其 frame 不跟随 View reparent 到覆盖窗口，
+        // 在横屏悬浮模式下右边界超出悬浮窗口，遮挡乐酷桌面右侧按钮。
+        // TextureView 是普通 View，frame 跟随 View 层级正确移动，无此问题。
+        if (wallpaperTextureView == null) {
+            wallpaperTextureView = new TextureView(getContext());
+            wallpaperTextureView.setLayoutParams(
                     new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-            // SurfaceView放在最底层，不拦截触摸事件
-            wallpaperSurfaceView.setZOrderOnTop(false);
-            addView(wallpaperSurfaceView, 0);
+            addView(wallpaperTextureView, 0);
         }
-        wallpaperSurfaceView.setVisibility(VISIBLE);
-
-        wallpaperSurfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        wallpaperTextureView.setVisibility(VISIBLE);
+        wallpaperTextureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                startVideoPlayback(holder);
+            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+                startVideoPlayback(surface);
             }
 
             @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
                 updateVideoLayout();
             }
 
             @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
+            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
                 stopVideoPlayback();
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
 
         Log.d(TAG, "Video wallpaper setup: " + path);
     }
 
-    private void startVideoPlayback(SurfaceHolder holder) {
+    private void startVideoPlayback(SurfaceTexture surfaceTexture) {
         if (currentWallpaperPath == null) {
             return;
         }
@@ -429,7 +435,7 @@ public class GridBackgroundView extends FrameLayout {
 
         try {
             wallpaperMediaPlayer = new MediaPlayer();
-            wallpaperMediaPlayer.setDisplay(holder);
+            wallpaperMediaPlayer.setSurface(new Surface(surfaceTexture));
             wallpaperMediaPlayer.setDataSource(currentWallpaperPath);
             wallpaperMediaPlayer.setLooping(true);
             wallpaperMediaPlayer.setVolume(0f, 0f); // 静音
@@ -437,9 +443,9 @@ public class GridBackgroundView extends FrameLayout {
             wallpaperMediaPlayer.setOnPreparedListener(mp -> {
                 videoPrepared = true;
                 mp.start();
-                // 延迟更新layout：等待SurfaceView完成layout
-                if (wallpaperSurfaceView != null) {
-                    wallpaperSurfaceView.post(() -> updateVideoLayout());
+                // 延迟更新layout：等待TextureView完成layout
+                if (wallpaperTextureView != null) {
+                    wallpaperTextureView.post(() -> updateVideoLayout());
                 }
                 Log.d(TAG, "Video wallpaper started");
             });
@@ -474,7 +480,7 @@ public class GridBackgroundView extends FrameLayout {
      * 更新SurfaceView的布局参数，实现视频center-crop
      */
     private void updateVideoLayout() {
-        if (wallpaperSurfaceView == null || wallpaperMediaPlayer == null) return;
+        if (wallpaperTextureView == null || wallpaperMediaPlayer == null) return;
 
         int parentW = getWidth();
         int parentH = getHeight();
@@ -494,13 +500,13 @@ public class GridBackgroundView extends FrameLayout {
         int leftOffset = (parentW - scaledW) / 2;
         int topOffset = (parentH - scaledH) / 2;
 
-        LayoutParams lp = (LayoutParams) wallpaperSurfaceView.getLayoutParams();
+        LayoutParams lp = (LayoutParams) wallpaperTextureView.getLayoutParams();
         lp.width = scaledW;
         lp.height = scaledH;
         lp.gravity = Gravity.TOP | Gravity.START;
         lp.leftMargin = leftOffset;
         lp.topMargin = topOffset;
-        wallpaperSurfaceView.setLayoutParams(lp);
+        wallpaperTextureView.setLayoutParams(lp);
 
         Log.d(TAG, "Video layout: parent=" + parentW + "x" + parentH
                 + " video=" + videoW + "x" + videoH
@@ -518,10 +524,14 @@ public class GridBackgroundView extends FrameLayout {
         // 释放视频壁纸
         stopVideoPlayback();
 
-        // 移除SurfaceView子View
-        if (wallpaperSurfaceView != null) {
-            removeView(wallpaperSurfaceView);
-            wallpaperSurfaceView = null;
+        // 移除TextureView子View
+        if (wallpaperTextureView != null) {
+            removeView(wallpaperTextureView);
+            wallpaperTextureView = null;
+        }
+        if (wallpaperSurfaceTexture != null) {
+            wallpaperSurfaceTexture.release();
+            wallpaperSurfaceTexture = null;
         }
 
         wallpaperActive = false;

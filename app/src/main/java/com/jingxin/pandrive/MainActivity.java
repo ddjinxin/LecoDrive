@@ -2,9 +2,11 @@ package com.jingxin.pandrive;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -14,6 +16,7 @@ import android.provider.Settings;
 import android.view.MotionEvent;
 import android.view.TextureView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.util.DisplayMetrics;
 import android.widget.Toast;
@@ -22,6 +25,8 @@ import android.widget.FrameLayout;
 
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
+import com.jingxin.pandrive.floatwindow.FloatLayoutHelper;
+import com.jingxin.pandrive.floatwindow.LecoFloatManager;
 import com.jingxin.pandrive.gl.Car3DRenderer;
 import com.jingxin.pandrive.gl.GlTextureRenderer;
 import com.jingxin.pandrive.theme.ThemeController;
@@ -34,6 +39,7 @@ import com.jingxin.pandrive.view.ICompassView;
 import com.jingxin.pandrive.view.LaneView;
 import com.jingxin.pandrive.view.MileageView;
 import com.jingxin.pandrive.view.NavigationBarView;
+import com.jingxin.pandrive.view.SettingsView;
 import com.jingxin.pandrive.view.SpeedometerView;
 import com.jingxin.pandrive.update.UpdateChecker;
 
@@ -51,6 +57,10 @@ public class MainActivity extends Activity implements
     private static final int REQ_LOCATION = 2;
     private static final int REQ_STORAGE = 3;
     private static final int REQ_ALL_FILES = 4;
+    private static final int REQ_OVERLAY = 5;
+
+    // 悬浮布局刷新广播接收器
+    private android.content.BroadcastReceiver floatLayoutReceiver;
 
     private DateTimeView dateTimeView;
     private SpeedometerView speedometerView;
@@ -67,6 +77,7 @@ public class MainActivity extends Activity implements
     private Car3DRenderer car3DRenderer;
     private GlTextureRenderer glTextureRenderer;
     private android.widget.ImageView themeButton;
+    private SettingsView settingsView; // 悬浮态下的设置页 View
 
     private ThemeController themeController;
     private DataHub dataHub;
@@ -83,6 +94,22 @@ public class MainActivity extends Activity implements
     private boolean checkFailed = false;
     // 模型切换防抖时间戳
     private long lastModelSwitchTime = 0;
+
+    // ==================== 悬浮态 findViewById 重定向 ====================
+
+    /**
+     * 悬浮态下内容 View 被剥离到覆盖窗口，Activity.findViewById 找不到子 View。
+     * 重写后悬浮态自动从 LecoFloatManager 的覆盖窗口容器中查找，非悬浮态走原逻辑。
+     */
+    @Override
+    public <T extends View> T findViewById(int id) {
+        LecoFloatManager fm = LecoFloatManager.getInstance();
+        if (fm.isCurrentFloatingActivity(this)) {
+            View v = fm.findViewById(id);
+            if (v != null) return (T) v;
+        }
+        return super.findViewById(id);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -181,6 +208,35 @@ public class MainActivity extends Activity implements
 
         // Chain permission checks: notification -> storage -> location
         checkPermissionsChain();
+
+        // 注册悬浮布局刷新广播接收器（非悬浮模式下不触发，不影响原有逻辑）
+        registerFloatLayoutReceiver();
+    }
+
+    /**
+     * 注册悬浮布局刷新广播接收器。
+     * 收到广播时按悬浮区域尺寸重新应用权重并刷新所有 View。
+     * 非悬浮模式下不会收到此广播，完全不影响原有逻辑。
+     */
+    private void registerFloatLayoutReceiver() {
+        floatLayoutReceiver = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (LecoFloatManager.ACTION_FLOAT_LAYOUT_REFRESH.equals(intent.getAction())) {
+                    if (LecoFloatManager.getInstance().isFloating()) {
+                        // 悬浮态：按悬浮区域宽高比重新应用布局权重
+                        applyLayoutWeightsForFloat();
+                        forceRefreshAllViews();
+                    }
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter(LecoFloatManager.ACTION_FLOAT_LAYOUT_REFRESH);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(floatLayoutReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(floatLayoutReceiver, filter);
+        }
     }
 
     private void setupGL() {
@@ -280,7 +336,11 @@ public class MainActivity extends Activity implements
         // Theme button: single tap toggles style, long press opens settings
         themeButton.setOnClickListener(v -> toggleTheme());
         themeButton.setOnLongClickListener(v -> {
-            startActivity(new Intent(this, SettingsActivity.class));
+            if (LecoFloatManager.getInstance().isFloating()) {
+                showFloatSettings();
+            } else {
+                startActivity(new Intent(this, SettingsActivity.class));
+            }
             return true;
         });
     }
@@ -340,6 +400,27 @@ public class MainActivity extends Activity implements
                     Manifest.permission.ACCESS_FINE_LOCATION,
                     Manifest.permission.ACCESS_COARSE_LOCATION
             }, REQ_LOCATION);
+            return; // wait for callback
+        }
+        // Step 4: overlay permission (for Leco float mode)
+        checkOverlayPermission();
+    }
+
+    /**
+     * 悬浮窗权限请求（乐酷桌面悬浮模式需要）。
+     * 非悬浮模式不需要此权限，但提前请求以便乐酷发 showmap 时直接可用。
+     */
+    private void checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && !Settings.canDrawOverlays(this)) {
+            Toast.makeText(this, "请授予悬浮窗权限以支持乐酷桌面悬浮显示", Toast.LENGTH_LONG).show();
+            try {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQ_OVERLAY);
+            } catch (Exception e) {
+                Toast.makeText(this, "无法打开悬浮窗权限设置页面", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -361,7 +442,8 @@ public class MainActivity extends Activity implements
             }
             checkLocationPermission();
         } else if (requestCode == REQ_LOCATION) {
-            // End of chain
+            // Location done, continue to overlay permission
+            checkOverlayPermission();
         }
     }
 
@@ -379,6 +461,14 @@ public class MainActivity extends Activity implements
             }
             // Continue chain regardless
             checkLocationPermission();
+        } else if (requestCode == REQ_OVERLAY) {
+            // Returned from overlay permission settings
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                    && Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "悬浮窗权限已授予", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "未授予悬浮窗权限，乐酷桌面悬浮模式不可用", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -387,6 +477,13 @@ public class MainActivity extends Activity implements
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        // 悬浮态下系统配置变化不影响悬浮窗（尺寸由乐酷广播控制），只刷新布局
+        if (LecoFloatManager.getInstance().isFloating()) {
+            applyLayoutWeightsForFloat();
+            forceRefreshAllViews();
+            return;
+        }
+        // ===== 以下为非悬浮态原有逻辑，完全不变 =====
         // 窗口大小变化时先切换全屏/窗口模式，再调整布局比例，最后刷新View
         applyFullscreenMode();
         applyLayoutWeights();
@@ -396,8 +493,14 @@ public class MainActivity extends Activity implements
     /**
      * 根据横竖屏从DataHub读取布局比例，应用到5个区域
      * 顺序：日期时间/仪表盘/指南针/导航/车道线，合计=100
+     * 悬浮态下按悬浮区域宽高比判断横竖屏，非悬浮态用 Configuration.orientation（原逻辑不变）
      */
     private void applyLayoutWeights() {
+        if (LecoFloatManager.getInstance().isFloating()) {
+            applyLayoutWeightsForFloat();
+            return;
+        }
+        // ===== 以下为非悬浮态原有逻辑，完全不变 =====
         boolean isPortrait = getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_PORTRAIT;
 
@@ -511,7 +614,14 @@ public class MainActivity extends Activity implements
      * 窗口大小变化后强制刷新所有View
      */
     private void forceRefreshAllViews() {
-        View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+        View rootView;
+        if (LecoFloatManager.getInstance().isFloating()) {
+            // 悬浮态：从覆盖窗口查找根 View
+            rootView = LecoFloatManager.getInstance().findViewById(R.id.grid_background);
+        } else {
+            // 非悬浮态：原逻辑
+            rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+        }
         if (rootView != null) {
             rootView.requestLayout();
         }
@@ -524,13 +634,60 @@ public class MainActivity extends Activity implements
         if (mileageView != null) mileageView.invalidate();
         if (laneView != null) laneView.invalidate();
         if (navigationBarView != null) navigationBarView.requestLayout();
-        if (textureView != null) car3DRenderer.requestRender();
+        if (textureView != null && car3DRenderer != null) {
+            car3DRenderer.requestRender();
+        }
+    }
+
+    /**
+     * 悬浮态下在悬浮窗口内显示设置页（叠加在 GridBackgroundView 上）
+     */
+    private void showFloatSettings() {
+        if (settingsView != null) return; // 已显示
+        settingsView = new SettingsView(this);
+        settingsView.onClose = () -> {
+            if (gridBackgroundView != null && settingsView != null) {
+                gridBackgroundView.removeView(settingsView);
+            }
+            settingsView = null;
+            // 保存后重新应用布局（设置页可能修改了布局比例/车型等）
+            applyLayoutWeights();
+        };
+        if (gridBackgroundView != null) {
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT);
+            gridBackgroundView.addView(settingsView, lp);
+        }
+    }
+
+    /**
+     * 悬浮态下按悬浮区域尺寸重新应用五区域布局权重。
+     * 非悬浮态不调用此方法。
+     */
+    private void applyLayoutWeightsForFloat() {
+        View rootView = gridBackgroundView;
+        if (rootView == null) {
+            rootView = LecoFloatManager.getInstance().findViewById(R.id.grid_background);
+        }
+        if (rootView != null) {
+            FloatLayoutHelper.applyLayoutWeightsForFloat(rootView, dataHub);
+            if (rootView instanceof GridBackgroundView) {
+                ((GridBackgroundView) rootView).refreshEdgeGeometry();
+            }
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         if (checkFailed) return;
+        // 悬浮态：Activity 被推回后台后又被拉回，LecoFloatManager 会 moveTaskToBack。
+        // 此处跳过重复初始化，View 已在悬浮窗口中正常运行。
+        if (LecoFloatManager.getInstance().isFloating()) {
+            return;
+        }
+        // ===== 以下为非悬浮态原有逻辑，完全不变 =====
         applyLayoutWeights();
         dataHub.registerSensors();
         dataHub.registerLocation();
@@ -595,6 +752,9 @@ public class MainActivity extends Activity implements
     protected void onPause() {
         super.onPause();
         if (checkFailed) return;
+        // 悬浮态下不暂停壁纸（View 在悬浮窗口中继续运行）
+        if (LecoFloatManager.getInstance().isFloating()) return;
+        // ===== 以下为非悬浮态原有逻辑，完全不变 =====
         // GL渲染的暂停/恢复改由onStop/onStart控制
         dataHub.unregisterSensors();
         // 退出时把油耗tick累加值+所有设置同步到备份文件
@@ -606,7 +766,8 @@ public class MainActivity extends Activity implements
     protected void onStart() {
         super.onStart();
         if (checkFailed) return;
-        if (glTextureRenderer != null) {
+        // 悬浮态下 GL 线程保持运行，不重复 resume
+        if (glTextureRenderer != null && !LecoFloatManager.getInstance().isFloating()) {
             glTextureRenderer.onResume();
         }
         Intent serviceIntent = new Intent(this, PanDriveService.class);
@@ -623,7 +784,8 @@ public class MainActivity extends Activity implements
         if (checkFailed) return;
         // 兜底再保存一次，确保能耗累加器不丢
         dataHub.persistAll();
-        if (glTextureRenderer != null) {
+        // 悬浮态下 GL 线程保持运行，不暂停（Activity 被 onStop 但悬浮窗仍需渲染）
+        if (glTextureRenderer != null && !LecoFloatManager.getInstance().isFloating()) {
             glTextureRenderer.onPause();
         }
     }
@@ -632,6 +794,11 @@ public class MainActivity extends Activity implements
     protected void onDestroy() {
         super.onDestroy();
         if (checkFailed) return;
+        // 注销悬浮布局刷新广播接收器
+        if (floatLayoutReceiver != null) {
+            try { unregisterReceiver(floatLayoutReceiver); } catch (Exception ignored) {}
+            floatLayoutReceiver = null;
+        }
         themeController.removeListener(this);
         dataHub.removeSpeedListener(this);
         dataHub.removeDirectionListener(this);
