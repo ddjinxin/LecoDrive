@@ -17,6 +17,7 @@ import android.graphics.SurfaceTexture;
 import android.view.Gravity;
 import android.view.Surface;
 import android.view.TextureView;
+import android.view.View;
 import android.widget.FrameLayout;
 
 import com.jingxin.pandrive.data.WeatherHelper;
@@ -602,8 +603,30 @@ public class GridBackgroundView extends FrameLayout {
         // 3. 渲染子View（视频TextureView在index 0 → 最底层，仪表盘等在上面）
         super.dispatchDraw(canvas);
 
-        // 4. 天气文字
-        drawWeatherLabels(canvas, w, h);
+        // 4. 天气文字（被全屏覆盖页遮挡时跳过）
+        if (!hasFullscreenOverlay()) {
+            drawWeatherLabels(canvas, w, h);
+        }
+    }
+
+    /**
+     * 是否有全屏覆盖的子 View（如设置页、帮助页、文件选择器），
+     * 有时跳过天气文字绘制，避免穿透覆盖层。
+     */
+    private boolean hasFullscreenOverlay() {
+        int w = getWidth();
+        int h = getHeight();
+        if (w <= 0 || h <= 0) return false;
+        for (int i = 0; i < getChildCount(); i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() != View.VISIBLE) continue;
+            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
+            if (lp == null) continue;
+            boolean matchW = lp.width == FrameLayout.LayoutParams.MATCH_PARENT;
+            boolean matchH = lp.height == FrameLayout.LayoutParams.MATCH_PARENT;
+            if (matchW && matchH) return true;
+        }
+        return false;
     }
 
     private void drawWeatherLabels(Canvas canvas, int w, int h) {

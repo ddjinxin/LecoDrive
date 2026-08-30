@@ -1,7 +1,6 @@
 package com.jingxin.pandrive.view;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
@@ -15,10 +14,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
-
 import com.jingxin.pandrive.FilePickerActivity;
-import com.jingxin.pandrive.HelpActivity;
 import com.jingxin.pandrive.R;
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
@@ -190,17 +186,21 @@ public class SettingsView extends ScrollView {
         Button btnCheckUpdate = findViewById(R.id.btn_check_update);
         btnCheckUpdate.setOnClickListener(v -> {
             // 悬浮态下无 Activity，走后台静默检查：发现新版本下载后推送通知，点击通知弹安装窗
-            UpdateChecker.getInstance(getContext()).checkSilently();
-            Toast.makeText(getContext(), "正在后台检查更新，有新版本将推送通知", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "正在后台检查更新，有新版本将推送通知");
+            UpdateChecker.getInstance(getContext()).checkSilentlyWithFeedback(getContext());
         });
 
         Button btnHelp = findViewById(R.id.btn_help);
         btnHelp.setOnClickListener(v -> {
-            // 悬浮态下打开帮助需退出悬浮
-            close();
-            Intent intent = new Intent(getContext(), HelpActivity.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            getContext().startActivity(intent);
+            // 悬浮态下用 HelpView 叠加在 GridBackgroundView 上
+            final GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv == null) return;
+            final HelpView helpView = new HelpView(getContext());
+            helpView.onClose = () -> gv.removeView(helpView);
+            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT);
+            gv.addView(helpView, lp);
         });
     }
 
@@ -218,8 +218,7 @@ public class SettingsView extends ScrollView {
                 .putBoolean("weather_animation_enabled", weatherAnimationEnabled).apply();
         updateWeatherAnimationStatus();
         updateWallpaperStatus();
-        Toast.makeText(getContext(), weatherAnimationEnabled ? "天气动画已开启" : "天气动画已关闭",
-                Toast.LENGTH_SHORT).show();
+        FloatToast.show(getContext(), weatherAnimationEnabled ? "天气动画已开启" : "天气动画已关闭");
         refreshMainWallpaper();
         close();
     }
@@ -263,7 +262,7 @@ public class SettingsView extends ScrollView {
     private void restoreDefaultWallpapers() {
         File dir = GridBackgroundView.ensureWallpaperDir();
         if (dir == null) {
-            Toast.makeText(getContext(), "无法创建壁纸目录", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "无法创建壁纸目录");
             return;
         }
         if (weatherAnimationEnabled) {
@@ -298,9 +297,9 @@ public class SettingsView extends ScrollView {
             ok = false;
         }
         if (ok) {
-            Toast.makeText(getContext(), "已恢复默认壁纸", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "已恢复默认壁纸");
         } else {
-            Toast.makeText(getContext(), "恢复默认壁纸失败", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "恢复默认壁纸失败");
         }
         updateWallpaperStatus();
         refreshMainWallpaper();
@@ -317,7 +316,7 @@ public class SettingsView extends ScrollView {
             if (f.exists() && f.isFile()) { f.delete(); deleted = true; }
         }
         if (deleted) {
-            Toast.makeText(getContext(), ("day".equals(type) ? "白天" : "夜间") + "壁纸已清除", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), ("day".equals(type) ? "白天" : "夜间") + "壁纸已清除");
         }
         updateWallpaperStatus();
         refreshMainWallpaper();
@@ -520,7 +519,7 @@ public class SettingsView extends ScrollView {
 
         if (!saveLayoutWeights()) return;
 
-        Toast.makeText(getContext(), "设置已保存", Toast.LENGTH_SHORT).show();
+        FloatToast.show(getContext(), "设置已保存");
         close();
     }
 
@@ -543,12 +542,12 @@ public class SettingsView extends ScrollView {
     private boolean saveLayoutWeights() {
         float[] land = parseLayoutWeights(editLayoutLand);
         if (land == null) {
-            Toast.makeText(getContext(), "横屏布局比例合计需为100", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "横屏布局比例合计需为100");
             return false;
         }
         float[] port = parseLayoutWeights(editLayoutPort);
         if (port == null) {
-            Toast.makeText(getContext(), "竖屏布局比例合计需为100", Toast.LENGTH_SHORT).show();
+            FloatToast.show(getContext(), "竖屏布局比例合计需为100");
             return false;
         }
         dataHub.setLayoutWeights(false, land);

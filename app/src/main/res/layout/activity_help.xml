@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FF1A1A2E"
+    android:fillViewport="true"
     android:padding="20dp">
 
     <LinearLayout
@@ -140,7 +141,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="油箱容量：录入一下自己油箱的标准油量，主要是为了中途校准剩余续航使用。"
+            android:text="油箱容量：录入自己油箱的标准油量，主要用于中途校准剩余续航使用。电车则录入电池容量(kWh)。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -149,7 +150,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="不加油，根据车机上数据校准剩余续航：只修改剩余续航，不修改加油量，将结合油箱容量这个数据推算剩余油量的百分比，显示在首页的信息中。"
+            android:text="不加油，根据车机上数据校准剩余续航：只修改剩余续航，不修改加油量，将结合油箱容量推算剩余油量的百分比，显示在首页的信息中。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -158,7 +159,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="去加油站加油时，记下加油前车辆的续航和本次加油的升数，录入加油量和剩余续航，推算出新的剩余续航，并且油量会重置为100%"
+            android:text="去加油站加油时，记下加油前车辆的续航和本次加油的升数，录入加油量和剩余续航，推算出新的剩余续航，并且油量会重置为100%。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -167,7 +168,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="累计里程：你如果发现和车上的续航里程有差异或者因某些原因清零，按车上累计里程录入即可"
+            android:text="累计里程：如果发现和车上的续航里程有差异或因某些原因清零，按车上累计里程录入即可。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -176,7 +177,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="怠速油耗：这是每小时怠速耗费的油量，经验值，2.0的车按1.2-1.4吧，看各人的情况，这个数据用来计算剩余油量和剩余续航的。"
+            android:text="怠速油耗：这是每小时怠速耗费的油量，经验值，2.0的车按1.2-1.4即可，这个数据用来计算剩余油量和剩余续航。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -185,7 +186,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="近期油耗周期：推算剩余油量和剩余续航使用的是近期的油耗，也就是车辆在这个2分钟到5分钟周期内以什么周期来计算一次平均油耗，如果是120秒，则2分钟平均一次，每秒会根据当前的速度与油耗的对应关系生成一个数据，2分钟整体平均一次。然后显示在首页的近期油耗中。"
+            android:text="近期油耗周期：推算剩余油量和剩余续航使用的是近期的油耗，即车辆在2分钟到5分钟周期内以什么周期来计算一次平均油耗。例如选择120秒，则每2分钟平均一次，每秒根据当前速度与油耗的对应关系生成一个数据，2分钟整体平均一次，显示在首页的近期油耗中。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -203,7 +204,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="分段油耗设置：根据不同的车，各人自行估计设置。20以下是多少油耗，20-40是多少，40-60是多少……每秒系统会取一次数"
+            android:text="分段油耗设置：根据不同的车，各人自行估计设置。20以下是多少油耗，20-40是多少，40-60是多少……每秒系统会取一次数。电车同理，对应不同速度段的电耗(kWh/100km)。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -221,7 +222,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="电车的大体逻辑也是一样的。"
+            android:text="电车的大体逻辑也是一样的，区别在于油耗改为电耗(kWh/100km)，油量改为剩余电量百分比。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -239,7 +240,16 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="壁纸设置：白天/夜间/天气/默认四个按钮，可分别设置对应场景壁纸。点击后从文件选择图片或视频，天气按钮切换为天气动画背景。"
+            android:text="车道背景色：可分别自定义夜间顶部/底部和白天顶部/底部的车道渐变色，通过滑动色相条选择颜色，即选即存。透明度滑条可调节车道背景的透明度(0~100%)，使壁纸能在车道区域透出。每行可单独恢复默认，也可点击&quot;全部默认&quot;一键恢复。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="壁纸设置：白天/夜间/天气/默认四个按钮，可分别设置对应场景壁纸。点击白天或夜间后从文件选择图片或视频，长按可清除已设置的壁纸；天气按钮切换为天气动画背景（与壁纸互斥）；默认按钮恢复内置默认壁纸。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
@@ -257,17 +267,35 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="应用启动时会自动检查新版本；也可在设置页点击“检查更新”手动触发。检测到新版本会后台静默下载，完成后提示安装。"
+            android:text="自动检查：应用启动时自动检查新版本，前台服务每2小时也会静默检查一次。检测到新版本会后台静默下载，完成后推送通知，点击通知弹出安装窗口。&#10;手动检查：在设置页点击&quot;检查更新&quot;手动触发，检查结果会以浮层提示。&#10;更新源：优先从 Gitee 拉取版本信息并下载 APK（国内速度更快），Gitee 无 Release 时自动回退到 GitHub。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
             android:layout_marginBottom="16dp" />
 
-        <!-- 五、数据说明 -->
+        <!-- 五、悬浮模式 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="五、数据说明"
+            android:text="五、悬浮模式"
+            android:textSize="16sp"
+            android:textColor="#FF00D4E8"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="本应用集成乐酷桌面悬浮模式，在乐酷桌面下进入悬浮后，全部操作（设置、帮助、壁纸选择、文件浏览、检查更新）均在悬浮窗口内以叠加页面方式完成，不需要退出悬浮模式。提示信息也以浮层方式显示在悬浮窗口上层，不会被遮挡。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 六、数据说明 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="六、数据说明"
             android:textSize="16sp"
             android:textColor="#FF00D4E8"
             android:layout_marginBottom="8dp" />

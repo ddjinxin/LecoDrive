@@ -21,6 +21,7 @@ import android.widget.Toast;
 import androidx.core.content.FileProvider;
 
 import com.jingxin.pandrive.R;
+import com.jingxin.pandrive.view.FloatToast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -193,6 +194,74 @@ public class UpdateChecker {
                 postUpdateNotification(info);
             } catch (Exception e) {
                 Log.e(TAG, "checkSilently 异常: " + e.getMessage(), e);
+                isChecking = false;
+            }
+        }).start();
+    }
+
+    /**
+     * 带反馈的后台静默检查（悬浮态设置页手动触发）：
+     * 在 isChecking 被阻塞、已是最新版本、网络失败等场景给用户 Toast 反馈。
+     * 发现新版本时走 checkSilently 同样逻辑（下载 + 通知推送）。
+     */
+    public void checkSilentlyWithFeedback(Context context) {
+        if (isChecking) {
+            Log.d(TAG, "已有检查任务在运行，跳过 checkSilentlyWithFeedback");
+            mainHandler.post(() -> FloatToast.show(context, "正在检查更新，请稍候..."));
+            return;
+        }
+        isChecking = true;
+
+        new Thread(() -> {
+            try {
+                String currentVer = getCurrentVersionName();
+                if (currentVer == null) {
+                    Log.e(TAG, "checkSilentlyWithFeedback: 无法获取当前版本号");
+                    mainHandler.post(() -> FloatToast.show(context, "无法获取当前版本号"));
+                    isChecking = false;
+                    return;
+                }
+                ReleaseInfo info = fetchLatestRelease();
+                if (info == null) {
+                    Log.w(TAG, "checkSilentlyWithFeedback: 无法获取最新版本（网络问题）");
+                    mainHandler.post(() -> FloatToast.show(context, "无法连接更新服务器"));
+                    isChecking = false;
+                    return;
+                }
+                String latestVer = normalizeVersion(info.tagName);
+                String currentNorm = normalizeVersion(currentVer);
+                if (compareVersions(currentNorm, latestVer) >= 0) {
+                    Log.i(TAG, "checkSilentlyWithFeedback: 已是最新版本");
+                    mainHandler.post(() -> FloatToast.show(context, "已是最新版本"));
+                    isChecking = false;
+                    return;
+                }
+                if (isVersionIgnored(info.tagName)) {
+                    Log.i(TAG, "checkSilentlyWithFeedback: 用户已忽略 " + info.tagName);
+                    mainHandler.post(() -> FloatToast.show(context, "新版本 " + info.tagName + " 已忽略，可在非悬浮模式手动检查更新", Toast.LENGTH_LONG));
+                    isChecking = false;
+                    return;
+                }
+                Log.i(TAG, "checkSilentlyWithFeedback: 后台下载 APK: " + info.downloadUrl);
+                mainHandler.post(() -> FloatToast.show(context, "发现新版本 " + info.tagName + "，正在下载..."));
+                boolean ok = downloadApk(info.downloadUrl);
+                if (!ok) {
+                    Log.e(TAG, "checkSilentlyWithFeedback: 下载失败");
+                    mainHandler.post(() -> FloatToast.show(context, "下载失败，请检查网络"));
+                    isChecking = false;
+                    return;
+                }
+                appContext.getSharedPreferences(SP_NAME, Context.MODE_PRIVATE).edit()
+                        .putString(KEY_PENDING_VER, info.tagName)
+                        .putString(KEY_PENDING_NOTES, info.notes != null ? info.notes : "")
+                        .putBoolean(KEY_PENDING, true)
+                        .apply();
+                isChecking = false;
+                postUpdateNotification(info);
+                mainHandler.post(() -> FloatToast.show(context, "新版本已下载完成，点击通知安装", Toast.LENGTH_LONG));
+            } catch (Exception e) {
+                Log.e(TAG, "checkSilentlyWithFeedback 异常: " + e.getMessage(), e);
+                mainHandler.post(() -> FloatToast.show(context, "检查更新异常: " + e.getMessage()));
                 isChecking = false;
             }
         }).start();
