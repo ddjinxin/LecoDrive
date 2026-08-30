@@ -382,9 +382,27 @@ public class UpdateChecker {
         return sb.toString();
     }
 
-    /** 从 JSON 中提取第一个 asset 的 browser_download_url */
+    /** 从 JSON 中提取第一个 .apk asset 的 browser_download_url
+     *  Gitee/GitHub 的 assets 列表中可能包含源码包(.zip/.tar.gz)，需过滤出 APK。 */
     private String extractFirstAssetUrl(String json) {
         String key = "browser_download_url";
+        int searchFrom = 0;
+        while (true) {
+            int idx = json.indexOf(key, searchFrom);
+            if (idx < 0) break;
+            int valStart = json.indexOf("\"", json.indexOf(":", idx));
+            if (valStart < 0) break;
+            valStart++;
+            int end = json.indexOf("\"", valStart);
+            if (end < 0) break;
+            String url = json.substring(valStart, end);
+            // 优先返回 .apk 后缀的 URL，跳过 .zip/.tar.gz 源码包
+            if (url.toLowerCase().endsWith(".apk")) {
+                return url;
+            }
+            searchFrom = end + 1;
+        }
+        // 没找到 .apk，回退取第一个 asset URL（兼容旧逻辑）
         int idx = json.indexOf(key);
         if (idx < 0) return null;
         idx = json.indexOf("\"", json.indexOf(":", idx));
