@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '3ce70851-3a10-4ad5-acaf-4fd333cb0aa0'
-  PropagateID: '3ce70851-3a10-4ad5-acaf-4fd333cb0aa0'
-  ReservedCode1: '86d819c4-0e92-4e8f-8bcb-60b6ce114337'
-  ReservedCode2: '86d819c4-0e92-4e8f-8bcb-60b6ce114337'
+  ProduceID: '64a81ecd-ff78-463b-b718-b9d8c5c7c4a3'
+  PropagateID: '64a81ecd-ff78-463b-b718-b9d8c5c7c4a3'
+  ReservedCode1: 'b5e017b4-75e9-4593-83c5-996e6da3d5ad'
+  ReservedCode2: 'b5e017b4-75e9-4593-83c5-996e6da3d5ad'
 ---
 
 <div align="center">
@@ -30,7 +30,12 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.3)
+## 📢 最新版本 (v1.0.5.4)
+
+### v1.0.5.4 — 悬浮态导航显示 + 梯形文字锚点同步
+- **悬浮态导航信息不显示修复** — `NavigationBarView` 进入悬浮态时 View 被剥离触发 `onDetachedFromWindow` 移除了导航/模式监听，挂载到覆盖窗口后未恢复，导致高德导航信息在悬浮模式下完全不显示。新增 `onAttachedToWindow` 重新注册监听并同步当前模式
+- **车道虚线滚动恢复** — `LaneView` 同类问题，`onDetachedFromWindow` 移除了速度监听但无恢复，悬浮态下车道虚线滚动动画失去速度驱动。新增 `onAttachedToWindow` 恢复 `addSpeedListener`
+- **悬浮态梯形/文字锚点同步** — `GridBackgroundView.computeEdgeGeometry()` 原按权重比例重算文字锚点，与 `LaneView` 按实际尺寸绘制的梯形基准不一致，悬浮态下比例判断方式差异导致文字与梯形错位。改为悬浮态直接读取 LaneView 实际位置/高度作为锚点，非悬浮态保持原算法不变
 
 ### v1.0.5.3 — 悬浮态天气显示 + 里程轮播 + 极简模式配色修复
 - **悬浮态天气不显示修复** — `hasFullscreenOverlay()` 原来遍历全部子 View，主布局 LinearLayout 本身 MATCH_PARENT 导致永远返回 true、天气文字从不绘制。改为用 `overlayViews` 集合只追踪动态叠加的覆盖层（设置页/帮助页/文件选择器），新增 `addOverlay()`/`removeOverlay()` 方法

@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '7da31bc9-1ed9-4efa-a30e-641443e35427'
-  PropagateID: '7da31bc9-1ed9-4efa-a30e-641443e35427'
-  ReservedCode1: '61227b3a-35e7-4f29-b9c8-61144de4c195'
-  ReservedCode2: '61227b3a-35e7-4f29-b9c8-61144de4c195'
+  ProduceID: '064b542d-4f0a-414f-9eb3-e51cbfbb065f'
+  PropagateID: '064b542d-4f0a-414f-9eb3-e51cbfbb065f'
+  ReservedCode1: '6af140ec-213d-4d3d-9c10-e2643b34cc99'
+  ReservedCode2: '6af140ec-213d-4d3d-9c10-e2643b34cc99'
 ---
 
 <div align="center">
@@ -30,7 +30,12 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.3)
+## 📢 Latest Release (v1.0.5.4)
+
+### v1.0.5.4 — Floating Navigation Display + Trapezoid Text Anchor Sync
+- **Floating-mode navigation info not showing** — `NavigationBarView` lost navigation/mode listeners when entering floating mode: `onDetachedFromWindow` removed them but they were never restored after re-attaching to the overlay window, causing Amap navigation info to completely disappear in floating mode. Added `onAttachedToWindow` to re-register listeners and sync current mode
+- **Lane dashed-line scrolling restored** — `LaneView` had the same issue: `onDetachedFromWindow` removed the speed listener without restoration, so lane-line scrolling animation lost its speed drive in floating mode. Added `onAttachedToWindow` to restore `addSpeedListener`
+- **Floating-mode trapezoid/text anchor sync** — `GridBackgroundView.computeEdgeGeometry()` recalculated text anchors by weight ratio, which was inconsistent with `LaneView`'s trapezoid drawn by actual dimensions. In floating mode the ratio calculation differed, causing text/trapezoid misalignment. Changed to read LaneView's actual position/height as anchors in floating mode; non-floating mode retains the original algorithm
 
 ### v1.0.5.3 — Floating Weather + Mileage Carousel + Minimal Mode Color Fix
 - **Floating-mode weather display fix** — `hasFullscreenOverlay()` was iterating all child Views; the main LinearLayout itself being MATCH_PARENT caused it to always return true, so weather text was never drawn. Replaced with an `overlayViews` set that only tracks dynamically added overlays (Settings/Help/FilePicker); added `addOverlay()`/`removeOverlay()` methods
