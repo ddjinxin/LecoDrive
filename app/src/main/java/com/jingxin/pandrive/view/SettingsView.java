@@ -12,11 +12,13 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.ScrollView;
+import android.widget.Switch;
 import android.widget.TextView;
 import com.jingxin.pandrive.FilePickerActivity;
 import com.jingxin.pandrive.R;
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
+import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.update.UpdateChecker;
 
 import java.io.File;
@@ -80,6 +82,22 @@ public class SettingsView extends ScrollView {
     private void init() {
         LayoutInflater.from(getContext()).inflate(R.layout.activity_settings, this, true);
         dataHub = DataHub.getInstance(getContext());
+
+        // 返回按钮
+        findViewById(R.id.btn_back).setOnClickListener(v -> {
+            if (onClose != null) onClose.run();
+        });
+
+        // 日夜模式开关
+        Switch switchDayNight = findViewById(R.id.switch_day_night);
+        switchDayNight.setChecked(ThemeController.getInstance(getContext()).isNightMode());
+        switchDayNight.setOnCheckedChangeListener((button, isChecked) -> {
+            getContext().getSharedPreferences("theme", Context.MODE_PRIVATE).edit()
+                    .putBoolean("isNight", isChecked)
+                    .putBoolean("amapTriggered", false)
+                    .apply();
+            ThemeController.getInstance(getContext()).forceSetNightMode(isChecked);
+        });
 
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);

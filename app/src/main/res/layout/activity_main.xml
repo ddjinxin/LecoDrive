@@ -119,7 +119,7 @@
 
     </LinearLayout>
 
-    <!-- 手动切换日夜模式按钮（右上角） -->
+    <!-- 设置按钮（右上角） -->
     <ImageView
         android:id="@+id/theme_button"
         android:layout_width="36dp"
@@ -127,10 +127,10 @@
         android:layout_gravity="top|end"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        android:src="@drawable/ic_theme"
+        android:src="@drawable/ic_settings"
         android:padding="6dp"
         android:clickable="true"
         android:focusable="true"
-        android:contentDescription="切换日夜模式" />
+        android:contentDescription="设置" />
 
 </com.jingxin.pandrive.view.GridBackgroundView>

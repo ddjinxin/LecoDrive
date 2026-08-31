@@ -10,11 +10,13 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
+import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
 import com.jingxin.pandrive.view.LaneColorHelper;
@@ -62,6 +64,20 @@ public class SettingsActivity extends Activity {
         setContentView(R.layout.activity_settings);
 
         dataHub = DataHub.getInstance(this);
+
+        // 返回按钮
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+
+        // 日夜模式开关
+        Switch switchDayNight = findViewById(R.id.switch_day_night);
+        switchDayNight.setChecked(ThemeController.getInstance(this).isNightMode());
+        switchDayNight.setOnCheckedChangeListener((button, isChecked) -> {
+            getSharedPreferences("theme", MODE_PRIVATE).edit()
+                    .putBoolean("isNight", isChecked)
+                    .putBoolean("amapTriggered", false)
+                    .apply();
+            ThemeController.getInstance(this).forceSetNightMode(isChecked);
+        });
 
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);

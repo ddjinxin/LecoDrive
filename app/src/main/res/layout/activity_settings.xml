@@ -13,15 +13,66 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Title -->
-        <TextView
+        <!-- Title + Back -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="设置"
-            android:textSize="22sp"
-            android:textColor="#FF00D4E8"
-            android:gravity="center"
-            android:layout_marginBottom="24dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="24dp">
+
+            <ImageView
+                android:id="@+id/btn_back"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:src="@drawable/ic_back"
+                android:padding="6dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:contentDescription="返回" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="设置"
+                android:textSize="22sp"
+                android:textColor="#FF00D4E8"
+                android:gravity="center" />
+
+            <View
+                android:layout_width="36dp"
+                android:layout_height="36dp" />
+
+        </LinearLayout>
+
+        <!-- Day/Night Mode Toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="夜间模式"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFCCCCCC" />
+
+            <Switch
+                android:id="@+id/switch_day_night"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textOff="白天"
+                android:textOn="夜间"
+                android:thumbTint="#FFFFFFFF"
+                android:trackTint="#FFFFFFFF" />
+
+        </LinearLayout>
 
         <!-- Wallpaper Section -->
         <TextView

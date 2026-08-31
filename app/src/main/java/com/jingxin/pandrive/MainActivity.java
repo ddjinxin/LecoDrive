@@ -367,15 +367,13 @@ public class MainActivity extends Activity implements
         });
         navigationBarView.setClickable(true);
 
-        // Theme button: single tap toggles style, long press opens settings
-        themeButton.setOnClickListener(v -> toggleTheme());
-        themeButton.setOnLongClickListener(v -> {
+        // Theme button: click opens settings
+        themeButton.setOnClickListener(v -> {
             if (LecoFloatManager.getInstance().isFloating()) {
                 showFloatSettings();
             } else {
                 startActivity(new Intent(this, SettingsActivity.class));
             }
-            return true;
         });
     }
 
@@ -713,6 +711,8 @@ public class MainActivity extends Activity implements
     protected void onResume() {
         super.onResume();
         if (checkFailed) return;
+        // 日夜模式监听无论悬浮态都需注册（悬浮态下高德广播自动切换日夜模式）
+        themeController.registerAmapReceiver();
         // 悬浮态：Activity 被推回后台后又被拉回，LecoFloatManager 会 moveTaskToBack。
         // 此处跳过重复初始化，View 已在悬浮窗口中正常运行。
         if (LecoFloatManager.getInstance().isFloating()) {
@@ -723,7 +723,6 @@ public class MainActivity extends Activity implements
         dataHub.registerSensors();
         dataHub.registerLocation();
         dataHub.startFuelSampling();
-        themeController.registerAmapReceiver();
 
         if (Build.VERSION.SDK_INT >= 30) {
             if (Environment.isExternalStorageManager()) {
@@ -966,17 +965,6 @@ public class MainActivity extends Activity implements
     }
 
     // ==================== Manual theme toggle ====================
-
-    private void toggleTheme() {
-        boolean isNight = !themeController.isNightMode();
-        getSharedPreferences("theme", MODE_PRIVATE).edit()
-                .putBoolean("isNight", isNight)
-                .putBoolean("amapTriggered", false)
-                .apply();
-        themeController.forceSetNightMode(isNight);
-        Toast.makeText(this, isNight ? "夜间模式" : "白天模式",
-                Toast.LENGTH_SHORT).show();
-    }
 
     private void updateThemeButtonIcon(boolean isNight) {
         if (themeButton == null) return;
