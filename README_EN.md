@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '064b542d-4f0a-414f-9eb3-e51cbfbb065f'
-  PropagateID: '064b542d-4f0a-414f-9eb3-e51cbfbb065f'
-  ReservedCode1: '6af140ec-213d-4d3d-9c10-e2643b34cc99'
-  ReservedCode2: '6af140ec-213d-4d3d-9c10-e2643b34cc99'
+  ProduceID: '18bdf018-26df-4424-8c83-06b3f1a6596e'
+  PropagateID: '18bdf018-26df-4424-8c83-06b3f1a6596e'
+  ReservedCode1: '8955423e-a3fb-4fda-af46-125529831296'
+  ReservedCode2: '8955423e-a3fb-4fda-af46-125529831296'
 ---
 
 <div align="center">
@@ -30,7 +30,13 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.4)
+## 📢 Latest Release (v1.0.5.5)
+
+### v1.0.5.5 — Settings Entry Rework + Day/Night Toggle + Floating Day/Night Listener Fix
+- **Top-right button changed to settings entry** — Former day/night toggle button replaced with a settings button (gear icon); single tap opens settings page directly, long-press-to-open-settings logic removed
+- **Day/Night toggle moved to settings page** — Added a "Night Mode" Switch as the first item in settings; toggles day/night mode instantly
+- **Back button added to settings page** — A back arrow button on the left side of the settings title; tap to exit settings and return to main screen
+- **Floating-mode Amap day/night listener fix** — `themeController.registerAmapReceiver()` in `onResume()` was placed after the floating-mode early return, so Amap KEY_TYPE=10019 broadcast could not drive day/night switching in floating mode. Moved registration before the return so it works in both modes
 
 ### v1.0.5.4 — Floating Navigation Display + Trapezoid Text Anchor Sync
 - **Floating-mode navigation info not showing** — `NavigationBarView` lost navigation/mode listeners when entering floating mode: `onDetachedFromWindow` removed them but they were never restored after re-attaching to the overlay window, causing Amap navigation info to completely disappear in floating mode. Added `onAttachedToWindow` to re-register listeners and sync current mode

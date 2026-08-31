@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '64a81ecd-ff78-463b-b718-b9d8c5c7c4a3'
-  PropagateID: '64a81ecd-ff78-463b-b718-b9d8c5c7c4a3'
-  ReservedCode1: 'b5e017b4-75e9-4593-83c5-996e6da3d5ad'
-  ReservedCode2: 'b5e017b4-75e9-4593-83c5-996e6da3d5ad'
+  ProduceID: '287be220-f914-4c43-8d92-15175e236d76'
+  PropagateID: '287be220-f914-4c43-8d92-15175e236d76'
+  ReservedCode1: '651f7ea4-3545-4b27-b96f-4be96ec65f77'
+  ReservedCode2: '651f7ea4-3545-4b27-b96f-4be96ec65f77'
 ---
 
 <div align="center">
@@ -30,7 +30,13 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.4)
+## 📢 最新版本 (v1.0.5.5)
+
+### v1.0.5.5 — 设置入口重构 + 日夜开关 + 悬浮态日夜监听修复
+- **右上角按钮改为设置入口** — 原日夜切换按钮改为设置按钮（齿轮图标），单击直接进入设置页，取消长按进设置的逻辑
+- **日夜切换移入设置页** — 新增「夜间模式」Switch 开关作为设置页第一项，即时切换日间/夜间模式
+- **设置页新增返回按钮** — 标题左侧增加返回箭头按钮，点击退出设置页返回首页
+- **悬浮态高德日夜监听修复** — `onResume()` 中 `themeController.registerAmapReceiver()` 原在悬浮态 return 之后，导致悬浮态下高德 KEY_TYPE=10019 广播无法驱动日夜切换。改为 return 之前注册，确保悬浮态也生效
 
 ### v1.0.5.4 — 悬浮态导航显示 + 梯形文字锚点同步
 - **悬浮态导航信息不显示修复** — `NavigationBarView` 进入悬浮态时 View 被剥离触发 `onDetachedFromWindow` 移除了导航/模式监听，挂载到覆盖窗口后未恢复，导致高德导航信息在悬浮模式下完全不显示。新增 `onAttachedToWindow` 重新注册监听并同步当前模式
