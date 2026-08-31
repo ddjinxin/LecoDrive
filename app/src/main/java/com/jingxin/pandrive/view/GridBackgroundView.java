@@ -20,6 +20,7 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.FrameLayout;
 
+import com.jingxin.pandrive.R;
 import com.jingxin.pandrive.data.WeatherHelper;
 
 import java.io.File;
@@ -86,6 +87,19 @@ public class GridBackgroundView extends FrameLayout {
     /** 强制重算车道边缘几何（布局比例变化后调用） */
     public void refreshEdgeGeometry() {
         cachedW = -1;  // 强制下次 dispatchDraw 重新计算
+    }
+
+    // 悬浮态 LaneView 未布局时的回退占比（仅调试/兜底用）
+    private float laneHRatioFallback = 0.3f;
+
+    /**
+     * 查找子 View 层级中的 LaneView（悬浮态叠加窗口内共用同一实例）。
+     * 悬浮态下 GridBackgroundView 被搬入乐酷覆盖窗口，其子层级结构不变。
+     */
+    private View findLaneView() {
+        View lane = findViewById(R.id.lane_view);
+        if (lane != null) return lane;
+        return null;
     }
 
     // ==================== 壁纸相关 ====================
@@ -170,16 +184,43 @@ public class GridBackgroundView extends FrameLayout {
 
     /**
      * 计算车道梯形边缘角度和中点位置
+     * <p>
+     * 悬浮态下直接读取 LaneView 实际位置/高度作为锚点基准，
+     * 避免与 FloatLayoutHelper 的横竖屏判定（width > height * 1.1f）不一致
+     * 导致文字锚点与梯形错位。非悬浮态保持原有按比例算法不变。
      */
     private void computeEdgeGeometry(int w, int h) {
-        // 车道梯形在屏幕底部区域，占比从 DataHub 布局比例动态读取
-        boolean isPortrait = h > w;
-        float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
-                .getLayoutWeights(isPortrait);
-        float laneHRatio = weights[4] / 100f;          // 车道线区域占比
-        float laneTopRatio = 1f - laneHRatio;           // 上方区域合计占比
-        float laneTop = h * laneTopRatio;
-        float laneH = h * laneHRatio;
+        float laneTop;
+        float laneH;
+
+        if (com.jingxin.pandrive.floatwindow.LecoFloatManager.getInstance().isFloating()) {
+            // 悬浮态：以 LaneView 实际布局位置为准（梯形绘制同基准，天然同步）
+            View laneView = findLaneView();
+            if (laneView != null && laneView.getWidth() > 0 && laneView.getHeight() > 0) {
+                int[] loc = new int[2];
+                laneView.getLocationInWindow(loc);
+                int[] selfLoc = new int[2];
+                getLocationInWindow(selfLoc);
+                laneTop = loc[1] - selfLoc[1];
+                laneH = laneView.getHeight();
+            } else {
+                // 悬浮但 LaneView 尚未布局：回退按比例计算（与 FloatLayoutHelper 同一判定基准）
+                boolean isLandscape = w > h * 1.1f;
+                float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
+                        .getLayoutWeights(!isLandscape);
+                laneHRatioFallback = weights[4] / 100f;
+                laneTop = h * (1f - laneHRatioFallback);
+                laneH = h * laneHRatioFallback;
+            }
+        } else {
+            // 非悬浮态：原有逻辑，完全不变
+            boolean isPortrait = h > w;
+            float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
+                    .getLayoutWeights(isPortrait);
+            float laneHRatio = weights[4] / 100f;
+            laneTop = h * (1f - laneHRatio);
+            laneH = h * laneHRatio;
+        }
 
         float nearWidth = w * 0.95f;
         float farWidth = w * 0.15f;

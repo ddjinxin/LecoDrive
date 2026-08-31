@@ -837,6 +837,22 @@ public class NavigationBarView extends FrameLayout implements
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // 悬浮态剥离/重新挂载时重新注册监听
+        // （onDetachedFromWindow 已移除导航/模式监听，不恢复则悬浮态收不到高德广播回调）
+        if (dataHub != null) {
+            dataHub.addNavigationListener(this);
+            dataHub.addModeListener(this);
+        }
+        // 挂载后同步一次当前模式，避免悬浮窗口内模式显示过期
+        if (dataHub != null) {
+            currentMode = dataHub.getCurrentMode();
+            updateModeDisplay();
+        }
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         if (dataHub != null) {

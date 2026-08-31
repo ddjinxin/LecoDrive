@@ -279,6 +279,13 @@ public class LaneView extends View implements DataHub.OnSpeedListener {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // 悬浮态剥离/重新挂载时重新注册速度监听（onDetachedFromWindow 已移除）
+        DataHub.getInstance(getContext()).addSpeedListener(this);
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         DataHub.getInstance(getContext()).removeSpeedListener(this);
