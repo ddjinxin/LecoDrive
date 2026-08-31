@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '46dc161e-3f1f-4297-80ea-4add61469613'
-  PropagateID: '46dc161e-3f1f-4297-80ea-4add61469613'
-  ReservedCode1: '9aa51866-1495-4a8f-8466-f566706460f2'
-  ReservedCode2: '9aa51866-1495-4a8f-8466-f566706460f2'
+  ProduceID: '3ce70851-3a10-4ad5-acaf-4fd333cb0aa0'
+  PropagateID: '3ce70851-3a10-4ad5-acaf-4fd333cb0aa0'
+  ReservedCode1: '86d819c4-0e92-4e8f-8bcb-60b6ce114337'
+  ReservedCode2: '86d819c4-0e92-4e8f-8bcb-60b6ce114337'
 ---
 
 <div align="center">
@@ -30,7 +30,12 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.2)
+## 📢 最新版本 (v1.0.5.3)
+
+### v1.0.5.3 — 悬浮态天气显示 + 里程轮播 + 极简模式配色修复
+- **悬浮态天气不显示修复** — `hasFullscreenOverlay()` 原来遍历全部子 View，主布局 LinearLayout 本身 MATCH_PARENT 导致永远返回 true、天气文字从不绘制。改为用 `overlayViews` 集合只追踪动态叠加的覆盖层（设置页/帮助页/文件选择器），新增 `addOverlay()`/`removeOverlay()` 方法
+- **里程油耗滚轮轮播恢复** — `MileageView` 进入悬浮态时 View 被剥离触发 `onDetachedFromWindow` 移除轮播回调，挂载到覆盖窗口后未恢复。新增 `onAttachedToWindow` 重启 4 秒轮播
+- **极简模式夜间未点亮色块改为浅白** — `COLOR_NIGHT_INACTIVE_BAR` 从深灰蓝 `#4A5A6A` 改为浅白 `#E0E0E0`，与青色高亮色块对比更清晰
 
 ### v1.0.5.2 — 通知推送更新修复
 - **通知点击改为直接启动 Activity** — 原来用 PendingIntent.getBroadcast 发广播，MainActivity 在后台或已销毁时弹窗会崩溃或丢失。改为 PendingIntent.getActivity 直接启动/唤醒 MainActivity

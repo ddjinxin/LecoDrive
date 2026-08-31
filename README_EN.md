@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'b124d7be-5a70-419c-959d-78c9d5914312'
-  PropagateID: 'b124d7be-5a70-419c-959d-78c9d5914312'
-  ReservedCode1: 'd93e928a-0b57-43be-806e-0b8fbe6db611'
-  ReservedCode2: 'd93e928a-0b57-43be-806e-0b8fbe6db611'
+  ProduceID: '7da31bc9-1ed9-4efa-a30e-641443e35427'
+  PropagateID: '7da31bc9-1ed9-4efa-a30e-641443e35427'
+  ReservedCode1: '61227b3a-35e7-4f29-b9c8-61144de4c195'
+  ReservedCode2: '61227b3a-35e7-4f29-b9c8-61144de4c195'
 ---
 
 <div align="center">
@@ -30,7 +30,12 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.2)
+## 📢 Latest Release (v1.0.5.3)
+
+### v1.0.5.3 — Floating Weather + Mileage Carousel + Minimal Mode Color Fix
+- **Floating-mode weather display fix** — `hasFullscreenOverlay()` was iterating all child Views; the main LinearLayout itself being MATCH_PARENT caused it to always return true, so weather text was never drawn. Replaced with an `overlayViews` set that only tracks dynamically added overlays (Settings/Help/FilePicker); added `addOverlay()`/`removeOverlay()` methods
+- **Mileage fuel roller carousel restored** — When entering floating mode, View detachment triggered `onDetachedFromWindow` which removed the carousel callback; it was never restored after re-attaching to the overlay window. Added `onAttachedToWindow` to restart the 4-second carousel
+- **Minimal mode inactive bar changed to light white** — `COLOR_NIGHT_INACTIVE_BAR` changed from dark blue-gray `#4A5A6A` to light white `#E0E0E0` for better contrast with the cyan active bars
 
 ### v1.0.5.2 — Update Notification Fix
 - **Notification tap now launches Activity directly** — Previously used PendingIntent.getBroadcast which could crash or get lost when MainActivity was in background or destroyed. Changed to PendingIntent.getActivity to directly start/bring MainActivity to foreground

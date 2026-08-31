@@ -67,7 +67,7 @@ public class SpeedometerView extends View {
     private static final int COLOR_NIGHT_DANGER_GLOW = 0x60FF4444;
     private static final int COLOR_NIGHT_EMBOSS_HIGHLIGHT = 0xFF667788;
     private static final int COLOR_NIGHT_BOTTOM_TEXT = 0xFF667788;
-    private static final int COLOR_NIGHT_INACTIVE_BAR = 0xFF4A5A6A;
+    private static final int COLOR_NIGHT_INACTIVE_BAR = 0xFFE0E0E0;
     private static final int COLOR_NIGHT_LED_DIGIT_GLOW = 0xFF009966;
     private static final int COLOR_NIGHT_ACTIVE_BAR_GLOW = 0x5000E5A0;
     private static final int COLOR_NIGHT_NEEDLE_GLOW = 0x4000E5A0;

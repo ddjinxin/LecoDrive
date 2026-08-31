@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -196,11 +195,8 @@ public class SettingsView extends ScrollView {
             final GridBackgroundView gv = GridBackgroundView.getInstance();
             if (gv == null) return;
             final HelpView helpView = new HelpView(getContext());
-            helpView.onClose = () -> gv.removeView(helpView);
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT);
-            gv.addView(helpView, lp);
+            helpView.onClose = () -> gv.removeOverlay(helpView);
+            gv.addOverlay(helpView);
         });
     }
 
@@ -243,7 +239,7 @@ public class SettingsView extends ScrollView {
         final FilePickerView picker = new FilePickerView(getContext());
         picker.setPickerType(type);
         picker.onPicked = () -> {
-            gv.removeView(picker);
+            gv.removeOverlay(picker);
             // 选完后更新设置页壁纸状态
             if (FilePickerActivity.pendingWallpaperPath != null) {
                 FilePickerActivity.pendingWallpaperPath = null;
@@ -251,12 +247,9 @@ public class SettingsView extends ScrollView {
             }
             updateWallpaperStatus();
         };
-        picker.onCancel = () -> gv.removeView(picker);
+        picker.onCancel = () -> gv.removeOverlay(picker);
 
-        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT);
-        gv.addView(picker, lp);
+        gv.addOverlay(picker);
     }
 
     private void restoreDefaultWallpapers() {

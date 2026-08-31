@@ -26,6 +26,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * 科幻渐变背景 + 壁纸 + 天气文字
@@ -97,6 +100,34 @@ public class GridBackgroundView extends FrameLayout {
     // ==================== 天气动画相关 ====================
     private boolean weatherAnimationMode = false;
     private String currentWeatherVideoPath = null;
+
+    // 动态叠加的全屏覆盖层（设置页/帮助页/文件选择器）
+    // 与主布局区分：主 LinearLayout 也是 MATCH_PARENT，不能误判为覆盖层
+    private final Set<View> overlayViews = Collections.synchronizedSet(new HashSet<View>());
+
+    /**
+     * 叠加全屏覆盖层（设置页/帮助页/文件选择器）。
+     * 覆盖层存在时跳过天气文字绘制，避免文字穿透。
+     */
+    public void addOverlay(View view) {
+        if (view == null) return;
+        overlayViews.add(view);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        addView(view, lp);
+        invalidate();
+    }
+
+    /**
+     * 移除全屏覆盖层，恢复天气文字绘制。
+     */
+    public void removeOverlay(View view) {
+        if (view == null) return;
+        overlayViews.remove(view);
+        removeView(view);
+        invalidate();
+    }
 
     public GridBackgroundView(Context context) {
         super(context);
@@ -610,21 +641,17 @@ public class GridBackgroundView extends FrameLayout {
     }
 
     /**
-     * 是否有全屏覆盖的子 View（如设置页、帮助页、文件选择器），
-     * 有时跳过天气文字绘制，避免穿透覆盖层。
+     * 是否有全屏覆盖层（设置页/帮助页/文件选择器等动态叠加的 View），
+     * 有则跳过天气文字绘制，避免文字穿透覆盖层。
+     * 只检查 addOverlay 加入的覆盖层，不遍历主布局子 View
+     * （主 LinearLayout 也是 MATCH_PARENT，不能误判为覆盖层）。
      */
     private boolean hasFullscreenOverlay() {
-        int w = getWidth();
-        int h = getHeight();
-        if (w <= 0 || h <= 0) return false;
-        for (int i = 0; i < getChildCount(); i++) {
-            View child = getChildAt(i);
-            if (child.getVisibility() != View.VISIBLE) continue;
-            FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) child.getLayoutParams();
-            if (lp == null) continue;
-            boolean matchW = lp.width == FrameLayout.LayoutParams.MATCH_PARENT;
-            boolean matchH = lp.height == FrameLayout.LayoutParams.MATCH_PARENT;
-            if (matchW && matchH) return true;
+        synchronized (overlayViews) {
+            for (View child : overlayViews) {
+                if (child.getVisibility() != View.VISIBLE) continue;
+                if (child.getParent() == this) return true;
+            }
         }
         return false;
     }

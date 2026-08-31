@@ -681,17 +681,14 @@ public class MainActivity extends Activity implements
         settingsView = new SettingsView(this);
         settingsView.onClose = () -> {
             if (gridBackgroundView != null && settingsView != null) {
-                gridBackgroundView.removeView(settingsView);
+                gridBackgroundView.removeOverlay(settingsView);
             }
             settingsView = null;
             // 保存后重新应用布局（设置页可能修改了布局比例/车型等）
             applyLayoutWeights();
         };
         if (gridBackgroundView != null) {
-            FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT);
-            gridBackgroundView.addView(settingsView, lp);
+            gridBackgroundView.addOverlay(settingsView);
         }
     }
 

@@ -105,6 +105,15 @@ public class MileageView extends View {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        // 悬浮态剥离/重新挂载时重启轮播（onDetachedFromWindow 已移除回调）
+        // 先移除再 post，避免与 init() 中已排队的回调叠加导致轮播加速
+        cycleHandler.removeCallbacks(cycleRunnable);
+        cycleHandler.postDelayed(cycleRunnable, CYCLE_INTERVAL_MS);
+    }
+
+    @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         int w = getWidth();
