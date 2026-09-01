@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '18bdf018-26df-4424-8c83-06b3f1a6596e'
-  PropagateID: '18bdf018-26df-4424-8c83-06b3f1a6596e'
-  ReservedCode1: '8955423e-a3fb-4fda-af46-125529831296'
-  ReservedCode2: '8955423e-a3fb-4fda-af46-125529831296'
+  ProduceID: 'cc39d870-6336-45ce-8fcf-bd3fceacbef3'
+  PropagateID: 'cc39d870-6336-45ce-8fcf-bd3fceacbef3'
+  ReservedCode1: '21e028c6-b5cf-4747-a724-5052f79a3bf5'
+  ReservedCode2: '21e028c6-b5cf-4747-a724-5052f79a3bf5'
 ---
 
 <div align="center">
@@ -30,7 +30,13 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.5)
+## 📢 Latest Release (v1.0.5.6)
+
+### v1.0.5.6 — Navigation Bar Wallpaper Brightness Adaptation
+- **Navigation bar text color auto-adapts to wallpaper brightness** — Samples pixel brightness in the navigation area when loading image wallpapers; video wallpapers sampled every 2 seconds. Text automatically switches between black/white without manual day/night mode toggle
+- **Brightness threshold 0.6** — Background brightness below 0.6 uses white text; above 0.6 uses black text
+- **No-wallpaper retains original logic** — Without wallpaper, text color still follows day/night mode as before
+- **Technical implementation** — `GridBackgroundView` adds `OnBackgroundBrightnessListener` interface; `NavigationBarView` implements it and uses `shouldUseWhiteText()` to drive color scheme
 
 ### v1.0.5.5 — Settings Entry Rework + Day/Night Toggle + Floating Day/Night Listener Fix
 - **Top-right button changed to settings entry** — Former day/night toggle button replaced with a settings button (gear icon); single tap opens settings page directly, long-press-to-open-settings logic removed

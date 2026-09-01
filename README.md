@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '287be220-f914-4c43-8d92-15175e236d76'
-  PropagateID: '287be220-f914-4c43-8d92-15175e236d76'
-  ReservedCode1: '651f7ea4-3545-4b27-b96f-4be96ec65f77'
-  ReservedCode2: '651f7ea4-3545-4b27-b96f-4be96ec65f77'
+  ProduceID: '99e99bb1-da95-447f-a2aa-584897fa2d2f'
+  PropagateID: '99e99bb1-da95-447f-a2aa-584897fa2d2f'
+  ReservedCode1: '37e29baf-0480-4562-a666-c115292ee79a'
+  ReservedCode2: '37e29baf-0480-4562-a666-c115292ee79a'
 ---
 
 <div align="center">
@@ -30,7 +30,13 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.5)
+## 📢 最新版本 (v1.0.5.6)
+
+### v1.0.5.6 — 导航栏壁纸亮度自适应
+- **导航栏文字颜色自动适配壁纸亮度** — 图片壁纸加载时采样导航区域像素亮度，视频壁纸每2秒周期采样，文字自动在黑/白之间切换，无需手动调日夜模式
+- **亮度阈值 0.6** — 背景亮度低于0.6用白字，高于0.6用黑字
+- **无壁纸时维持原逻辑** — 无壁纸渐变背景下仍按日夜模式决定文字颜色
+- **技术实现** — `GridBackgroundView` 新增 `OnBackgroundBrightnessListener` 监听器，`NavigationBarView` 实现接口并改用 `shouldUseWhiteText()` 驱动配色
 
 ### v1.0.5.5 — 设置入口重构 + 日夜开关 + 悬浮态日夜监听修复
 - **右上角按钮改为设置入口** — 原日夜切换按钮改为设置按钮（齿轮图标），单击直接进入设置页，取消长按进设置的逻辑
