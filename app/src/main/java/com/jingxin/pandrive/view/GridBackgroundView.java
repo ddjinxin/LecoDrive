@@ -27,8 +27,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -118,6 +120,41 @@ public class GridBackgroundView extends FrameLayout {
     // 动态叠加的全屏覆盖层（设置页/帮助页/文件选择器）
     // 与主布局区分：主 LinearLayout 也是 MATCH_PARENT，不能误判为覆盖层
     private final Set<View> overlayViews = Collections.synchronizedSet(new HashSet<View>());
+
+    // ==================== 背景亮度自适应 ====================
+    /**
+     * 背景亮度变化监听器。
+     * 图片壁纸加载时采样，视频壁纸周期采样（每2秒），
+     * 无壁纸渐变背景根据日夜模式确定。
+     */
+    public interface OnBackgroundBrightnessListener {
+        /** @param dark true 表示背景偏暗，文字应用白色；false 表示背景偏亮，文字应用黑色 */
+        void onBackgroundBrightnessChanged(boolean dark);
+    }
+    private final List<OnBackgroundBrightnessListener> brightnessListeners = new ArrayList<>();
+    private boolean lastNotifiedDark = true;  // 默认暗背景（夜间渐变）
+    private Runnable videoBrightnessRunnable = null;
+    private static final int VIDEO_SAMPLE_INTERVAL_MS = 2000;
+
+    public void addBackgroundBrightnessListener(OnBackgroundBrightnessListener l) {
+        if (!brightnessListeners.contains(l)) brightnessListeners.add(l);
+        l.onBackgroundBrightnessChanged(lastNotifiedDark);
+    }
+    public void removeBackgroundBrightnessListener(OnBackgroundBrightnessListener l) {
+        brightnessListeners.remove(l);
+    }
+
+    /** 壁纸是否激活（图片或视频壁纸） */
+    public boolean isWallpaperActive() {
+        return wallpaperActive;
+    }
+    private void notifyBrightness(boolean dark) {
+        if (dark == lastNotifiedDark) return;
+        lastNotifiedDark = dark;
+        for (OnBackgroundBrightnessListener l : brightnessListeners) {
+            l.onBackgroundBrightnessChanged(dark);
+        }
+    }
 
     /**
      * 叠加全屏覆盖层（设置页/帮助页/文件选择器）。
@@ -278,6 +315,10 @@ public class GridBackgroundView extends FrameLayout {
         bgShader = null;
         // 日/夜切换时重新加载对应壁纸
         reloadWallpaper();
+        // 无壁纸时根据渐变确定亮度
+        if (!wallpaperActive) {
+            notifyBrightness(isNightMode);
+        }
         invalidate();
     }
 
@@ -451,6 +492,9 @@ public class GridBackgroundView extends FrameLayout {
         if (wallpaperBitmap != null) {
             wallpaperActive = true;
             currentWallpaperPath = path;
+            // 采样图片壁纸导航区域亮度
+            boolean dark = sampleBitmapBrightness(wallpaperBitmap) < 0.6f;
+            notifyBrightness(dark);
             Log.d(TAG, "Image wallpaper loaded: " + path + " (" + wallpaperBitmap.getWidth() + "x" + wallpaperBitmap.getHeight() + ")");
         } else {
             Log.w(TAG, "Failed to decode image wallpaper: " + path);
@@ -462,6 +506,9 @@ public class GridBackgroundView extends FrameLayout {
         wallpaperActive = true;
         currentWallpaperPath = path;
         videoPrepared = false;
+
+        // 启动视频亮度周期采样
+        startVideoBrightnessSampling();
 
         // 使用 TextureView 替代 SurfaceView
         // SurfaceView 会创建独立的 Surface 窗口，其 frame 不跟随 View reparent 到覆盖窗口，
@@ -588,6 +635,9 @@ public class GridBackgroundView extends FrameLayout {
     }
 
     private void releaseWallpaperResources() {
+        // 停止视频亮度采样
+        stopVideoBrightnessSampling();
+
         // 释放图片壁纸
         if (wallpaperBitmap != null) {
             wallpaperBitmap.recycle();
@@ -628,6 +678,70 @@ public class GridBackgroundView extends FrameLayout {
 
         RectF dst = new RectF(left, top, left + scaledW, top + scaledH);
         canvas.drawBitmap(bitmap, null, dst, wallpaperPaint);
+    }
+
+    // ==================== 背景亮度采样 ====================
+
+    /**
+     * 采样 Bitmap 中间区域（导航条大致位置）的平均亮度。
+     * 采样区域：水平居中取 60% 宽度，垂直取 50%~70%（导航条 + 车道区域）。
+     * 返回 0.0~1.0 的亮度值。
+     */
+    private float sampleBitmapBrightness(Bitmap bmp) {
+        if (bmp == null) return 0f;
+        int bw = bmp.getWidth();
+        int bh = bmp.getHeight();
+        int startX = (int) (bw * 0.2f);
+        int endX = (int) (bw * 0.8f);
+        int startY = (int) (bh * 0.5f);
+        int endY = (int) (bh * 0.7f);
+        if (endX <= startX || endY <= startY) return 0f;
+
+        int sampleStep = Math.max(1, (endX - startX) / 20);
+        long totalLum = 0;
+        int count = 0;
+        for (int y = startY; y < endY; y += sampleStep) {
+            for (int x = startX; x < endX; x += sampleStep) {
+                int pixel = bmp.getPixel(x, y);
+                int r = (pixel >> 16) & 0xFF;
+                int g = (pixel >> 8) & 0xFF;
+                int b = pixel & 0xFF;
+                totalLum += (long)(0.299 * r + 0.587 * g + 0.114 * b);
+                count++;
+            }
+        }
+        return count > 0 ? (float) totalLum / (count * 255f) : 0f;
+    }
+
+    /**
+     * 启动视频壁纸亮度周期采样（每2秒取一帧采样）
+     */
+    private void startVideoBrightnessSampling() {
+        stopVideoBrightnessSampling();
+        videoBrightnessRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (wallpaperTextureView != null && wallpaperActive) {
+                    Bitmap frame = wallpaperTextureView.getBitmap();
+                    if (frame != null) {
+                        boolean dark = sampleBitmapBrightness(frame) < 0.6f;
+                        notifyBrightness(dark);
+                        frame.recycle();
+                    }
+                }
+                if (wallpaperActive) {
+                    postDelayed(videoBrightnessRunnable, VIDEO_SAMPLE_INTERVAL_MS);
+                }
+            }
+        };
+        postDelayed(videoBrightnessRunnable, VIDEO_SAMPLE_INTERVAL_MS);
+    }
+
+    private void stopVideoBrightnessSampling() {
+        if (videoBrightnessRunnable != null) {
+            removeCallbacks(videoBrightnessRunnable);
+            videoBrightnessRunnable = null;
+        }
     }
 
     // ==================== 绘制 ====================

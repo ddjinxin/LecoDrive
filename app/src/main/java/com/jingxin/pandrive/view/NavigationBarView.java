@@ -32,9 +32,11 @@ import java.util.regex.Pattern;
  * 逻辑对齐原项目 高德辅助导航 FloatingWindowService
  */
 public class NavigationBarView extends FrameLayout implements
-        DataHub.OnNavigationListener, DataHub.OnModeListener {
+        DataHub.OnNavigationListener, DataHub.OnModeListener,
+        GridBackgroundView.OnBackgroundBrightnessListener {
 
     private boolean isNightMode = false;
+    private boolean isBgDark = true;  // 背景是否偏暗（壁纸亮度驱动）
     private int currentMode = DataHub.MODE_CRUISE;
     private DataHub dataHub;
 
@@ -82,6 +84,12 @@ public class NavigationBarView extends FrameLayout implements
         dataHub = DataHub.getInstance(getContext());
         dataHub.addNavigationListener(this);
         dataHub.addModeListener(this);
+
+        // 注册背景亮度监听（壁纸场景下自动调整文字颜色）
+        GridBackgroundView bgv = GridBackgroundView.getInstance();
+        if (bgv != null) {
+            bgv.addBackgroundBrightnessListener(this);
+        }
 
         setClipChildren(false);
 
@@ -427,7 +435,7 @@ public class NavigationBarView extends FrameLayout implements
         Pattern pattern = Pattern.compile("^(\\d+(\\.\\d+)?)");
         Matcher matcher = pattern.matcher(text);
         int ledColor = 0xFFFF3030;           // 导航距离LED红色
-        int unitColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;  // "米 进入"保持原色
+        int unitColor = shouldUseWhiteText() ? 0xFFFFFFFF : 0xFF000000;  // "米 进入"保持原色
 
         if (matcher.find()) {
             String numberPart = matcher.group(1);
@@ -553,7 +561,7 @@ public class NavigationBarView extends FrameLayout implements
      */
     private SpannableString setNumbersColor(String text) {
         SpannableString spannableString = new SpannableString(text);
-        int numberColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;
+        int numberColor = shouldUseWhiteText() ? 0xFFFFFFFF : 0xFF000000;
         Pattern pattern = Pattern.compile("\\d+(:\\d+)?");
         Matcher matcher = pattern.matcher(text);
         while (matcher.find()) {
@@ -740,15 +748,44 @@ public class NavigationBarView extends FrameLayout implements
         }
     }
 
+    @Override
+    public void onBackgroundBrightnessChanged(boolean dark) {
+        this.isBgDark = dark;
+        updateColors();
+        // Re-apply span-based colors
+        if (currentMode == DataHub.MODE_NAVI) {
+            String distance = dataHub.getSegRemainDis();
+            String roadName = dataHub.getNextRoadName();
+            updateDistanceAndGuide(distance, roadName);
+            String routeRemainDis = dataHub.getRouteRemainDis();
+            int remainTime = dataHub.getRemainTime();
+            String etaText = dataHub.getEtaText();
+            updateDetailText(routeRemainDis, remainTime, etaText);
+        }
+    }
+
+    /**
+     * 判断文字应该用白色还是黑色。
+     * 有壁纸时根据背景亮度（isBgDark），无壁纸时根据日夜模式。
+     */
+    private boolean shouldUseWhiteText() {
+        GridBackgroundView bgv = GridBackgroundView.getInstance();
+        if (bgv != null && bgv.isWallpaperActive()) {
+            return isBgDark;
+        }
+        return isNightMode;
+    }
+
     private void updateColors() {
-        // Match original 高德辅助导航 color scheme exactly
+        // 壁纸场景根据背景亮度自适应；无壁纸维持原日夜模式逻辑
+        boolean useWhite = shouldUseWhiteText();
         // Cruise mode colors
-        int speedColor  = isNightMode ? 0xFFFFFFFF : 0xFF000000;
-        int unitColor   = isNightMode ? 0xFFFFFFFF : 0xFF666666;
-        int roadColor   = isNightMode ? 0xFFFFFFFF : 0xFF000000;
+        int speedColor  = useWhite ? 0xFFFFFFFF : 0xFF000000;
+        int unitColor   = useWhite ? 0xFFFFFFFF : 0xFF666666;
+        int roadColor   = useWhite ? 0xFFFFFFFF : 0xFF000000;
         // Navi mode colors
-        int guideColor  = isNightMode ? 0xFFFFFFFF : 0xFF000000;
-        int detailColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;
+        int guideColor  = useWhite ? 0xFFFFFFFF : 0xFF000000;
+        int detailColor = useWhite ? 0xFFFFFFFF : 0xFF000000;
 
         // Cruise layout
         if (tvCruiseSpeed != null) tvCruiseSpeed.setTextColor(speedColor);
@@ -763,10 +800,10 @@ public class NavigationBarView extends FrameLayout implements
         if (tvTrafficLight != null) tvTrafficLight.setTextColor(0xFFFFFFFF);
         // Divider
         if (cruiseDivider != null) cruiseDivider.setBackgroundColor(
-                isNightMode ? 0x33FFFFFF : 0x33999999);
+                useWhite ? 0x33FFFFFF : 0x33999999);
         // Sub-views
-        if (ledDistanceNumber != null) ledDistanceNumber.setNightMode(isNightMode);
-        if (naviTrafficBar != null) naviTrafficBar.setNightMode(isNightMode);
+        if (ledDistanceNumber != null) ledDistanceNumber.setNightMode(useWhite);
+        if (naviTrafficBar != null) naviTrafficBar.setNightMode(useWhite);
 
         // Background: transparent — show grid background underneath
     }
@@ -850,6 +887,11 @@ public class NavigationBarView extends FrameLayout implements
             currentMode = dataHub.getCurrentMode();
             updateModeDisplay();
         }
+        // 重新注册背景亮度监听
+        GridBackgroundView bgv = GridBackgroundView.getInstance();
+        if (bgv != null) {
+            bgv.addBackgroundBrightnessListener(this);
+        }
     }
 
     @Override
@@ -858,6 +900,10 @@ public class NavigationBarView extends FrameLayout implements
         if (dataHub != null) {
             dataHub.removeNavigationListener(this);
             dataHub.removeModeListener(this);
+        }
+        GridBackgroundView bgv = GridBackgroundView.getInstance();
+        if (bgv != null) {
+            bgv.removeBackgroundBrightnessListener(this);
         }
     }
 }
