@@ -419,7 +419,7 @@ public class LecoFloatManager {
      * 移除覆盖窗口。
      */
     private void removeFloatWindow() {
-        if (windowContainer != null && windowContainer.getWindowToken() != null) {
+        if (windowContainer != null) {
             try {
                 windowManager.removeViewImmediate(windowContainer);
             } catch (Exception e) {
@@ -433,6 +433,28 @@ public class LecoFloatManager {
         windowContainer = null;
         windowParams = null;
         floatCornerRadius = 0f;
+    }
+
+    /**
+     * 强制移除悬浮窗兜底方法（无视所有状态标记，直接清理）。
+     * 供 PanDriveService.onDestroy 等外部兜底调用，防止进程结束后窗口残留。
+     */
+    public void forceRemoveFloatWindow() {
+        if (windowContainer != null) {
+            try {
+                windowManager.removeViewImmediate(windowContainer);
+            } catch (Exception e) {
+                Log.e(TAG, "forceRemoveFloatWindow: removeViewImmediate 失败", e);
+            }
+        }
+        windowContainer = null;
+        windowParams = null;
+        floatContentView = null;
+        placeholderView = null;
+        floatCornerRadius = 0f;
+        isFloating.set(false);
+        canFloat.set(false);
+        Log.d(TAG, "forceRemoveFloatWindow: 悬浮窗已强制清理");
     }
 
     // ==================== 窗口尺寸更新 ====================
@@ -613,12 +635,18 @@ public class LecoFloatManager {
         public void onActivitySaveInstanceState(Activity activity, android.os.Bundle outState) {
         }
 
-        @Override
-        public void onActivityDestroyed(Activity activity) {
+    @Override
+    public void onActivityDestroyed(Activity activity) {
             if (activity == currentFloatingActivity) {
                 // Activity 销毁（横竖屏切换/内存压力），清理悬浮窗口
                 // 新 Activity 重建后 onActivityResumed 会重新悬浮
                 restoreCurrentActivity();
+                removeFloatWindow();
+            } else if (isFloating.get()) {
+                // 当前悬浮的 Activity 已不在，兜底清理
+                Log.w(TAG, "onActivityDestroyed: 非当前悬浮Activity但仍在悬浮态，兜底清理");
+                isFloating.set(false);
+                floatContentView = null;
                 removeFloatWindow();
             }
         }

@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '04c64724-6ac7-4b70-8996-cf92450aab68'
-  PropagateID: '04c64724-6ac7-4b70-8996-cf92450aab68'
-  ReservedCode1: '0f08005c-02fd-4868-aeaf-b24500ed4a7d'
-  ReservedCode2: '0f08005c-02fd-4868-aeaf-b24500ed4a7d'
+  ProduceID: '1a94e460-5d85-4334-9108-4d785d5659eb'
+  PropagateID: '1a94e460-5d85-4334-9108-4d785d5659eb'
+  ReservedCode1: 'c7bf0c5e-de80-4431-a3c6-ab3cc6cff6e2'
+  ReservedCode2: 'c7bf0c5e-de80-4431-a3c6-ab3cc6cff6e2'
 ---
 
 <div align="center">
@@ -30,8 +30,15 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-<!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.7)
+## 📢 最新版本 (v1.0.5.8)
+
+### v1.0.5.8 — 修复悬浮窗残留问题
+- **悬浮窗无法关闭修复** — 应用在乐酷桌面悬浮模式下运行后，即使应用从内存关闭，悬浮窗仍残留在屏幕上无法消除。根因是 `PanDriveService.onDestroy()` 未清理悬浮窗，且 `removeFloatWindow()` 的 token null guard 导致僵尸窗口
+- **新增 `forceRemoveFloatWindow()` 兜底方法** — 无视所有状态标记强制清理窗口+引用+状态位，供 Service 销毁时调用
+- **`PanDriveService.onDestroy()` 增加悬浮窗清理** — 前台服务销毁时强制移除悬浮窗，解决"Activity 死了但 Service 还活着，悬浮窗无人管"的核心场景
+- **`PanDriveService.onTaskRemoved()` 增加清理** — 用户从最近任务列表划掉应用时触发清理
+- **`removeFloatWindow()` 去除 token null guard** — 原来窗口 token 为 null 时跳过 `removeViewImmediate`，导致僵尸窗口，改为无条件尝试移除
+- **`onActivityDestroyed` 兜底** — 即使销毁的不是当前悬浮 Activity，只要仍在悬浮态也清理
 
 ### v1.0.5.7 — 新增「调整」区域（6区域布局）
 - **新增第 6 个普通区域「调整」** — 位于导航栏与 3D 车道线之间，默认占比 0%（不占空间），用于配合手动调整其他区域在页面上的竖向位置

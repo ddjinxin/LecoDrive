@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'a26d28e1-82f3-4ee2-b4b4-f10dace2b0e2'
-  PropagateID: 'a26d28e1-82f3-4ee2-b4b4-f10dace2b0e2'
-  ReservedCode1: '21de598b-7257-4938-ab56-70c65b876ad0'
-  ReservedCode2: '21de598b-7257-4938-ab56-70c65b876ad0'
+  ProduceID: '7e05b65e-156d-487d-afca-c8eef6860ded'
+  PropagateID: '7e05b65e-156d-487d-afca-c8eef6860ded'
+  ReservedCode1: 'f2d3b04a-8ca2-4ac4-b7ae-6350babe48bb'
+  ReservedCode2: 'f2d3b04a-8ca2-4ac4-b7ae-6350babe48bb'
 ---
 
 <div align="center">
@@ -30,7 +30,15 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.7)
+## 📢 Latest Release (v1.0.5.8)
+
+### v1.0.5.8 — Fix Floating Window Residue
+- **Floating window cannot be closed fix** — After running in Leco Desktop floating mode, even after the app is killed from memory, the floating window remains on screen. Root cause: `PanDriveService.onDestroy()` did not clean up the floating window, and `removeFloatWindow()` token null guard caused zombie windows
+- **New `forceRemoveFloatWindow()` fallback method** — Forces removal of window + references + state flags regardless of status, called when Service is destroyed
+- **`PanDriveService.onDestroy()` adds floating window cleanup** — Frontground service destroys and force-removes floating window, solving the core scenario where "Activity is dead but Service is still alive, floating window has no owner"
+- **`PanDriveService.onTaskRemoved()` adds cleanup** — Triggered when user swipes away the app from recent tasks
+- **`removeFloatWindow()` removes token null guard** — Previously skipped `removeViewImmediate` when window token was null, causing zombie windows; now always attempts removal
+- **`onActivityDestroyed` fallback** — Cleans up even if the destroyed Activity is not the current floating one, as long as floating state is active
 
 ### v1.0.5.7 — New "Adjust" Region (6-Region Layout Weights)
 - **Added the 6th regular region "Adjust"** — Located between the navigation bar and the 3D lane view, defaults to 0% (takes no space), used to fine-tune the vertical position of other regions on the page

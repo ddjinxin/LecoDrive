@@ -16,6 +16,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.jingxin.pandrive.data.DataHub;
+import com.jingxin.pandrive.floatwindow.LecoFloatManager;
 
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.util.CompatUtils;
@@ -78,6 +79,15 @@ public class PanDriveService extends Service {
     }
 
     @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        // 用户从最近任务列表划掉应用时触发
+        // 此时 Activity 已被销毁，前台服务即将被杀，强制清理悬浮窗防止残留
+        Log.d(TAG, "onTaskRemoved: 用户划掉应用，清理悬浮窗");
+        LecoFloatManager.getInstance().forceRemoveFloatWindow();
+        super.onTaskRemoved(rootIntent);
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
@@ -88,6 +98,8 @@ public class PanDriveService extends Service {
         stopUpdateCheckLoop();
         unregisterAmapReceiver();
         unregisterExitReceiver();
+        // 兜底：销毁前台服务时强制清理悬浮窗，防止进程结束后窗口残留
+        LecoFloatManager.getInstance().forceRemoveFloatWindow();
         Log.d(TAG, "PanDriveService 销毁");
     }
 
