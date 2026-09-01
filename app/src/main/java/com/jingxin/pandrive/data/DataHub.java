@@ -141,9 +141,9 @@ public class DataHub {
     private static final float[] DEFAULT_FUEL_SPEED_THRESHOLDS = {0, 20, 40, 60, 80, 105, 115, 130, 999};
     private static final float[] DEFAULT_FUEL_VALUES = {20f, 12f, 11f, 10f, 9.5f, 8f, 7.5f, 9.5f, 11f};
 
-    // 布局比例默认值：日期/仪表盘/指南针/导航/车道线，合计=100
-    private static final float[] DEFAULT_LAYOUT_W_LAND = {10f, 30f, 15f, 15f, 30f};
-    private static final float[] DEFAULT_LAYOUT_W_PORT = {10f, 27f, 15f, 13f, 35f};
+    // 布局比例默认值：日期/仪表盘/指南针/导航/调整/车道线，合计=100
+    private static final float[] DEFAULT_LAYOUT_W_LAND = {10f, 30f, 15f, 15f, 0f, 30f};
+    private static final float[] DEFAULT_LAYOUT_W_PORT = {10f, 27f, 15f, 13f, 0f, 35f};
 
     // 车道背景默认色（ARGB int）—取自原 LaneView 硬编码值
     private static final int DEFAULT_LANE_NIGHT_TOP    = 0xFF050810;
@@ -468,15 +468,15 @@ public class DataHub {
             // 布局比例
             JSONArray layoutLand = root.optJSONArray("layout_w_land");
             JSONArray layoutPort = root.optJSONArray("layout_w_port");
-            if (layoutLand != null && layoutLand.length() == 5) {
+            if (layoutLand != null && layoutLand.length() == 6) {
                 float sum = 0;
-                for (int i = 0; i < 5; i++) { layoutWeightsLand[i] = (float) layoutLand.optDouble(i); sum += layoutWeightsLand[i]; }
-                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 5);
+                for (int i = 0; i < 6; i++) { layoutWeightsLand[i] = (float) layoutLand.optDouble(i); sum += layoutWeightsLand[i]; }
+                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 6);
             }
-            if (layoutPort != null && layoutPort.length() == 5) {
+            if (layoutPort != null && layoutPort.length() == 6) {
                 float sum = 0;
-                for (int i = 0; i < 5; i++) { layoutWeightsPort[i] = (float) layoutPort.optDouble(i); sum += layoutWeightsPort[i]; }
-                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
+                for (int i = 0; i < 6; i++) { layoutWeightsPort[i] = (float) layoutPort.optDouble(i); sum += layoutWeightsPort[i]; }
+                if (Math.abs(sum - 100f) > 1f) System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 6);
             }
             // 车道背景色
             laneNightTopColor    = root.optInt("lane_night_top", DEFAULT_LANE_NIGHT_TOP);
@@ -512,8 +512,8 @@ public class DataHub {
         fuelCalcKm           = 0f;
         tankCapacity         = 0f;
         recentFuelWindowSec  = 120;
-        System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 5);
-        System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 5);
+        System.arraycopy(DEFAULT_LAYOUT_W_LAND, 0, layoutWeightsLand, 0, 6);
+        System.arraycopy(DEFAULT_LAYOUT_W_PORT, 0, layoutWeightsPort, 0, 6);
         laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
         laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
         laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
@@ -596,7 +596,7 @@ public class DataHub {
             root.put("recent_fuel_window_sec", recentFuelWindowSec);
             JSONArray layoutLand = new JSONArray();
             JSONArray layoutPort = new JSONArray();
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 6; i++) {
                 layoutLand.put(layoutWeightsLand[i]);
                 layoutPort.put(layoutWeightsPort[i]);
             }
@@ -798,17 +798,17 @@ public class DataHub {
         persistBackup();
     }
 
-    /** 获取布局比例（5项：日期/仪表盘/指南针/导航/车道线） */
+    /** 获取布局比例（6项：日期/仪表盘/指南针/导航/调整/车道线） */
     public float[] getLayoutWeights(boolean isPortrait) {
         return isPortrait ? layoutWeightsPort.clone() : layoutWeightsLand.clone();
     }
-    /** 获取布局比例默认值（5项） */
+    /** 获取布局比例默认值（6项） */
     public float[] getDefaultLayoutWeights(boolean isPortrait) {
         return isPortrait ? DEFAULT_LAYOUT_W_PORT.clone() : DEFAULT_LAYOUT_W_LAND.clone();
     }
-    /** 设置布局比例，数组长度必须=5，自动校验合计=100 */
+    /** 设置布局比例，数组长度必须=6，自动校验合计=100 */
     public boolean setLayoutWeights(boolean isPortrait, float[] weights) {
-        if (weights == null || weights.length != 5) return false;
+        if (weights == null || weights.length != 6) return false;
         float sum = 0;
         for (float w : weights) {
             if (w < 0) return false;

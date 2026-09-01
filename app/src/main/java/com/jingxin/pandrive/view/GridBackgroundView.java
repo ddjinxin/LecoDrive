@@ -245,7 +245,7 @@ public class GridBackgroundView extends FrameLayout {
                 boolean isLandscape = w > h * 1.1f;
                 float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
                         .getLayoutWeights(!isLandscape);
-                laneHRatioFallback = weights[4] / 100f;
+                laneHRatioFallback = weights[5] / 100f;
                 laneTop = h * (1f - laneHRatioFallback);
                 laneH = h * laneHRatioFallback;
             }
@@ -254,7 +254,7 @@ public class GridBackgroundView extends FrameLayout {
             boolean isPortrait = h > w;
             float[] weights = com.jingxin.pandrive.data.DataHub.getInstance(getContext())
                     .getLayoutWeights(isPortrait);
-            float laneHRatio = weights[4] / 100f;
+            float laneHRatio = weights[5] / 100f;
             laneTop = h * (1f - laneHRatio);
             laneH = h * laneHRatio;
         }

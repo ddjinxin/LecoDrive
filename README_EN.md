@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'cc39d870-6336-45ce-8fcf-bd3fceacbef3'
-  PropagateID: 'cc39d870-6336-45ce-8fcf-bd3fceacbef3'
-  ReservedCode1: '21e028c6-b5cf-4747-a724-5052f79a3bf5'
-  ReservedCode2: '21e028c6-b5cf-4747-a724-5052f79a3bf5'
+  ProduceID: 'a26d28e1-82f3-4ee2-b4b4-f10dace2b0e2'
+  PropagateID: 'a26d28e1-82f3-4ee2-b4b4-f10dace2b0e2'
+  ReservedCode1: '21de598b-7257-4938-ab56-70c65b876ad0'
+  ReservedCode2: '21de598b-7257-4938-ab56-70c65b876ad0'
 ---
 
 <div align="center">
@@ -30,7 +30,14 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.6)
+## 📢 Latest Release (v1.0.5.7)
+
+### v1.0.5.7 — New "Adjust" Region (6-Region Layout Weights)
+- **Added the 6th regular region "Adjust"** — Located between the navigation bar and the 3D lane view, defaults to 0% (takes no space), used to fine-tune the vertical position of other regions on the page
+- **Layout weights upgraded to 6 items** — Date/Dashboard/Compass/Navigation/Adjust/Lane, landscape default `{10, 30, 15, 15, 0, 30}`, portrait default `{10, 27, 15, 13, 0, 35}`, sum still must equal 100
+- **New input fields in settings** — Both landscape and portrait weight rows gain an "Adjust" label and a 6th input field
+- **Settings crash fixed** — When expanding the weight arrays from 5 to 6, `SettingsView`/`SettingsActivity` left residual `new EditText[5]`/`new float[5]`, causing an immediate crash on opening settings (ArrayIndexOutOfBoundsException). All corrected
+- **Technical implementation** — `DataHub` defaults/backup IO/validation adapted to 6 items; `GridBackgroundView` lane geometry now uses `weights[5]`; floating mode auto-adapts
 
 ### v1.0.5.6 — Navigation Bar Wallpaper Brightness Adaptation
 - **Navigation bar text color auto-adapts to wallpaper brightness** — Samples pixel brightness in the navigation area when loading image wallpapers; video wallpapers sampled every 2 seconds. Text automatically switches between black/white without manual day/night mode toggle

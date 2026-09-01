@@ -45,8 +45,8 @@ public class SettingsActivity extends Activity {
     private TextView labelNightWallpaperStatus;
     private Button btnWeatherAnimation;
     private boolean weatherAnimationEnabled;
-    private EditText[] editLayoutLand = new EditText[5];
-    private EditText[] editLayoutPort = new EditText[5];
+    private EditText[] editLayoutLand = new EditText[6];
+    private EditText[] editLayoutPort = new EditText[6];
 
     /** 车道背景色辅助器 */
     private LaneColorHelper laneColorHelper;
@@ -115,12 +115,12 @@ public class SettingsActivity extends Activity {
 
         // 布局比例输入框
         int[] landIds = {R.id.edit_layout_land_0, R.id.edit_layout_land_1, R.id.edit_layout_land_2,
-                R.id.edit_layout_land_3, R.id.edit_layout_land_4};
+                R.id.edit_layout_land_3, R.id.edit_layout_land_4, R.id.edit_layout_land_5};
         int[] portIds = {R.id.edit_layout_port_0, R.id.edit_layout_port_1, R.id.edit_layout_port_2,
-                R.id.edit_layout_port_3, R.id.edit_layout_port_4};
+                R.id.edit_layout_port_3, R.id.edit_layout_port_4, R.id.edit_layout_port_5};
         float[] curLand = dataHub.getLayoutWeights(false);
         float[] curPort = dataHub.getLayoutWeights(true);
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             editLayoutLand[i] = findViewById(landIds[i]);
             editLayoutPort[i] = findViewById(portIds[i]);
             editLayoutLand[i].setText(String.valueOf((int) curLand[i]));
@@ -573,11 +573,11 @@ public class SettingsActivity extends Activity {
         finish();
     }
 
-    /** 从输入框读取5个数字，校验合计=100，返回null表示校验失败 */
+    /** 从输入框读取6个数字，校验合计=100，返回null表示校验失败 */
     private float[] parseLayoutWeights(EditText[] edits) {
-        float[] w = new float[5];
+        float[] w = new float[6];
         float sum = 0;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             try {
                 w[i] = Float.parseFloat(edits[i].getText().toString().trim());
             } catch (NumberFormatException e) {
@@ -611,7 +611,7 @@ public class SettingsActivity extends Activity {
     private void fillLayoutDefaults(boolean isPortrait) {
         float[] def = dataHub.getDefaultLayoutWeights(isPortrait);
         EditText[] edits = isPortrait ? editLayoutPort : editLayoutLand;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             edits[i].setText(String.valueOf((int) def[i]));
         }
     }

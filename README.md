@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '99e99bb1-da95-447f-a2aa-584897fa2d2f'
-  PropagateID: '99e99bb1-da95-447f-a2aa-584897fa2d2f'
-  ReservedCode1: '37e29baf-0480-4562-a666-c115292ee79a'
-  ReservedCode2: '37e29baf-0480-4562-a666-c115292ee79a'
+  ProduceID: '04c64724-6ac7-4b70-8996-cf92450aab68'
+  PropagateID: '04c64724-6ac7-4b70-8996-cf92450aab68'
+  ReservedCode1: '0f08005c-02fd-4868-aeaf-b24500ed4a7d'
+  ReservedCode2: '0f08005c-02fd-4868-aeaf-b24500ed4a7d'
 ---
 
 <div align="center">
@@ -30,7 +30,15 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.6)
+<!-- LATEST_RELEASE_START -->
+## 📢 最新版本 (v1.0.5.7)
+
+### v1.0.5.7 — 新增「调整」区域（6区域布局）
+- **新增第 6 个普通区域「调整」** — 位于导航栏与 3D 车道线之间，默认占比 0%（不占空间），用于配合手动调整其他区域在页面上的竖向位置
+- **布局比例升级为 6 项** — 日期/仪表盘/指南针/导航/调整/车道线，横屏默认 `{10, 30, 15, 15, 0, 30}`，竖屏默认 `{10, 27, 15, 13, 0, 35}`，6 项合计仍须=100
+- **设置页新增输入框** — 横屏/竖屏区域比例各新增「调整」标签及第 6 个输入框
+- **修复设置页闪退** — `SettingsView`/`SettingsActivity` 布局比例数组由 5 项扩为 6 项时残留 `new EditText[5]`/`new float[5]`，点击设置页即崩溃（ArrayIndexOutOfBoundsException），已全部修正
+- **技术实现** — `DataHub` 默认权重/备份读写/校验适配 6 项，`GridBackgroundView` 车道线几何改用 `weights[5]`，悬浮态自动适配
 
 ### v1.0.5.6 — 导航栏壁纸亮度自适应
 - **导航栏文字颜色自动适配壁纸亮度** — 图片壁纸加载时采样导航区域像素亮度，视频壁纸每2秒周期采样，文字自动在黑/白之间切换，无需手动调日夜模式

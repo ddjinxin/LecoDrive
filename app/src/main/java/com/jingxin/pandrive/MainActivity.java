@@ -542,13 +542,15 @@ public class MainActivity extends Activity implements
         View speedometer = findViewById(R.id.speedometer_view);
         View sectionCompassClock = findViewById(R.id.section_compass_clock);
         View sectionNav = findViewById(R.id.section_navigation);
+        View sectionAdjust = findViewById(R.id.section_adjust);
         View sectionCar3d = findViewById(R.id.section_car3d);
 
         setVerticalWeight(sectionDatetime, weights[0]);
         setVerticalWeight(speedometer, weights[1]);
         setVerticalWeight(sectionCompassClock, weights[2]);
         setVerticalWeight(sectionNav, weights[3]);
-        setVerticalWeight(sectionCar3d, weights[4]);
+        setVerticalWeight(sectionAdjust, weights[4]);
+        setVerticalWeight(sectionCar3d, weights[5]);
 
         // 通知背景重算天气文字位置
         GridBackgroundView bgv = findViewById(R.id.grid_background);

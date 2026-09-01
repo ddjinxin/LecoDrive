@@ -527,6 +527,8 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="调整" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="车道线" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" />
 
         </LinearLayout>
@@ -603,6 +605,19 @@
                 android:gravity="center"
                 android:layout_marginRight="4dp" />
 
+            <EditText
+                android:id="@+id/edit_layout_land_5"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
             <Button
                 android:id="@+id/btn_layout_land_default"
                 android:layout_width="wrap_content"
@@ -642,6 +657,8 @@
                 android:text="指南针" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+            <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
+                android:text="调整" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="车道线" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" />
 
@@ -708,6 +725,19 @@
 
             <EditText
                 android:id="@+id/edit_layout_port_4"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:inputType="numberDecimal"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                android:background="#FF2A2A4A"
+                android:padding="4dp"
+                android:gravity="center"
+                android:layout_marginRight="4dp" />
+
+            <EditText
+                android:id="@+id/edit_layout_port_5"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"

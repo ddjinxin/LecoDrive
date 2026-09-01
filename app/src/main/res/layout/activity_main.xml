@@ -97,6 +97,14 @@
             android:layout_weight="15"
             android:background="@android:color/transparent" />
 
+        <!-- 调整区域：空白占位，默认0%，用于调节下方区域的竖向位置 -->
+        <View
+            android:id="@+id/section_adjust"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0"
+            android:background="@android:color/transparent" />
+
         <!-- Section 5: Lane + Car3D (30%) -->
         <FrameLayout
             android:id="@+id/section_car3d"
