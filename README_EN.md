@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '7e05b65e-156d-487d-afca-c8eef6860ded'
-  PropagateID: '7e05b65e-156d-487d-afca-c8eef6860ded'
-  ReservedCode1: 'f2d3b04a-8ca2-4ac4-b7ae-6350babe48bb'
-  ReservedCode2: 'f2d3b04a-8ca2-4ac4-b7ae-6350babe48bb'
+  ProduceID: 'aba19a0b-6973-4e40-8a3c-5e293a513ce9'
+  PropagateID: 'aba19a0b-6973-4e40-8a3c-5e293a513ce9'
+  ReservedCode1: '7e71e3c8-b81b-409e-bd41-94e4e23904d7'
+  ReservedCode2: '7e71e3c8-b81b-409e-bd41-94e4e23904d7'
 ---
 
 <div align="center">
@@ -30,7 +30,17 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.8)
+## 📢 Latest Release (v1.0.5.9)
+
+### v1.0.5.9 — Dashboard 3-Page Swipe + Vehicle Info as Independent Region
+- **Dashboard 3-page swipe container** — New self-built `DashboardView` (zero third-party dependencies), extends FrameLayout with 3 equally-wide pages, GestureDetector + Scroller for left/right swipe page switching, DOWN events passed to child views to retain tap-to-switch-style capability
+- **Three pages: Speedometer / Compass / Clock** — The speedometer and compass/clock previously crammed into one region are now three swipeable pages, with LED-style page indicator dots at the bottom (cyan solid / dark gray), showing one instrument at a time
+- **Page width = min(container width, container height)** — DashboardView narrows itself to a single page width and centers horizontally, short swipe distance for precise operation
+- **Vehicle info separated as region ③** — MileageView is now the sole content of vertical region ③, with roller width aligned to DashboardView's actual width via `setTargetWidth()`
+- **Roller display optimization** — Roller height is 70% of View height, roller width is 90% of MileageView width, label font size is 20% of MileageView height, internal digit/radius scaled proportionally, roller center shifted down to leave room for labels
+- **Compass/Clock drawing range unified** — outerRadius from `0.36` to `0.42`, arcStrokeWidth from `0.0632` to `0.0737`, matching the speedometer's content ratio (~84% diameter)
+- **Settings page labels updated** — Region names "Dashboard"→"Dashboard" (仪表区), "Compass"→"Vehicle Info" (车辆信息)
+- **Help page content updated** — Dashboard 3-page swipe description, vehicle info 7-item data description, gesture section adds left/right swipe, layout weights from 5 to 6 items
 
 ### v1.0.5.8 — Fix Floating Window Residue
 - **Floating window cannot be closed fix** — After running in Leco Desktop floating mode, even after the app is killed from memory, the floating window remains on screen. Root cause: `PanDriveService.onDestroy()` did not clean up the floating window, and `removeFloatWindow()` token null guard caused zombie windows

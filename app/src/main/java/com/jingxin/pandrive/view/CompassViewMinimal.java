@@ -61,7 +61,7 @@ public class CompassViewMinimal extends View implements ICompassView {
         gaugeSize = w;
         centerX = gaugeSize / 2f;
         centerY = gaugeSize * 0.5f;
-        outerRadius = gaugeSize * 0.36f;
+        outerRadius = gaugeSize * 0.42f;
     }
 
     @Override

@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '1a94e460-5d85-4334-9108-4d785d5659eb'
-  PropagateID: '1a94e460-5d85-4334-9108-4d785d5659eb'
-  ReservedCode1: 'c7bf0c5e-de80-4431-a3c6-ab3cc6cff6e2'
-  ReservedCode2: 'c7bf0c5e-de80-4431-a3c6-ab3cc6cff6e2'
+  ProduceID: '2e90c82b-c465-4994-9f53-7d1f01c2eef0'
+  PropagateID: '2e90c82b-c465-4994-9f53-7d1f01c2eef0'
+  ReservedCode1: 'b29e45cf-662e-48cf-8de3-f26e72b6c83d'
+  ReservedCode2: 'b29e45cf-662e-48cf-8de3-f26e72b6c83d'
 ---
 
 <div align="center">
@@ -30,7 +30,17 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.8)
+## 📢 最新版本 (v1.0.5.9)
+
+### v1.0.5.9 — 仪表区三页滑动 + 车辆信息独立区域
+- **仪表区三页滑动容器** — 新增自研 `DashboardView`（零第三方依赖），继承 FrameLayout，内部三页等宽排列，通过 GestureDetector + Scroller 实现左右滑动切页，DOWN 事件放行给子视图保留点击切换样式能力
+- **三页内容：速度仪表盘 / 指南针 / 圆形时钟** — 原来挤在同一区域的仪表盘和指南针时钟改为三页滑动切换，底部 LED 风格指示点显示当前页面（青色实心/暗灰色），一次只显示一个仪表
+- **每页宽度 = min(容器宽, 容器高)** — DashboardView 自身宽度收窄为单页宽度并水平居中，滑动距离短，操作精准
+- **车辆信息独立为第③区域** — MileageView 从原仪表盘区域分离，成为竖向第③区域唯一内容，滚轮宽度对齐 DashboardView 实际宽度
+- **滚轮显示优化** — 滚轮高度为 View 高度的 70%，滚轮宽度为 MileageView 宽度的 90%，标签字号为 MileageView 高度的 20%，内部数字/半径等比放大，滚轮中心下移给标签留空间
+- **指南针/时钟绘制范围统一** — outerRadius 从 `0.36` 改为 `0.42`，arcStrokeWidth 从 `0.0632` 改为 `0.0737`，与速度仪表盘内容占比一致（直径约 84%）
+- **设置页标签更新** — 区域名"仪表盘"→"仪表区"、"指南针"→"车辆信息"
+- **帮助页内容更新** — 仪表区三页滑动说明、车辆信息七项数据说明、操作手势增加左右滑动、布局比例从五项改为六项
 
 ### v1.0.5.8 — 修复悬浮窗残留问题
 - **悬浮窗无法关闭修复** — 应用在乐酷桌面悬浮模式下运行后，即使应用从内存关闭，悬浮窗仍残留在屏幕上无法消除。根因是 `PanDriveService.onDestroy()` 未清理悬浮窗，且 `removeFloatWindow()` 的 token null guard 导致僵尸窗口

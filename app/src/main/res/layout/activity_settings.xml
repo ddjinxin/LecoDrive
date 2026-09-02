@@ -500,7 +500,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical" />
 
-        <!-- 布局比例设置（5项合计=100） -->
+        <!-- 布局比例设置（6项合计=100） -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -521,9 +521,9 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="日期" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="仪表盘" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+                android:text="仪表区" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="指南针" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+                android:text="车辆信息" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
@@ -652,9 +652,9 @@
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="日期" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="仪表盘" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+                android:text="仪表区" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
-                android:text="指南针" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
+                android:text="车辆信息" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
                 android:text="导航" android:textColor="#FF888888" android:textSize="11sp" android:gravity="center" android:layout_marginRight="4dp" />
             <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"

@@ -33,7 +33,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="仪表盘：显示实时车速，超速时数字变红预警。"
+            android:text="仪表区：三页滑动切换，左右滑动可在速度仪表盘、指南针、圆形时钟之间切换，底部指示点显示当前页面。单击可切换对应仪表的显示样式。速度仪表盘显示实时车速，超速时数字变红预警；指南针显示当前方向，行驶时方向自动跟随GPS更新；圆形时钟显示当前时间。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
@@ -69,16 +69,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="指南针时钟：显示当前方向和时间，行驶时方向自动跟随GPS更新。"
-            android:textSize="14sp"
-            android:textColor="#FFEEEEEE"
-            android:lineSpacingExtra="4dp"
-            android:layout_marginBottom="8dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="里程轮播：自动滚动显示七项数据——实时行程、今日里程、累计里程、综合油耗、近期油耗、剩余续航、剩余油量（电量为剩余电量）。"
+            android:text="车辆信息：自动滚动显示七项数据——实时行程、今日里程、累计里程、综合油耗、近期油耗、剩余续航、剩余油量（电量为剩余电量）。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
@@ -96,7 +87,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="布局比例：主界面五个区域（日期时间、仪表盘、指南针、导航、车道线）的高度占比支持横屏和竖屏分别自定义，可根据车机屏幕尺寸和个人偏好自由调整，充分发挥界面灵活性。调整后天气文字位置也会自动跟随车道线区域动态变化。"
+            android:text="布局比例：主界面六个区域（日期时间、仪表区、车辆信息、导航、调整、车道线）的高度占比支持横屏和竖屏分别自定义，可根据车机屏幕尺寸和个人偏好自由调整，充分发挥界面灵活性。调整后天气文字位置也会自动跟随车道线区域动态变化。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
@@ -114,7 +105,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
+            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;左右滑动仪表区：在速度仪表盘、指南针、圆形时钟之间切换。&#10;单击仪表区：切换当前仪表的显示样式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -231,7 +222,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="布局比例：横屏和竖屏分别设置，在对应区域填入五个数字（日期时间、仪表盘、指南针、导航、车道线），五个数字合计必须等于100。填好后点击保存立即生效，主界面各区域按新比例重新分配高度。如需恢复系统默认比例，点击对应行的&quot;默认&quot;按钮即可。"
+            android:text="布局比例：横屏和竖屏分别设置，在对应区域填入六个数字（日期时间、仪表区、车辆信息、导航、调整、车道线），六个数字合计必须等于100。填好后点击保存立即生效，主界面各区域按新比例重新分配高度。如需恢复系统默认比例，点击对应行的&quot;默认&quot;按钮即可。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"

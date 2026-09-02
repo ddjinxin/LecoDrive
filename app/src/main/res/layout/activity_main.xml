@@ -19,71 +19,67 @@
             android:layout_height="0dp"
             android:layout_weight="10" />
 
-        <!-- Section 2: Speedometer (30%) -->
-        <com.jingxin.pandrive.view.SpeedometerView
-            android:id="@+id/speedometer_view"
+        <!-- Section 2: 仪表综合区（速度仪表盘/指南针/圆形时钟 三页滑动） -->
+        <com.jingxin.pandrive.view.DashboardView
+            android:id="@+id/dashboard_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="30" />
+            android:layout_weight="30"
+            android:layout_gravity="center_horizontal">
 
-        <!-- Section 3: Compass + Clock + Mileage overlay (15%) -->
+            <com.jingxin.pandrive.view.SpeedometerView
+                android:id="@+id/speedometer_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <FrameLayout
+                android:id="@+id/compass_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.jingxin.pandrive.view.CompassView
+                    android:id="@+id/compass_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:visibility="visible" />
+
+                <com.jingxin.pandrive.view.CompassViewMinimal
+                    android:id="@+id/compass_view_minimal"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/clock_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <com.jingxin.pandrive.view.ClockView
+                    android:id="@+id/clock_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center" />
+
+            </FrameLayout>
+
+        </com.jingxin.pandrive.view.DashboardView>
+
+        <!-- Section 3: 车辆信息（里程/油耗/续航）—宽度与仪表盘区域一致，水平居中 -->
         <FrameLayout
-            android:id="@+id/section_compass_clock"
+            android:id="@+id/section_vehicle_info"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="15"
             android:background="@android:color/transparent">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:baselineAligned="false"
-                android:background="@android:color/transparent">
-
-                <FrameLayout
-                    android:id="@+id/compass_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
-
-                    <com.jingxin.pandrive.view.CompassView
-                        android:id="@+id/compass_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:visibility="visible" />
-
-                    <com.jingxin.pandrive.view.CompassViewMinimal
-                        android:id="@+id/compass_view_minimal"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:visibility="gone" />
-
-                </FrameLayout>
-
-                <!-- Clock -->
-                <FrameLayout
-                    android:id="@+id/clock_container"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1">
-
-                    <com.jingxin.pandrive.view.ClockView
-                        android:id="@+id/clock_view"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center" />
-
-                </FrameLayout>
-
-            </LinearLayout>
-
-            <!-- Mileage display: centered between compass and clock -->
+            <!-- Mileage display: 里程油耗车辆信息 -->
             <com.jingxin.pandrive.view.MileageView
                 android:id="@+id/mileage_view"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center" />
 

@@ -97,8 +97,8 @@ public class CompassView extends View implements ICompassView {
         gaugeSize = w;
         centerX = gaugeSize / 2f;
         centerY = gaugeSize * 0.5f;
-        outerRadius = gaugeSize * 0.36f;
-        arcStrokeWidth = gaugeSize * 0.0632f;
+        outerRadius = gaugeSize * 0.42f;
+        arcStrokeWidth = gaugeSize * 0.0737f;
         paintsDirty = true;
     }
 

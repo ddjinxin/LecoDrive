@@ -98,6 +98,27 @@ public class MileageView extends View {
     @Override
     public boolean onTouchEvent(MotionEvent event) { return false; }
 
+    /** 目标宽度（由外部设置，与 DashboardView 宽度对齐） */
+    private int targetWidth = 0;
+
+    public void setTargetWidth(int width) {
+        if (width > 0 && width != targetWidth) {
+            targetWidth = width;
+            requestLayout();
+        }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        int height = MeasureSpec.getSize(heightMeasureSpec);
+        if (targetWidth > 0) {
+            setMeasuredDimension(targetWidth, height);
+        } else {
+            int width = MeasureSpec.getSize(widthMeasureSpec);
+            setMeasuredDimension(Math.min(width, height), height);
+        }
+    }
+
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
@@ -143,23 +164,20 @@ public class MileageView extends View {
         int labelColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;
 
         float cx = w / 2f;
-        // 滚轮中心在标签下方，数字区域居中
-        float rollerCenterY = h * 0.5f;
+        // 滚轮中心下移，给顶部标签留出空间
+        float rollerCenterY = h * 0.60f;
 
-        // 滚轮宽度：横屏(屏幕宽/高>1.2)用0.18f，竖屏用0.26f
-        int screenW = getResources().getDisplayMetrics().widthPixels;
-        int screenH = getResources().getDisplayMetrics().heightPixels;
-        boolean isLandscape = screenW >= screenH * 1.2f;
-        float rollerW = isLandscape ? w * 0.18f : w * 0.26f;
+        // 滚轮宽度：MileageView 宽度的 80%
+        float rollerW = w * 0.90f;
         float rollerLeft = cx - rollerW / 2f;
         float rollerRight = cx + rollerW / 2f;
 
         // 标签固定在顶部，不随滚轮旋转
         drawLabel(canvas, w, h, currentMode, labelColor);
 
-        // 滚轮可见区域：正面数字完整 + 上下相邻项各露出约1/5
-        float digitH = h * 0.21f;
-        float rollerVisibleH = h * 0.40f;
+        // 滚轮可见区域：70% 高度，内部元素按原比例放大
+        float digitH = h * 0.3675f;
+        float rollerVisibleH = h * 0.70f;
         float rollerTop = rollerCenterY - rollerVisibleH / 2f;
         float rollerBottom = rollerCenterY + rollerVisibleH / 2f;
 
@@ -175,7 +193,7 @@ public class MileageView extends View {
         canvas.clipPath(clipPath);
 
         // 画圆柱面纹理线（随旋转透视移动，让滚轮本身可见转动）
-        float radius = h * 0.30f;
+        float radius = h * 0.525f;
         drawCylinderTexture(canvas, cx, rollerCenterY, rollerLeft, rollerRight, totalRotation, radius, h);
 
         if (isAnimating) {
@@ -214,11 +232,11 @@ public class MileageView extends View {
         } else {
             label = MODE_LABELS[mode];
         }
-        labelPaint.setTextSize(h * 0.093f);
+        labelPaint.setTextSize(h * 0.20f);
         labelPaint.setColor(labelColor);
         labelPaint.setAlpha(255);
         Paint.FontMetrics labelFm = labelPaint.getFontMetrics();
-        float labelBaseline = h * 0.2f - (labelFm.ascent + labelFm.descent) / 2f;
+        float labelBaseline = h * 0.10f - (labelFm.ascent + labelFm.descent) / 2f;
         canvas.drawText(label, w / 2f, labelBaseline, labelPaint);
     }
 
@@ -245,7 +263,7 @@ public class MileageView extends View {
         int alpha = 255;
 
         // 圆柱半径：决定上下项的间距
-        float radius = h * 0.30f;
+        float radius = h * 0.525f;
         // 该项在圆柱面上的 Y 偏移（正=上方，负=下方）
         float yOnCylinder = (float) Math.sin(angle * Math.PI / 180f) * radius;
 
@@ -417,8 +435,8 @@ public class MileageView extends View {
         float slotGap = slotW * 0.08f;  // 凹槽间距
         float slotInnerW = slotW - slotGap;
 
-        // 数字尺寸：根据凹槽宽度自适应，高度不变
-        float digitH = h * 0.21f;
+        // 数字尺寸：根据凹槽宽度自适应，高度按滚轮80%比例放大
+        float digitH = h * 0.3675f;
         float digitW = Math.min(slotInnerW * 0.7f, digitH * 0.5f);  // 数字宽不超过槽宽70%
         float segThick = digitH * 0.14f;
         float segGap = digitH * 0.06f;

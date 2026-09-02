@@ -33,6 +33,7 @@ import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.view.ClockView;
 import com.jingxin.pandrive.view.CompassView;
 import com.jingxin.pandrive.view.CompassViewMinimal;
+import com.jingxin.pandrive.view.DashboardView;
 import com.jingxin.pandrive.view.DateTimeView;
 import com.jingxin.pandrive.view.GridBackgroundView;
 import com.jingxin.pandrive.view.ICompassView;
@@ -64,6 +65,7 @@ public class MainActivity extends Activity implements
 
     private DateTimeView dateTimeView;
     private SpeedometerView speedometerView;
+    private DashboardView dashboardView;
     private CompassView compassView;
     private CompassViewMinimal compassViewMinimal;
     private ICompassView activeCompassView;
@@ -139,6 +141,7 @@ public class MainActivity extends Activity implements
 
         // Bind views
         dateTimeView = findViewById(R.id.section_datetime);
+        dashboardView = findViewById(R.id.dashboard_view);
         speedometerView = findViewById(R.id.speedometer_view);
         compassView = findViewById(R.id.compass_view);
         compassViewMinimal = findViewById(R.id.compass_view_minimal);
@@ -349,12 +352,12 @@ public class MainActivity extends Activity implements
         speedometerView.setOnClickListener(v -> speedometerView.toggleStyle());
         speedometerView.setClickable(true);
 
-        // Compass: single tap toggles style
+        // Compass: single tap toggles style (在 dashboard 内部)
         View compassContainer = findViewById(R.id.compass_container);
         compassContainer.setOnClickListener(v -> toggleCompassStyle());
         compassContainer.setClickable(true);
 
-        // Clock: single tap toggles style
+        // Clock: single tap toggles style (在 dashboard 内部)
         View clockContainer = findViewById(R.id.clock_container);
         clockContainer.setOnClickListener(v -> clockView.toggleStyle());
         clockContainer.setClickable(true);
@@ -539,8 +542,8 @@ public class MainActivity extends Activity implements
         float[] weights = dataHub.getLayoutWeights(isPortrait);
 
         View sectionDatetime = findViewById(R.id.section_datetime);
-        View speedometer = findViewById(R.id.speedometer_view);
-        View sectionCompassClock = findViewById(R.id.section_compass_clock);
+        View speedometer = findViewById(R.id.dashboard_view);
+        View sectionCompassClock = findViewById(R.id.section_vehicle_info);
         View sectionNav = findViewById(R.id.section_navigation);
         View sectionAdjust = findViewById(R.id.section_adjust);
         View sectionCar3d = findViewById(R.id.section_car3d);
@@ -555,6 +558,23 @@ public class MainActivity extends Activity implements
         // 通知背景重算天气文字位置
         GridBackgroundView bgv = findViewById(R.id.grid_background);
         if (bgv != null) bgv.refreshEdgeGeometry();
+
+        // 同步 MileageView 宽度与 DashboardView 一致（布局完成后 post 读取实际宽度）
+        syncMileageWidth();
+    }
+
+    /**
+     * 将 MileageView 的宽度设置为与 DashboardView 实际宽度一致，
+     * 保证车辆信息滚轮与上方仪表盘等宽对齐。
+     */
+    private void syncMileageWidth() {
+        if (dashboardView == null || mileageView == null) return;
+        dashboardView.post(() -> {
+            int dw = dashboardView.getWidth();
+            if (dw > 0) {
+                mileageView.setTargetWidth(dw);
+            }
+        });
     }
 
     private void setVerticalWeight(View view, float weight) {
@@ -661,6 +681,7 @@ public class MainActivity extends Activity implements
         }
         if (gridBackgroundView != null) gridBackgroundView.invalidate();
         if (dateTimeView != null) dateTimeView.invalidate();
+        if (dashboardView != null) dashboardView.invalidate();
         if (speedometerView != null) speedometerView.invalidate();
         if (compassView != null) compassView.invalidate();
         if (compassViewMinimal != null) compassViewMinimal.invalidate();
@@ -706,6 +727,7 @@ public class MainActivity extends Activity implements
             if (rootView instanceof GridBackgroundView) {
                 ((GridBackgroundView) rootView).refreshEdgeGeometry();
             }
+            syncMileageWidth();
         }
     }
 
