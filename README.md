@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '2e90c82b-c465-4994-9f53-7d1f01c2eef0'
-  PropagateID: '2e90c82b-c465-4994-9f53-7d1f01c2eef0'
-  ReservedCode1: 'b29e45cf-662e-48cf-8de3-f26e72b6c83d'
-  ReservedCode2: 'b29e45cf-662e-48cf-8de3-f26e72b6c83d'
+  ProduceID: '1c74a13e-e6f9-4805-8f91-7166040a6a25'
+  PropagateID: '1c74a13e-e6f9-4805-8f91-7166040a6a25'
+  ReservedCode1: 'dd7c36bf-a250-480b-ad16-9f1559c807ca'
+  ReservedCode2: 'dd7c36bf-a250-480b-ad16-9f1559c807ca'
 ---
 
 <div align="center">
@@ -30,7 +30,14 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.5.9)
+## 📢 最新版本 (v1.0.6.0)
+
+### v1.0.6.0 — 新增滚轮透明度设置项
+- **滚轮透明度可调** — 设置页新增「滚轮透明度」滑条（0~255，255=不透明），自由调节车辆信息滚轮（金属背景、凹槽、边框）的透明度，壁纸可从滚轮透出
+- **实时生效** — 滑动时数值实时更新并立即刷新主界面滚轮，无需保存
+- **默认按钮** — 滑条右侧「默认」按钮一键恢复 255（不透明）
+- **普通模式与悬浮模式均支持** — SettingsActivity（全屏）与 SettingsView（乐酷悬浮）同步实现
+- **持久化** — 通过 DataHub 写入 JSON 备份 + SharedPreferences，重启后自动恢复
 
 ### v1.0.5.9 — 仪表区三页滑动 + 车辆信息独立区域
 - **仪表区三页滑动容器** — 新增自研 `DashboardView`（零第三方依赖），继承 FrameLayout，内部三页等宽排列，通过 GestureDetector + Scroller 实现左右滑动切页，DOWN 事件放行给子视图保留点击切换样式能力

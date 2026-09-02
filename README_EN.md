@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'aba19a0b-6973-4e40-8a3c-5e293a513ce9'
-  PropagateID: 'aba19a0b-6973-4e40-8a3c-5e293a513ce9'
-  ReservedCode1: '7e71e3c8-b81b-409e-bd41-94e4e23904d7'
-  ReservedCode2: '7e71e3c8-b81b-409e-bd41-94e4e23904d7'
+  ProduceID: '48673af6-f201-4a88-b516-09eb69164eae'
+  PropagateID: '48673af6-f201-4a88-b516-09eb69164eae'
+  ReservedCode1: '0c43f048-85fd-48f0-9bc9-dec41c6f817f'
+  ReservedCode2: '0c43f048-85fd-48f0-9bc9-dec41c6f817f'
 ---
 
 <div align="center">
@@ -30,7 +30,14 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.5.9)
+## 📢 Latest Release (v1.0.6.0)
+
+### v1.0.6.0 — New Roller Transparency Setting
+- **Adjustable roller transparency** — New "Roller Transparency" slider in Settings (0~255, 255=opaque) controls the vehicle info roller's opacity (metal + digits + slots), letting the wallpaper show through
+- **Real-time effect** — Value updates instantly and refreshes the roller on the main screen while sliding, no save needed
+- **One-tap reset** — "Default" button on the right restores 255 (opaque)
+- **Both fullscreen and floating mode** — Supported in SettingsActivity (fullscreen) and SettingsView (floating overlay)
+- **Persisted** — Saved via DataHub to JSON backup + SharedPreferences, auto-restored on restart
 
 ### v1.0.5.9 — Dashboard 3-Page Swipe + Vehicle Info as Independent Region
 - **Dashboard 3-page swipe container** — New self-built `DashboardView` (zero third-party dependencies), extends FrameLayout with 3 equally-wide pages, GestureDetector + Scroller for left/right swipe page switching, DOWN events passed to child views to retain tap-to-switch-style capability

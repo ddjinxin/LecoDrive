@@ -883,6 +883,7 @@ public class MainActivity extends Activity implements
         if (clockView != null) clockView.setNightMode(isNight);
         if (mileageView != null) mileageView.setNightMode(isNight);
         if (mileageView != null) mileageView.setVehicleType(dataHub.getVehicleType());
+        if (mileageView != null) mileageView.setRollerAlpha(dataHub.getRollerAlpha());
         if (gridBackgroundView != null) gridBackgroundView.setNightMode(isNight);
         updateThemeButtonIcon(isNight);
     }

@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -19,6 +20,7 @@ import com.jingxin.pandrive.data.WeatherHelper;
 import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
+import com.jingxin.pandrive.view.MileageView;
 import com.jingxin.pandrive.view.LaneColorHelper;
 
 import java.io.File;
@@ -136,6 +138,35 @@ public class SettingsActivity extends Activity {
             if (gv != null) {
                 View lane = gv.findViewById(R.id.lane_view);
                 if (lane != null) lane.invalidate();
+            }
+        });
+
+        // 滚轮透明度
+        SeekBar seekRollerAlpha = findViewById(R.id.seekbar_roller_alpha);
+        TextView labelRollerAlphaValue = findViewById(R.id.label_roller_alpha_value);
+        seekRollerAlpha.setProgress(dataHub.getRollerAlpha());
+        labelRollerAlphaValue.setText(String.valueOf(dataHub.getRollerAlpha()));
+        seekRollerAlpha.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(SeekBar sb, int progress, boolean fromUser) {
+                labelRollerAlphaValue.setText(String.valueOf(progress));
+                dataHub.setRollerAlpha(progress);
+                GridBackgroundView gv = GridBackgroundView.getInstance();
+                if (gv != null) {
+                    View mv = gv.findViewById(R.id.mileage_view);
+                    if (mv instanceof MileageView) ((MileageView) mv).setRollerAlpha(progress);
+                }
+            }
+            @Override public void onStartTrackingTouch(SeekBar sb) {}
+            @Override public void onStopTrackingTouch(SeekBar sb) {}
+        });
+        findViewById(R.id.btn_roller_alpha_reset).setOnClickListener(v -> {
+            dataHub.setRollerAlpha(255);
+            seekRollerAlpha.setProgress(255);
+            labelRollerAlphaValue.setText("255");
+            GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv != null) {
+                View mv = gv.findViewById(R.id.mileage_view);
+                if (mv instanceof MileageView) ((MileageView) mv).setRollerAlpha(255);
             }
         });
 

@@ -151,12 +151,14 @@ public class DataHub {
     private static final int DEFAULT_LANE_DAY_TOP      = 0xFF2A2D30;
     private static final int DEFAULT_LANE_DAY_BOTTOM   = 0xFF3A3D42;
     private static final int DEFAULT_LANE_ALPHA        = 255;   // 0~255，255=不透明
+    private static final int DEFAULT_ROLLER_ALPHA       = 255;   // 滚轮透明度，255=不透明
 
     private int laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
     private int laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
     private int laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
     private int laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
     private int laneAlpha            = DEFAULT_LANE_ALPHA;
+    private int rollerAlpha          = DEFAULT_ROLLER_ALPHA;
 
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
@@ -484,6 +486,7 @@ public class DataHub {
             laneDayTopColor      = root.optInt("lane_day_top", DEFAULT_LANE_DAY_TOP);
             laneDayBottomColor   = root.optInt("lane_day_bottom", DEFAULT_LANE_DAY_BOTTOM);
             laneAlpha            = root.optInt("lane_alpha", DEFAULT_LANE_ALPHA);
+            rollerAlpha          = root.optInt("roller_alpha", DEFAULT_ROLLER_ALPHA);
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
             dataLoadedFromBackup = true;
             loadDistanceSamples();  // 恢复30公里窗口样本
@@ -552,6 +555,7 @@ public class DataHub {
         e.putInt("lane_day_top", laneDayTopColor);
         e.putInt("lane_day_bottom", laneDayBottomColor);
         e.putInt("lane_alpha", laneAlpha);
+        e.putInt("roller_alpha", rollerAlpha);
         e.apply();
     }
 
@@ -608,6 +612,7 @@ public class DataHub {
             root.put("lane_day_top", laneDayTopColor);
             root.put("lane_day_bottom", laneDayBottomColor);
             root.put("lane_alpha", laneAlpha);
+            root.put("roller_alpha", rollerAlpha);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
@@ -827,6 +832,8 @@ public class DataHub {
     public int getLaneDayTopColor()      { return laneDayTopColor; }
     public int getLaneDayBottomColor()   { return laneDayBottomColor; }
     public int getLaneAlpha()            { return laneAlpha; }
+    public int getRollerAlpha()          { return rollerAlpha; }
+    public void setRollerAlpha(int a)     { rollerAlpha = Math.min(255, Math.max(0, a)); persistBackup(); }
 
     /** 恢复车道背景色默认值 */
     public void resetLaneColors() {
@@ -835,6 +842,7 @@ public class DataHub {
         laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
         laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
         laneAlpha            = DEFAULT_LANE_ALPHA;
+        rollerAlpha          = DEFAULT_ROLLER_ALPHA;
         persistBackup();
     }
 

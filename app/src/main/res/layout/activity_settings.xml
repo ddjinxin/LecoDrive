@@ -981,6 +981,56 @@
 
         </LinearLayout>
 
+        <!-- 滚轮透明度滑条 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="滚轮透明度"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginRight="8dp" />
+
+            <SeekBar
+                android:id="@+id/seekbar_roller_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="255"
+                android:progress="255" />
+
+            <TextView
+                android:id="@+id/label_roller_alpha_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="255"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginLeft="8dp"
+                android:minWidth="36sp"
+                android:gravity="end" />
+
+            <Button
+                android:id="@+id/btn_roller_alpha_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
         <!-- Check Update / Cancel / Save / Help Buttons -->
         <LinearLayout
             android:layout_width="match_parent"

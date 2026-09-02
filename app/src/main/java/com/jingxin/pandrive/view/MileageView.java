@@ -47,6 +47,7 @@ public class MileageView extends View {
     private static final long SLIDE_DURATION_MS = 500;
 
     private boolean isNightMode = false;
+    private int rollerAlpha = 255;  // 滚轮透明度 0~255，由设置页控制
 
     private final Camera camera = new Camera();
     private final Matrix matrix = new Matrix();
@@ -81,6 +82,7 @@ public class MileageView extends View {
     }
 
     public void setNightMode(boolean night) { isNightMode = night; invalidate(); }
+    public void setRollerAlpha(int alpha) { rollerAlpha = Math.min(255, Math.max(0, alpha)); invalidate(); }
     public void setVehicleType(int type) { isElectric = (type == 1); invalidate(); }
 
     public void updateMileage(float trip, float today, float total) {
@@ -292,9 +294,9 @@ public class MileageView extends View {
         // 与速度仪表盘一致的银灰色金属配色
         // 日间：高光 0xFFCCD8E4 → 中间色 0xFF8A95A8 → 暗面 0xFF5A6578
         // 夜间：高光 0xFFBBC8D4 → 中间色 0xFF8899AA → 暗面 0xFF4A5A6A
-        int colorHighlight = isNightMode ? 0xFFBBC8D4 : 0xFFCCD8E4;
-        int colorMid = isNightMode ? 0xFF8899AA : 0xFF8A95A8;
-        int colorShadow = isNightMode ? 0xFF4A5A6A : 0xFF5A6578;
+        int colorHighlight = isNightMode ? (rollerAlpha << 24 | 0xBBC8D4) : (rollerAlpha << 24 | 0xCCD8E4);
+        int colorMid = isNightMode ? (rollerAlpha << 24 | 0x8899AA) : (rollerAlpha << 24 | 0x8A95A8);
+        int colorShadow = isNightMode ? (rollerAlpha << 24 | 0x4A5A6A) : (rollerAlpha << 24 | 0x5A6578);
 
         // 圆柱面渐变：暗面→中间色→高光→中间色→暗面（模拟圆柱凸面光照）
         float h0 = Math.max(0f, highlightCenter - 0.30f);
@@ -318,7 +320,7 @@ public class MileageView extends View {
         bgPaint.setShader(null);
         bgPaint.setStyle(Paint.Style.STROKE);
         bgPaint.setStrokeWidth(1.5f);
-        bgPaint.setColor(isNightMode ? 0xFF99AABB : 0xFFAABBCC);
+        bgPaint.setColor(isNightMode ? (rollerAlpha << 24 | 0x99AABB) : (rollerAlpha << 24 | 0xAABBCC));
         canvas.drawRoundRect(rect, cornerRadius, cornerRadius, bgPaint);
     }
 
@@ -472,8 +474,8 @@ public class MileageView extends View {
     private void drawSlot(Canvas canvas, float left, float top, float right, float bottom) {
         Paint slotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         // 凹陷渐变：上暗下亮（模拟上方被遮挡、下方有反光）
-        int colorTop = isNightMode ? 0xFF15151A : 0xFF5A6578;
-        int colorBottom = isNightMode ? 0xFF2A2A32 : 0xFF7A8598;
+        int colorTop = isNightMode ? (rollerAlpha << 24 | 0x15151A) : (rollerAlpha << 24 | 0x5A6578);
+        int colorBottom = isNightMode ? (rollerAlpha << 24 | 0x2A2A32) : (rollerAlpha << 24 | 0x7A8598);
         LinearGradient slotGradient = new LinearGradient(0, top, 0, bottom,
                 new int[]{colorTop, colorBottom}, null, Shader.TileMode.CLAMP);
         slotPaint.setShader(slotGradient);
