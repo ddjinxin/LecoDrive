@@ -136,8 +136,8 @@ public class LEDDigitView extends View {
             activeColor = customColor;
             activeGlow = (customColor & 0x00FFFFFF) | 0x66000000;
         } else {
-            activeColor = isNightMode ? 0xFF00E5A0 : 0xFF00D4E8;
-            activeGlow = isNightMode ? 0xFF009966 : 0x3000D4E8;
+            activeColor = isNightMode ? GaugeDrawHelper.LED_GREEN : GaugeDrawHelper.LED_CYAN;
+            activeGlow = isNightMode ? 0xFF009966 : GaugeDrawHelper.GLOW_CYAN;
         }
 
         if (!allDigits) {

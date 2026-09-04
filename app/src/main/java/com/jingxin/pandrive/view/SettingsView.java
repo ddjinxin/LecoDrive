@@ -89,6 +89,15 @@ public class SettingsView extends ScrollView {
             if (onClose != null) onClose.run();
         });
 
+        // 关闭应用按钮：清理悬浮窗 + 停止服务 + 退出悬浮态
+        findViewById(R.id.btn_power_off).setOnClickListener(v -> {
+            com.jingxin.pandrive.floatwindow.LecoFloatManager.getInstance().forceRemoveFloatWindow();
+            android.content.Intent exitIntent = new android.content.Intent("com.jingxin.pandrive.EXIT");
+            exitIntent.setPackage(getContext().getPackageName());
+            getContext().sendBroadcast(exitIntent);
+            if (onClose != null) onClose.run();
+        });
+
         // 日夜模式开关
         Switch switchDayNight = findViewById(R.id.switch_day_night);
         switchDayNight.setChecked(ThemeController.getInstance(getContext()).isNightMode());

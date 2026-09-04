@@ -106,25 +106,25 @@ public class CompassView extends View implements ICompassView {
         if (!paintsDirty) return;
 
         if (isNightMode) {
-            colorLedOn = 0xFF00E5A0;
-            colorLedOnGlow = 0x6000E5A0;
+            colorLedOn = GaugeDrawHelper.LED_GREEN;
+            colorLedOnGlow = GaugeDrawHelper.GLOW_GREEN;
             colorLedOff = 0xFF1A2030;
             colorLedDanger = 0xFFFF3333;
             colorTickNumber = 0xFFFFFFFF;
-            colorArcBg = 0xFF8899AA;
-            colorArcHighlight = 0xFFBBC8D4;
+            colorArcBg = GaugeDrawHelper.STEEL_LIGHT;
+            colorArcHighlight = GaugeDrawHelper.STEEL_HIGHLIGHT;
             colorArcShadow = 0xFF4A5A6A;
-            colorOuterRing = 0xFF99AABB;
+            colorOuterRing = GaugeDrawHelper.STEEL_BRIGHT;
         } else {
-            colorLedOn = 0xFF00D4E8;
-            colorLedOnGlow = 0x3000D4E8;
+            colorLedOn = GaugeDrawHelper.LED_CYAN;
+            colorLedOnGlow = GaugeDrawHelper.GLOW_CYAN;
             colorLedOff = 0xFF3A4050;
             colorLedDanger = 0xFFFF3333;
             colorTickNumber = 0xFF000000;
             colorArcBg = 0xFF556070;
-            colorArcHighlight = 0xFFA0ADB8;
+            colorArcHighlight = GaugeDrawHelper.STEEL_MID;
             colorArcShadow = 0xFF2A3540;
-            colorOuterRing = 0xFF8899AA;
+            colorOuterRing = GaugeDrawHelper.STEEL_LIGHT;
         }
         paintsDirty = false;
     }
@@ -326,14 +326,5 @@ public class CompassView extends View implements ICompassView {
             paintsDirty = true;
             invalidate();
         }
-    }
-
-    @Override
-    public boolean isDegreeArea(float x, float y) {
-        // 风格0：点击方位角度数字区域判定（中心区域）
-        float dx = x - centerX;
-        float dy = y - centerY;
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
-        return dist < gaugeSize * 0.15f;
     }
 }

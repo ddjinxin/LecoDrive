@@ -192,23 +192,6 @@ public class LecoFloatManager {
             Log.d(TAG, "onReceive: action=" + action + " isFloating=" + isFloating.get()
                     + " canFloat=" + canFloat.get()
                     + " currentActivity=" + currentFloatingActivity);
-            // 调试：全量 dump 广播 intent 的 extras，确认乐酷原始参数
-            try {
-                if (intent.getExtras() != null) {
-                    android.os.Bundle extras = intent.getExtras();
-                    java.util.Set<String> keys = extras.keySet();
-                    StringBuilder sb = new StringBuilder("extras全量[");
-                    for (String k : keys) {
-                        sb.append(k).append("=").append(extras.get(k)).append("; ");
-                    }
-                    sb.append("]");
-                    Log.d(TAG, "onReceive extras: " + sb.toString());
-                } else {
-                    Log.d(TAG, "onReceive extras: null");
-                }
-            } catch (Exception e) {
-                Log.d(TAG, "onReceive extras dump 失败: " + e.getMessage());
-            }
             if (ACTION_SHOW_MAP.equals(action)) {
                 handleShowMap(intent);
             } else if (ACTION_CLOSE_MAP.equals(action)) {

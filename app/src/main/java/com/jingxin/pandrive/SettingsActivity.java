@@ -17,6 +17,7 @@ import android.widget.Toast;
 
 import com.jingxin.pandrive.data.DataHub;
 import com.jingxin.pandrive.data.WeatherHelper;
+import com.jingxin.pandrive.floatwindow.LecoFloatManager;
 import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
@@ -69,6 +70,15 @@ public class SettingsActivity extends Activity {
 
         // 返回按钮
         findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+
+        // 关闭应用按钮：停止服务 + 清理悬浮窗 + 关闭所有Activity
+        findViewById(R.id.btn_power_off).setOnClickListener(v -> {
+            LecoFloatManager.getInstance().forceRemoveFloatWindow();
+            Intent exitIntent = new Intent(PanDriveService.ACTION_EXIT);
+            exitIntent.setPackage(getPackageName());
+            sendBroadcast(exitIntent);
+            finishAffinity();
+        });
 
         // 日夜模式开关
         Switch switchDayNight = findViewById(R.id.switch_day_night);

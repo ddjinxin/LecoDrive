@@ -49,11 +49,11 @@ public class SpeedometerView extends View {
 
     // ====== 配色常量 ======
     // 夜间模式
-    private static final int COLOR_NIGHT_ARC_BG = 0xFF8899AA;
+    private static final int COLOR_NIGHT_ARC_BG = GaugeDrawHelper.STEEL_LIGHT;
     private static final int COLOR_NIGHT_ARC_BG_END = 0xFF708090;
-    private static final int COLOR_NIGHT_ARC_HIGHLIGHT = 0xFFBBC8D4;
+    private static final int COLOR_NIGHT_ARC_HIGHLIGHT = GaugeDrawHelper.STEEL_HIGHLIGHT;
     private static final int COLOR_NIGHT_ARC_SHADOW = 0xFF4A5A6A;
-    private static final int COLOR_NIGHT_OUTER_RING = 0xFF99AABB;
+    private static final int COLOR_NIGHT_OUTER_RING = GaugeDrawHelper.STEEL_BRIGHT;
     private static final int COLOR_NIGHT_MAJOR_TICK = 0xFFD0D0D0;
     private static final int COLOR_NIGHT_MINOR_TICK = 0xFF707070;
     private static final int COLOR_NIGHT_NEEDLE = 0xFFFF6B35;
@@ -61,12 +61,12 @@ public class SpeedometerView extends View {
     private static final int COLOR_NIGHT_NEEDLE_HIGHLIGHT = 0xFF6A6A6A;
     private static final int COLOR_NIGHT_UNIT_TEXT = 0xFF999999;
     private static final int COLOR_NIGHT_LED_OFF = 0xFF1A2030;
-    private static final int COLOR_NIGHT_LED_ON = 0xFF00E5A0;
-    private static final int COLOR_NIGHT_LED_ON_GLOW = 0x6000E5A0;
+    private static final int COLOR_NIGHT_LED_ON = GaugeDrawHelper.LED_GREEN;
+    private static final int COLOR_NIGHT_LED_ON_GLOW = GaugeDrawHelper.GLOW_GREEN;
     private static final int COLOR_NIGHT_DANGER = 0xFFFF4444;
     private static final int COLOR_NIGHT_DANGER_GLOW = 0x60FF4444;
-    private static final int COLOR_NIGHT_EMBOSS_HIGHLIGHT = 0xFF667788;
-    private static final int COLOR_NIGHT_BOTTOM_TEXT = 0xFF667788;
+    private static final int COLOR_NIGHT_EMBOSS_HIGHLIGHT = GaugeDrawHelper.STEEL_DARK;
+    private static final int COLOR_NIGHT_BOTTOM_TEXT = GaugeDrawHelper.STEEL_DARK;
     private static final int COLOR_NIGHT_INACTIVE_BAR = 0xFFE0E0E0;
     private static final int COLOR_NIGHT_LED_DIGIT_GLOW = 0xFF009966;
     private static final int COLOR_NIGHT_ACTIVE_BAR_GLOW = 0x5000E5A0;
@@ -76,9 +76,9 @@ public class SpeedometerView extends View {
     // 日间模式
     private static final int COLOR_DAY_ARC_BG = 0xFF556070;
     private static final int COLOR_DAY_ARC_BG_END = 0xFF445060;
-    private static final int COLOR_DAY_ARC_HIGHLIGHT = 0xFFA0ADB8;
+    private static final int COLOR_DAY_ARC_HIGHLIGHT = GaugeDrawHelper.STEEL_MID;
     private static final int COLOR_DAY_ARC_SHADOW = 0xFF2A3540;
-    private static final int COLOR_DAY_OUTER_RING = 0xFF8899AA;
+    private static final int COLOR_DAY_OUTER_RING = GaugeDrawHelper.STEEL_LIGHT;
     private static final int COLOR_DAY_MAJOR_TICK = 0xFF333333;
     private static final int COLOR_DAY_MINOR_TICK = 0xFF888888;
     private static final int COLOR_DAY_NEEDLE = 0xFFD32F2F;
@@ -87,8 +87,8 @@ public class SpeedometerView extends View {
     private static final int COLOR_DAY_SPEED_TEXT = 0xFF222222;
     private static final int COLOR_DAY_UNIT_TEXT = 0xFF888888;
     private static final int COLOR_DAY_LED_OFF = 0xFF3A4050;
-    private static final int COLOR_DAY_LED_ON = 0xFF00D4E8;
-    private static final int COLOR_DAY_LED_ON_GLOW = 0x3000D4E8;
+    private static final int COLOR_DAY_LED_ON = GaugeDrawHelper.LED_CYAN;
+    private static final int COLOR_DAY_LED_ON_GLOW = GaugeDrawHelper.GLOW_CYAN;
     private static final int COLOR_DAY_DANGER = 0xFFD32F2F;
     private static final int COLOR_DAY_DANGER_GLOW = 0x30D32F2F;
     private static final int COLOR_DAY_EMBOSS_SHADOW = 0x66000000;
@@ -219,6 +219,10 @@ public class SpeedometerView extends View {
     // 端盖缓存Shader（位置固定，随布局重建）
     private Shader capShader0;
     private Shader capShader240;
+
+    // LED刻度光晕RadialGradient缓存（位置固定，随布局/配色重建）
+    private RadialGradient[] tickGlowNormalCache;
+    private RadialGradient[] tickGlowDangerCache;
 
     // 尺寸
     private float density;
@@ -362,6 +366,8 @@ public class SpeedometerView extends View {
         minimalLimitNumPaint = null;
         capShader0 = null;
         capShader240 = null;
+        tickGlowNormalCache = null;
+        tickGlowDangerCache = null;
     }
 
     @Override
@@ -785,7 +791,30 @@ public class SpeedometerView extends View {
         float majorPointR = arcHalfWidth * 0.25f;   // 大刻度点半径
         float minorPointR = arcHalfWidth * 0.15f;   // 小刻度点半径
 
+        // 懒构建RadialGradient缓存：位置/半径/颜色仅在布局或配色变更时变化
+        if (tickGlowNormalCache == null) {
+            int tickCount = MAX_SPEED / MINOR_TICK_INTERVAL + 1;
+            tickGlowNormalCache = new RadialGradient[tickCount];
+            tickGlowDangerCache = new RadialGradient[tickCount];
+            for (int i = 0; i < tickCount; i++) {
+                int spd = i * MINOR_TICK_INTERVAL;
+                float angle = speedToAngle(spd);
+                double rad = Math.toRadians(angle);
+                float px = centerX + (float) (tickRadius * Math.cos(rad));
+                float py = centerY + (float) (tickRadius * Math.sin(rad));
+                boolean isMajor = (spd % MAJOR_TICK_INTERVAL == 0);
+                float glowR = isMajor ? majorGlowR : minorGlowR;
+                tickGlowNormalCache[i] = new RadialGradient(
+                    px, py, glowR,
+                    colorLedOn, COLOR_NIGHT_LED_ON_FADE, Shader.TileMode.CLAMP);
+                tickGlowDangerCache[i] = new RadialGradient(
+                    px, py, glowR,
+                    colorLedDanger, COLOR_DANGER_FADE, Shader.TileMode.CLAMP);
+            }
+        }
+
         for (int speed = 0; speed <= MAX_SPEED; speed += MINOR_TICK_INTERVAL) {
+            int idx = speed / MINOR_TICK_INTERVAL;
             float angle = speedToAngle(speed);
             double rad = Math.toRadians(angle);
 
@@ -800,15 +829,11 @@ public class SpeedometerView extends View {
             boolean isOverLimit = (limitedSpeed > 0 && speed >= limitedSpeed);
 
             if (isActivated && isOverLimit) {
-                tickGlowPaint.setShader(new RadialGradient(
-                    px, py, glowR,
-                    colorLedDanger, COLOR_DANGER_FADE, Shader.TileMode.CLAMP));
+                tickGlowPaint.setShader(tickGlowDangerCache[idx]);
                 canvas.drawCircle(px, py, glowR, tickGlowPaint);
                 canvas.drawCircle(px, py, pointR, ledDangerPaint);
             } else if (isActivated) {
-                tickGlowPaint.setShader(new RadialGradient(
-                    px, py, glowR,
-                    colorLedOn, COLOR_NIGHT_LED_ON_FADE, Shader.TileMode.CLAMP));
+                tickGlowPaint.setShader(tickGlowNormalCache[idx]);
                 canvas.drawCircle(px, py, glowR, tickGlowPaint);
                 canvas.drawCircle(px, py, pointR, ledOnPaint);
             } else {

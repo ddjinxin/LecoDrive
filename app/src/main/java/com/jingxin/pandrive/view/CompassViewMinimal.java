@@ -191,12 +191,4 @@ public class CompassViewMinimal extends View implements ICompassView {
             invalidate();
         }
     }
-
-    @Override
-    public boolean isDegreeArea(float x, float y) {
-        float dx = x - centerX;
-        float dy = y - centerY;
-        float dist = (float) Math.sqrt(dx * dx + dy * dy);
-        return dist < gaugeSize * 0.15f;
-    }
 }

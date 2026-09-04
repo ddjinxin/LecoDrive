@@ -157,7 +157,7 @@ public class DashboardView extends FrameLayout {
 
             if (i == currentPage) {
                 // 选中点：青色
-                int coreColor = 0xFF00E5A0;
+                int coreColor = GaugeDrawHelper.LED_GREEN;
 
                 // 核心
                 dotPaint.setColor(coreColor);

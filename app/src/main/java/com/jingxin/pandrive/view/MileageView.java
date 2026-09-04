@@ -161,7 +161,7 @@ public class MileageView extends View {
         invalidate(); // 持续重绘以保持微摆动和动画
 
         // Colors
-        int activeColor = isNightMode ? 0xFF00E5A0 : 0xFFFFFFFF;
+        int activeColor = isNightMode ? GaugeDrawHelper.LED_GREEN : 0xFFFFFFFF;
         int activeGlow = isNightMode ? 0xFF009966 : 0xFF999999;
         int labelColor = isNightMode ? 0xFFFFFFFF : 0xFF000000;
 
@@ -293,7 +293,7 @@ public class MileageView extends View {
 
         // 与速度仪表盘一致的银灰色金属配色
         // 日间：高光 0xFFCCD8E4 → 中间色 0xFF8A95A8 → 暗面 0xFF5A6578
-        // 夜间：高光 0xFFBBC8D4 → 中间色 0xFF8899AA → 暗面 0xFF4A5A6A
+        // 夜间：高光 GaugeDrawHelper.STEEL_HIGHLIGHT → 中间色 GaugeDrawHelper.STEEL_LIGHT → 暗面 0xFF4A5A6A
         int colorHighlight = isNightMode ? (rollerAlpha << 24 | 0xBBC8D4) : (rollerAlpha << 24 | 0xCCD8E4);
         int colorMid = isNightMode ? (rollerAlpha << 24 | 0x8899AA) : (rollerAlpha << 24 | 0x8A95A8);
         int colorShadow = isNightMode ? (rollerAlpha << 24 | 0x4A5A6A) : (rollerAlpha << 24 | 0x5A6578);
@@ -352,7 +352,7 @@ public class MileageView extends View {
             int alpha = (int)(100f * cosVal * cosVal);
             if (alpha < 6) continue;
 
-            texPaint.setColor(isNightMode ? 0xFFBBC8D4 : 0xFFCCD8E4);
+            texPaint.setColor(isNightMode ? GaugeDrawHelper.STEEL_HIGHLIGHT : 0xFFCCD8E4);
             texPaint.setAlpha(alpha);
             texPaint.setStrokeWidth(1f);
             canvas.drawLine(left + 1, y, right - 1, y, texPaint);

@@ -8,5 +8,4 @@ public interface ICompassView {
     void setAzimuth(float azimuth);
     void setLocation(double lat, double lon, double alt);
     void setNightMode(boolean nightMode);
-    boolean isDegreeArea(float x, float y);
 }

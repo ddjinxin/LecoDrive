@@ -102,23 +102,23 @@ public class ClockView extends View {
         if (!paintsDirty) return;
 
         if (isNightMode) {
-            colorLedOn = 0xFF00E5A0;
-            colorLedOnGlow = 0x6000E5A0;
+            colorLedOn = GaugeDrawHelper.LED_GREEN;
+            colorLedOnGlow = GaugeDrawHelper.GLOW_GREEN;
             colorLedOff = 0xFF1A2030;
             colorTickNumber = 0xFFFFFFFF;
-            colorArcBg = 0xFF8899AA;
-            colorArcHighlight = 0xFFBBC8D4;
+            colorArcBg = GaugeDrawHelper.STEEL_LIGHT;
+            colorArcHighlight = GaugeDrawHelper.STEEL_HIGHLIGHT;
             colorArcShadow = 0xFF4A5A6A;
-            colorOuterRing = 0xFF99AABB;
+            colorOuterRing = GaugeDrawHelper.STEEL_BRIGHT;
         } else {
-            colorLedOn = 0xFF00D4E8;
-            colorLedOnGlow = 0x3000D4E8;
+            colorLedOn = GaugeDrawHelper.LED_CYAN;
+            colorLedOnGlow = GaugeDrawHelper.GLOW_CYAN;
             colorLedOff = 0xFF3A4050;
             colorTickNumber = 0xFF000000;
             colorArcBg = 0xFF556070;
-            colorArcHighlight = 0xFFA0ADB8;
+            colorArcHighlight = GaugeDrawHelper.STEEL_MID;
             colorArcShadow = 0xFF2A3540;
-            colorOuterRing = 0xFF8899AA;
+            colorOuterRing = GaugeDrawHelper.STEEL_LIGHT;
         }
         paintsDirty = false;
     }
@@ -287,7 +287,7 @@ public class ClockView extends View {
                 markPaint.setColor(colorTickNumber);
                 markPaint.setStrokeWidth(Math.max(1f, gaugeSize * 0.006f));
             } else {
-                markPaint.setColor(isNightMode ? 0xFF4A5A6A : 0xFF99AABB);
+                markPaint.setColor(isNightMode ? 0xFF4A5A6A : GaugeDrawHelper.STEEL_BRIGHT);
                 markPaint.setStrokeWidth(Math.max(1f, gaugeSize * 0.003f));
             }
             canvas.drawLine(x1, y1, x2, y2, markPaint);
@@ -337,8 +337,8 @@ public class ClockView extends View {
 
         Paint handPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         handPaint.setStyle(Paint.Style.FILL);
-        int highlight = isNightMode ? 0xFF8899AA : 0xFFA0ADB8;
-        int shadow = isNightMode ? 0xFF445566 : 0xFF556677;
+        int highlight = isNightMode ? GaugeDrawHelper.STEEL_LIGHT : GaugeDrawHelper.STEEL_MID;
+        int shadow = isNightMode ? 0xFF445566 : GaugeDrawHelper.STEEL_DARKER;
         handPaint.setShader(new LinearGradient(centerX, centerY - handLen, centerX, centerY,
                 shadow, highlight, android.graphics.Shader.TileMode.CLAMP));
         canvas.drawPath(handPath, handPaint);
@@ -365,8 +365,8 @@ public class ClockView extends View {
 
         Paint handPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         handPaint.setStyle(Paint.Style.FILL);
-        int highlight = isNightMode ? 0xFF99AABB : 0xFFBBC8D4;
-        int shadow = isNightMode ? 0xFF556677 : 0xFF667788;
+        int highlight = isNightMode ? GaugeDrawHelper.STEEL_BRIGHT : GaugeDrawHelper.STEEL_HIGHLIGHT;
+        int shadow = isNightMode ? GaugeDrawHelper.STEEL_DARKER : GaugeDrawHelper.STEEL_DARK;
         handPaint.setShader(new LinearGradient(centerX, centerY - handLen, centerX, centerY,
                 shadow, highlight, android.graphics.Shader.TileMode.CLAMP));
         canvas.drawPath(handPath, handPaint);
@@ -479,7 +479,7 @@ public class ClockView extends View {
                 markPaint.setColor(isNightMode ? 0xFFFFFFFF : 0xFF000000);
                 markPaint.setStrokeWidth(Math.max(1f, gaugeSize * 0.006f));
             } else {
-                markPaint.setColor(isNightMode ? 0xFF4A5A6A : 0xFF99AABB);
+                markPaint.setColor(isNightMode ? 0xFF4A5A6A : GaugeDrawHelper.STEEL_BRIGHT);
                 markPaint.setStrokeWidth(Math.max(1f, gaugeSize * 0.003f));
             }
             canvas.drawLine(x1, y1, x2, y2, markPaint);
@@ -528,8 +528,8 @@ public class ClockView extends View {
 
         Paint handPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         handPaint.setStyle(Paint.Style.FILL);
-        int highlight = isNightMode ? 0xFF8899AA : 0xFFA0ADB8;
-        int shadow = isNightMode ? 0xFF445566 : 0xFF556677;
+        int highlight = isNightMode ? GaugeDrawHelper.STEEL_LIGHT : GaugeDrawHelper.STEEL_MID;
+        int shadow = isNightMode ? 0xFF445566 : GaugeDrawHelper.STEEL_DARKER;
         handPaint.setShader(new LinearGradient(centerX, centerY - handLen, centerX, centerY,
                 shadow, highlight, android.graphics.Shader.TileMode.CLAMP));
         canvas.drawPath(handPath, handPaint);
@@ -555,8 +555,8 @@ public class ClockView extends View {
 
         Paint handPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         handPaint.setStyle(Paint.Style.FILL);
-        int highlight = isNightMode ? 0xFF99AABB : 0xFFBBC8D4;
-        int shadow = isNightMode ? 0xFF556677 : 0xFF667788;
+        int highlight = isNightMode ? GaugeDrawHelper.STEEL_BRIGHT : GaugeDrawHelper.STEEL_HIGHLIGHT;
+        int shadow = isNightMode ? GaugeDrawHelper.STEEL_DARKER : GaugeDrawHelper.STEEL_DARK;
         handPaint.setShader(new LinearGradient(centerX, centerY - handLen, centerX, centerY,
                 shadow, highlight, android.graphics.Shader.TileMode.CLAMP));
         canvas.drawPath(handPath, handPaint);

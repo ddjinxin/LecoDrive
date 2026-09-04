@@ -122,18 +122,6 @@ public class MainActivity extends Activity implements
 
         setContentView(R.layout.activity_main);
 
-        // 检查乐酷桌面是否已安装
-        if (!isLeKuLauncherInstalled()) {
-            checkFailed = true;
-            new android.app.AlertDialog.Builder(this)
-                    .setTitle("无法启动")
-                    .setMessage("乐酷驾驶助手是乐酷桌面配套应用，请先安装乐酷桌面，https://lecoauto.com")
-                    .setPositiveButton("确定", (dialog, which) -> finish())
-                    .setCancelable(false)
-                    .show();
-            return;
-        }
-
         themeController = ThemeController.getInstance(this);
         dataHub = DataHub.getInstance(this);
         weatherHelper = WeatherHelper.getInstance();
