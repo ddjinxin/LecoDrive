@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '1c74a13e-e6f9-4805-8f91-7166040a6a25'
-  PropagateID: '1c74a13e-e6f9-4805-8f91-7166040a6a25'
-  ReservedCode1: 'dd7c36bf-a250-480b-ad16-9f1559c807ca'
-  ReservedCode2: 'dd7c36bf-a250-480b-ad16-9f1559c807ca'
+  ProduceID: '5280dc0d-e28d-4792-8b17-aeb0d4da5818'
+  PropagateID: '5280dc0d-e28d-4792-8b17-aeb0d4da5818'
+  ReservedCode1: '4fe6adb0-85ac-428a-a91d-0b8823403f6d'
+  ReservedCode2: '4fe6adb0-85ac-428a-a91d-0b8823403f6d'
 ---
 
 <div align="center">
@@ -30,7 +30,15 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.6.0)
+## 📢 最新版本 (v1.0.6.1)
+
+### v1.0.6.1 — 冗余清理 + 性能优化 + 关闭应用按钮
+- **配色常量统一** — GaugeDrawHelper 新增 15 个主题色常量（LED/GLOW/STEEL 系），收敛 ClockView/SpeedometerView/CompassView/DashboardView/MileageView/LEDDigitView 约 40 处散落色值，消除跨文件色值错位风险
+- **重复重载合并** — GaugeDrawHelper 中 drawShimmerArc/drawOuterRing/drawDiskGlow 各合并双版本为单一核心方法，消除逐字节重复代码
+- **死代码清理** — 删除全工程 0 引用的 ic_theme.xml 和 ICompassView.isDegreeArea() 方法
+- **RadialGradient 缓存** — SpeedometerView drawTicks() 从每帧 new RadialGradient（最多 25 个/帧）改为懒构建缓存数组，按刻度位置索引复用，消除每帧 GC 压力，行为完全等价
+- **调试日志精简** — LecoFloatManager FloatReceiver 删除每次广播全量 dump extras 的调试代码，减少无效 I/O
+- **设置页关闭应用按钮** — 设置页新增「关闭应用」按钮（电源图标），普通模式与悬浮模式均支持，点击即退出应用
 
 ### v1.0.6.0 — 新增滚轮透明度设置项
 - **滚轮透明度可调** — 设置页新增「滚轮透明度」滑条（0~255，255=不透明），自由调节车辆信息滚轮（金属背景、凹槽、边框）的透明度，壁纸可从滚轮透出
