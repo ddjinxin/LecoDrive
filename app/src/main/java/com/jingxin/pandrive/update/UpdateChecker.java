@@ -775,6 +775,13 @@ public class UpdateChecker {
     public void onPendingUpdate(Activity activity) {
         PendingUpdate pending = getPendingUpdate();
         if (pending == null) return;
+        // 如果待安装版本已等于当前版本，说明用户已通过其他途径安装，清除残留标记
+        String currentVer = getCurrentVersionName();
+        if (currentVer != null && compareVersions(normalizeVersion(currentVer), normalizeVersion(pending.version)) >= 0) {
+            Log.i(TAG, "待安装版本 " + pending.version + " 已是当前版本，清除残留标记");
+            clearPendingUpdate();
+            return;
+        }
         showPendingInstallDialog(activity, pending);
     }
 
