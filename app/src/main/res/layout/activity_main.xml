@@ -19,13 +19,18 @@
             android:layout_height="0dp"
             android:layout_weight="10" />
 
-        <!-- Section 2: 仪表综合区（速度仪表盘/指南针/圆形时钟 三页滑动） -->
+        <!-- Section 2: 仪表综合区（日历/速度仪表盘/指南针/圆形时钟 四页滑动） -->
         <com.jingxin.pandrive.view.DashboardView
             android:id="@+id/dashboard_view"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="30"
             android:layout_gravity="center_horizontal">
+
+            <com.jingxin.pandrive.view.CalendarView
+                android:id="@+id/calendar_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
             <com.jingxin.pandrive.view.SpeedometerView
                 android:id="@+id/speedometer_view"

@@ -135,12 +135,16 @@ public class ClockView extends View {
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
         postDelayed(tickRunnable, TICK_INTERVAL_MS);
+        if (shimmerAnimator != null && !shimmerAnimator.isStarted()) {
+            shimmerAnimator.start();
+        }
     }
 
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
         removeCallbacks(tickRunnable);
+        if (shimmerAnimator != null) shimmerAnimator.cancel();
     }
 
     private void tick() {

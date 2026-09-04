@@ -287,6 +287,20 @@ public class SpeedometerView extends View {
         shimmerAnimator.start();
     }
 
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (shimmerAnimator != null) shimmerAnimator.cancel();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (shimmerAnimator != null && !shimmerAnimator.isStarted()) {
+            shimmerAnimator.start();
+        }
+    }
+
     private void updateColors() {
         if (isNightMode) {
             colorArcBg = COLOR_NIGHT_ARC_BG;

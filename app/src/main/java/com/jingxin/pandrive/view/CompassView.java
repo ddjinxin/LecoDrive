@@ -72,6 +72,20 @@ public class CompassView extends View implements ICompassView {
     }
 
     @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        if (shimmerAnimator != null) shimmerAnimator.cancel();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (shimmerAnimator != null && !shimmerAnimator.isStarted()) {
+            shimmerAnimator.start();
+        }
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);

@@ -212,7 +212,25 @@ public class DashboardView extends FrameLayout {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN:
+                // 消费 DOWN，确保后续 MOVE/UP 能到达本容器，
+                // 即使子 View（如 CalendarView）不消费触摸事件也能正常滑动
+                downX = event.getX();
+                downY = event.getY();
+                lastMoveX = event.getX();
+                dragging = false;
+                return true;
             case MotionEvent.ACTION_MOVE:
+                // 当子 View 不消费 DOWN 时，本容器直接成为触摸目标，
+                // onInterceptTouchEvent 不会被调用，需要在此自行检测拖拽
+                if (!dragging) {
+                    float dx = event.getX() - downX;
+                    float dy = event.getY() - downY;
+                    if (Math.abs(dx) > touchSlop && Math.abs(dx) > Math.abs(dy) * 1.2f) {
+                        dragging = true;
+                        lastMoveX = event.getX();
+                    }
+                }
                 if (dragging) {
                     float dx = event.getX() - lastMoveX;
                     lastMoveX = event.getX();

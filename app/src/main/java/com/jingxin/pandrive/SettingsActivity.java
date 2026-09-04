@@ -23,6 +23,7 @@ import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
 import com.jingxin.pandrive.view.MileageView;
 import com.jingxin.pandrive.view.LaneColorHelper;
+import com.jingxin.pandrive.view.CalendarColorHelper;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,6 +54,9 @@ public class SettingsActivity extends Activity {
 
     /** 车道背景色辅助器 */
     private LaneColorHelper laneColorHelper;
+
+    /** 日历背景色辅助器 */
+    private CalendarColorHelper calendarColorHelper;
 
     /** 进入设置页时的累计里程快照，用于保存时判断用户是否真正修改了 */
     private float initialTotalKm;
@@ -148,6 +152,15 @@ public class SettingsActivity extends Activity {
             if (gv != null) {
                 View lane = gv.findViewById(R.id.lane_view);
                 if (lane != null) lane.invalidate();
+            }
+        });
+
+        // 日历背景色
+        calendarColorHelper = new CalendarColorHelper(this, getWindow().getDecorView(), () -> {
+            GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv != null) {
+                View cal = gv.findViewById(R.id.calendar_view);
+                if (cal != null) cal.invalidate();
             }
         });
 

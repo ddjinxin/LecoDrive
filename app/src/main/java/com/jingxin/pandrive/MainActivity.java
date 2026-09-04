@@ -33,6 +33,7 @@ import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.view.ClockView;
 import com.jingxin.pandrive.view.CompassView;
 import com.jingxin.pandrive.view.CompassViewMinimal;
+import com.jingxin.pandrive.view.CalendarView;
 import com.jingxin.pandrive.view.DashboardView;
 import com.jingxin.pandrive.view.DateTimeView;
 import com.jingxin.pandrive.view.GridBackgroundView;
@@ -73,6 +74,7 @@ public class MainActivity extends Activity implements
     private NavigationBarView navigationBarView;
     private LaneView laneView;
     private ClockView clockView;
+    private CalendarView calendarView;
     private MileageView mileageView;
     private GridBackgroundView gridBackgroundView;
     private TextureView textureView;
@@ -137,6 +139,7 @@ public class MainActivity extends Activity implements
         navigationBarView = findViewById(R.id.section_navigation);
         laneView = findViewById(R.id.lane_view);
         clockView = findViewById(R.id.clock_view);
+        calendarView = findViewById(R.id.calendar_view);
         mileageView = findViewById(R.id.mileage_view);
         gridBackgroundView = findViewById(R.id.grid_background);
         themeButton = findViewById(R.id.theme_button);
@@ -536,12 +539,20 @@ public class MainActivity extends Activity implements
         View sectionAdjust = findViewById(R.id.section_adjust);
         View sectionCar3d = findViewById(R.id.section_car3d);
 
+        boolean car3dVisible = weights[5] > 0;
         setVerticalWeight(sectionDatetime, weights[0]);
         setVerticalWeight(speedometer, weights[1]);
         setVerticalWeight(sectionCompassClock, weights[2]);
         setVerticalWeight(sectionNav, weights[3]);
         setVerticalWeight(sectionAdjust, weights[4]);
         setVerticalWeight(sectionCar3d, weights[5]);
+
+        // 3D车模区域特殊处理：GONE会杀死GL线程，改用height=0 + GL线程pause
+        if (!car3dVisible && glTextureRenderer != null) {
+            glTextureRenderer.onPause();
+        } else if (car3dVisible && glTextureRenderer != null) {
+            glTextureRenderer.onResume();
+        }
 
         // 通知背景重算天气文字位置
         GridBackgroundView bgv = findViewById(R.id.grid_background);
@@ -565,10 +576,27 @@ public class MainActivity extends Activity implements
         });
     }
 
+    /**
+     * weight=0 时设为 GONE（触发 onDetachedFromWindow 停动画/监听），
+     * weight>0 时恢复 VISIBLE + height=0 + weight 分配。
+     * 3D车模区域例外：GONE会杀死GL线程丢失纹理，改用 height=0 + GL线程 pause。
+     */
     private void setVerticalWeight(View view, float weight) {
         LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) view.getLayoutParams();
-        params.height = 0;
-        params.weight = weight;
+        if (weight <= 0) {
+            // 3D车模区域不用GONE（避免TextureView detach杀GL线程），仅height=0
+            if (view.getId() == R.id.section_car3d) {
+                params.height = 0;
+                params.weight = 0;
+            } else {
+                view.setVisibility(View.GONE);
+                params.weight = 0;
+            }
+        } else {
+            view.setVisibility(View.VISIBLE);
+            params.height = 0;
+            params.weight = weight;
+        }
         view.setLayoutParams(params);
     }
 
@@ -712,6 +740,14 @@ public class MainActivity extends Activity implements
         }
         if (rootView != null) {
             FloatLayoutHelper.applyLayoutWeightsForFloat(rootView, dataHub);
+            // 3D车模区域 GL 线程联动
+            boolean isLandscape = FloatLayoutHelper.isLandscapeMode(rootView);
+            float[] weights = dataHub.getLayoutWeights(!isLandscape);
+            if (weights[5] <= 0 && glTextureRenderer != null) {
+                glTextureRenderer.onPause();
+            } else if (weights[5] > 0 && glTextureRenderer != null) {
+                glTextureRenderer.onResume();
+            }
             if (rootView instanceof GridBackgroundView) {
                 ((GridBackgroundView) rootView).refreshEdgeGeometry();
             }
@@ -869,6 +905,7 @@ public class MainActivity extends Activity implements
         if (navigationBarView != null) navigationBarView.setNightMode(isNight);
         if (laneView != null) laneView.setNightMode(isNight);
         if (clockView != null) clockView.setNightMode(isNight);
+        if (calendarView != null) calendarView.setNightMode(isNight);
         if (mileageView != null) mileageView.setNightMode(isNight);
         if (mileageView != null) mileageView.setVehicleType(dataHub.getVehicleType());
         if (mileageView != null) mileageView.setRollerAlpha(dataHub.getRollerAlpha());

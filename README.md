@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '5280dc0d-e28d-4792-8b17-aeb0d4da5818'
-  PropagateID: '5280dc0d-e28d-4792-8b17-aeb0d4da5818'
-  ReservedCode1: '4fe6adb0-85ac-428a-a91d-0b8823403f6d'
-  ReservedCode2: '4fe6adb0-85ac-428a-a91d-0b8823403f6d'
+  ProduceID: 'b66c9f52-9799-434d-af18-bffdfcadbde3'
+  PropagateID: 'b66c9f52-9799-434d-af18-bffdfcadbde3'
+  ReservedCode1: '63813bda-b638-41d6-9ed2-ca9b11b5d356'
+  ReservedCode2: '63813bda-b638-41d6-9ed2-ca9b11b5d356'
 ---
 
 <div align="center">
@@ -15,7 +15,7 @@ AIGC:
 
 **面向安卓车机的全景驾驶仪表盘应用**
 
-3D 车模 · 速度仪表 · 导航广播 · 指南车 · 天气 · 壁纸 · 里程油耗
+3D 车模 · 速度仪表 · 导航广播 · 指南车 · 天气 · 壁纸 · 里程油耗 · 翻页日历
 
 **简体中文** | [English](README_EN.md)
 
@@ -30,7 +30,14 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.6.1)
+## 📢 最新版本 (v1.0.6.2)
+
+### v1.0.6.2 — 翻页日历 + weight=0 资源优化
+- **仪表区新增翻页日历** — DashboardView 从三页扩展为四页（日历→速度→指南针→时钟），左右滑动切换，底部 LED 指示点同步更新
+- **CalendarView 自绘科幻金属风日历** — 圆形表盘风格，显示公历大字（红色发光）+ 农历竖排 + 干支·生肖 + 月相 + 节气/节日（含休/班标记）+ 宜忌
+- **tyme4j 日历库集成** — 集成 6tail/tyme4j（MIT 协议，117 个 Java 文件，零外部依赖），离线计算农历/干支/生肖/节气/法定假日/月相/宜忌
+- **日历背景色日夜可调** — 设置页新增日历背景色（夜间/白天）色条 + 透明度滑条，与车道背景色设置对称，实时生效
+- **weight=0 资源优化** — 区域占比为 0 时从 GONE 改为移除绘制，SpeedometerView/CompassView/ClockView 的 shimmer 动画在 weight=0 时暂停，3D 车模区域保留 GL 线程不销毁，减少 CPU/GPU 空转
 
 ### v1.0.6.1 — 冗余清理 + 性能优化 + 关闭应用按钮
 - **配色常量统一** — GaugeDrawHelper 新增 15 个主题色常量（LED/GLOW/STEEL 系），收敛 ClockView/SpeedometerView/CompassView/DashboardView/MileageView/LEDDigitView 约 40 处散落色值，消除跨文件色值错位风险
@@ -332,10 +339,11 @@ app/src/main/
 │   │   └── GlbParser.java         # GLB 解析器
 │   ├── view/
 │   │   ├── SpeedometerView.java   # 速度仪表盘 (1288 行)
-│   │   ├── CompassView.java       # 指南针时钟
-│   │   ├── NavigationBarView.java # 导航栏 (847 行, 53 图标)
-│   │   ├── LaneView.java          # 车道线渐变背景
-│   │   └── GridBackgroundView.java# 网格背景 + 壁纸 + 天气文字
+│   │   ├── CompassView.java        # 指南针时钟
+│   │   ├── CalendarView.java       # 翻页日历（农历/干支/月相/宜忌）
+│   │   ├── NavigationBarView.java  # 导航栏 (847 行, 53 图标)
+│   │   ├── LaneView.java           # 车道线渐变背景
+│   │   └── GridBackgroundView.java # 网格背景 + 壁纸 + 天气文字
 │   └── data/
 │       └── WeatherHelper.java     # 天气数据（Open-Meteo + ip-api）
 ├── assets/

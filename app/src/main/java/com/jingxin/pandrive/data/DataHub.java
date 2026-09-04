@@ -153,12 +153,20 @@ public class DataHub {
     private static final int DEFAULT_LANE_ALPHA        = 255;   // 0~255，255=不透明
     private static final int DEFAULT_ROLLER_ALPHA       = 255;   // 滚轮透明度，255=不透明
 
+    // 日历背景默认色（RGB，alpha 由 calBgAlpha 独立控制）
+    private static final int DEFAULT_CAL_NIGHT_BG  = 0xFF0A0F14;
+    private static final int DEFAULT_CAL_DAY_BG    = 0xFFF0F4F8;
+    private static final int DEFAULT_CAL_BG_ALPHA = 230;   // 日历面板透明度
+
     private int laneNightTopColor    = DEFAULT_LANE_NIGHT_TOP;
     private int laneNightBottomColor = DEFAULT_LANE_NIGHT_BOTTOM;
     private int laneDayTopColor      = DEFAULT_LANE_DAY_TOP;
     private int laneDayBottomColor   = DEFAULT_LANE_DAY_BOTTOM;
     private int laneAlpha            = DEFAULT_LANE_ALPHA;
     private int rollerAlpha          = DEFAULT_ROLLER_ALPHA;
+    private int calNightBgColor       = DEFAULT_CAL_NIGHT_BG;
+    private int calDayBgColor         = DEFAULT_CAL_DAY_BG;
+    private int calBgAlpha            = DEFAULT_CAL_BG_ALPHA;
 
     private static final String SETTINGS_PREFS = "pandrive_settings";
     private long lastPersistTime = 0;
@@ -487,6 +495,9 @@ public class DataHub {
             laneDayBottomColor   = root.optInt("lane_day_bottom", DEFAULT_LANE_DAY_BOTTOM);
             laneAlpha            = root.optInt("lane_alpha", DEFAULT_LANE_ALPHA);
             rollerAlpha          = root.optInt("roller_alpha", DEFAULT_ROLLER_ALPHA);
+            calNightBgColor      = root.optInt("cal_night_bg", DEFAULT_CAL_NIGHT_BG);
+            calDayBgColor        = root.optInt("cal_day_bg", DEFAULT_CAL_DAY_BG);
+            calBgAlpha           = root.optInt("cal_bg_alpha", DEFAULT_CAL_BG_ALPHA);
             Log.i(TAG, "已从备份文件加载设置: " + BACKUP_FILE);
             dataLoadedFromBackup = true;
             loadDistanceSamples();  // 恢复30公里窗口样本
@@ -556,6 +567,9 @@ public class DataHub {
         e.putInt("lane_day_bottom", laneDayBottomColor);
         e.putInt("lane_alpha", laneAlpha);
         e.putInt("roller_alpha", rollerAlpha);
+        e.putInt("cal_night_bg", calNightBgColor);
+        e.putInt("cal_day_bg", calDayBgColor);
+        e.putInt("cal_bg_alpha", calBgAlpha);
         e.apply();
     }
 
@@ -613,6 +627,9 @@ public class DataHub {
             root.put("lane_day_bottom", laneDayBottomColor);
             root.put("lane_alpha", laneAlpha);
             root.put("roller_alpha", rollerAlpha);
+            root.put("cal_night_bg", calNightBgColor);
+            root.put("cal_day_bg", calDayBgColor);
+            root.put("cal_bg_alpha", calBgAlpha);
             writeFile(new File(BACKUP_FILE), root.toString());
         } catch (Exception e) {
             Log.e(TAG, "写入备份文件失败: " + e.getMessage());
@@ -834,6 +851,25 @@ public class DataHub {
     public int getLaneAlpha()            { return laneAlpha; }
     public int getRollerAlpha()          { return rollerAlpha; }
     public void setRollerAlpha(int a)     { rollerAlpha = Math.min(255, Math.max(0, a)); persistBackup(); }
+
+    // ==================== 日历背景色 ====================
+    public int getCalNightBgColor()       { return calNightBgColor; }
+    public int getCalDayBgColor()         { return calDayBgColor; }
+    public int getCalBgAlpha()            { return calBgAlpha; }
+
+    public void setCalColors(Integer nightBg, Integer dayBg, int alpha) {
+        if (nightBg != null) calNightBgColor = nightBg;
+        if (dayBg   != null) calDayBgColor   = dayBg;
+        if (alpha >= 0) calBgAlpha = Math.min(255, Math.max(0, alpha));
+        persistBackup();
+    }
+
+    public void resetCalColors() {
+        calNightBgColor = DEFAULT_CAL_NIGHT_BG;
+        calDayBgColor   = DEFAULT_CAL_DAY_BG;
+        calBgAlpha      = DEFAULT_CAL_BG_ALPHA;
+        persistBackup();
+    }
 
     /** 恢复车道背景色默认值 */
     public void resetLaneColors() {

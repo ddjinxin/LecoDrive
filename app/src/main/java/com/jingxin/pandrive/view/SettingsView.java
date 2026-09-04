@@ -58,6 +58,9 @@ public class SettingsView extends ScrollView {
     /** 车道背景色辅助器 */
     private LaneColorHelper laneColorHelper;
 
+    /** 日历背景色辅助器 */
+    private CalendarColorHelper calendarColorHelper;
+
     private EditText editRefuelAmount;
     private EditText editRefuelRange;
     private View refuelSection;
@@ -164,6 +167,15 @@ public class SettingsView extends ScrollView {
             if (gv != null) {
                 View lane = gv.findViewById(R.id.lane_view);
                 if (lane != null) lane.invalidate();
+            }
+        });
+
+        // 日历背景色
+        calendarColorHelper = new CalendarColorHelper(getContext(), this, () -> {
+            GridBackgroundView gv = GridBackgroundView.getInstance();
+            if (gv != null) {
+                View cal = gv.findViewById(R.id.calendar_view);
+                if (cal != null) cal.invalidate();
             }
         });
 

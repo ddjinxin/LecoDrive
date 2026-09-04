@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
+import com.jingxin.pandrive.R;
 import com.jingxin.pandrive.data.DataHub;
 
 /**
@@ -80,11 +81,22 @@ public class FloatLayoutHelper {
     private static void setVerticalWeight(View view, float weight) {
         if (view == null) return;
         ViewGroup.LayoutParams lp = view.getLayoutParams();
-        if (lp instanceof LinearLayout.LayoutParams) {
-            LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) lp;
+        if (!(lp instanceof LinearLayout.LayoutParams)) return;
+        LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) lp;
+        if (weight <= 0) {
+            // 3D车模区域不用GONE（避免TextureView detach杀GL线程），仅height=0
+            if (view.getId() == R.id.section_car3d) {
+                params.height = 0;
+                params.weight = 0;
+            } else {
+                view.setVisibility(View.GONE);
+                params.weight = 0;
+            }
+        } else {
+            view.setVisibility(View.VISIBLE);
             params.height = 0;
             params.weight = weight;
-            view.setLayoutParams(params);
         }
+        view.setLayoutParams(params);
     }
 }

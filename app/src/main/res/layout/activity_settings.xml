@@ -1037,6 +1037,146 @@
 
         </LinearLayout>
 
+        <!-- 日历背景色设置 -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp"
+            android:text="日历背景色"
+            android:textColor="#FFCCCCCC"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <!-- 夜间背景 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_cal_night_bg_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="夜间背景"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_cal_night_bg"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_cal_night_bg_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 白天背景 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:id="@+id/tv_cal_day_bg_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="白天背景"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:layout_marginRight="8dp" />
+
+            <com.jingxin.pandrive.view.ColorBar
+                android:id="@+id/bar_cal_day_bg"
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1" />
+
+            <Button
+                android:id="@+id/btn_cal_day_bg_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- 日历透明度滑条 + 全部恢复默认 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="透明度"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginRight="8dp" />
+
+            <SeekBar
+                android:id="@+id/seekbar_cal_alpha"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="255"
+                android:progress="230" />
+
+            <TextView
+                android:id="@+id/label_cal_alpha_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="230"
+                android:textColor="#FFCCCCCC"
+                android:textSize="14sp"
+                android:layout_marginLeft="8dp"
+                android:minWidth="36sp"
+                android:gravity="end" />
+
+            <Button
+                android:id="@+id/btn_cal_color_reset"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:text="全部默认"
+                android:textSize="12sp"
+                android:textColor="#FFFFFFFF"
+                android:background="#FF444444"
+                android:minWidth="48dp"
+                android:layout_marginLeft="8dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
         <!-- Check Update / Cancel / Save / Help Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
