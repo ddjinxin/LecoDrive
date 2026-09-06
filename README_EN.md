@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '48673af6-f201-4a88-b516-09eb69164eae'
-  PropagateID: '48673af6-f201-4a88-b516-09eb69164eae'
-  ReservedCode1: '0c43f048-85fd-48f0-9bc9-dec41c6f817f'
-  ReservedCode2: '0c43f048-85fd-48f0-9bc9-dec41c6f817f'
+  ProduceID: '2fc1be54-1f9c-4158-bfae-09a998391d70'
+  PropagateID: '2fc1be54-1f9c-4158-bfae-09a998391d70'
+  ReservedCode1: '8d580ec1-6ff2-416a-9be5-7985a46a4417'
+  ReservedCode2: '8d580ec1-6ff2-416a-9be5-7985a46a4417'
 ---
 
 <div align="center">
@@ -25,12 +25,33 @@ AIGC:
 
 ## 📸 Demo
 
-https://pd.qq.com/s/8wejgtf1k?b=2
+https://pd.qq.com/s/fng6x6nlx?b=2
 
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.6.0)
+## 📢 Latest Release (v1.0.6.3)
+
+### v1.0.6.3 — Help Docs Refined + Settings Copyright + Debug Log Cleanup
+- **Help documentation updated** — Dashboard corrected from 3 pages to 4 pages (Calendar → Speed → Compass → Clock), added calendar feature descriptions (swipe up/down to change date, lunar calendar / Gan-Zhi / solar terms / moon phases / auspicious-inauspicious, offline calendar library)
+- **Settings descriptions completed** — Added help text for roller transparency, calendar background color & transparency, aligned with actual settings page features
+- **Settings page footer copyright** — Version number and copyright info shown at the bottom of settings page (both normal and floating mode)
+- **Debug log cleanup** — Removed 45 Log.d debug outputs across 10 files, kept Log.w/Log.e
+
+### v1.0.6.2 — Page-Turn Calendar + weight=0 Resource Optimization
+- **Dashboard adds page-turn calendar** — DashboardView expanded from 3 to 4 pages (Calendar → Speed → Compass → Clock), swipe left/right to switch, bottom LED indicator dots updated accordingly
+- **CalendarView self-drawn sci-fi metallic calendar** — Circular dial style, showing Gregorian date (red glow) + vertical lunar date + Gan-Zhi / Chinese zodiac + moon phase + solar terms / holidays (with rest/workday markers) + auspicious-inauspicious
+- **tyme4j calendar library integration** — Integrated 6tail/tyme4j (MIT license, 117 Java files, zero external dependencies) for offline calculation of lunar calendar / Gan-Zhi / zodiac / solar terms / legal holidays / moon phases / auspicious-inauspicious
+- **Calendar background color day/night adjustable** — New calendar background color (night/day) color bars + transparency slider in settings, symmetric with lane background color settings, real-time effect
+- **weight=0 resource optimization** — Areas with 0 ratio changed from GONE to removing draw calls; SpeedometerView/CompassView/ClockView shimmer animations paused when weight=0; 3D car area retains GL thread without destroying, reducing CPU/GPU idle spinning
+
+### v1.0.6.1 — Redundancy Cleanup + Performance Optimization + Close App Button
+- **Color constant unification** — GaugeDrawHelper adds 15 theme color constants (LED/GLOW/STEEL series), consolidating ~40 scattered color values across ClockView/SpeedometerView/CompassView/DashboardView/MileageView/LEDDigitView, eliminating cross-file color mismatch risk
+- **Duplicate overload merging** — drawShimmerArc/drawOuterRing/drawDiskGlow in GaugeDrawHelper each merged from dual versions to single core method, eliminating byte-for-byte duplicate code
+- **Dead code cleanup** — Removed 0-reference ic_theme.xml and ICompassView.isDegreeArea() method project-wide
+- **RadialGradient caching** — SpeedometerView drawTicks() changed from per-frame new RadialGradient (up to 25/frame) to lazily-built cached array, indexed by tick position for reuse, eliminating per-frame GC pressure with identical behavior
+- **Debug log trimming** — LecoFloatManager FloatReceiver removed per-broadcast full extras dump debug code, reducing invalid I/O
+- **Settings page close app button** — New "Close App" button (power icon) in settings, supported in both normal and floating mode, tap to exit the app
 
 ### v1.0.6.0 — New Roller Transparency Setting
 - **Adjustable roller transparency** — New "Roller Transparency" slider in Settings (0~255, 255=opaque) controls the vehicle info roller's opacity (metal + digits + slots), letting the wallpaper show through
@@ -325,6 +346,7 @@ app/src/main/
 │   ├── view/
 │   │   ├── SpeedometerView.java   # Speedometer (1288 lines)
 │   │   ├── CompassView.java       # Compass clock
+│   │   ├── CalendarView.java      # Page-turn calendar (lunar/Gan-Zhi/moon phases/auspicious)
 │   │   ├── NavigationBarView.java # Navigation bar (847 lines, 53 icons)
 │   │   ├── LaneView.java          # Lane gradient background
 │   │   └── GridBackgroundView.java# Grid bg + wallpaper + weather text
