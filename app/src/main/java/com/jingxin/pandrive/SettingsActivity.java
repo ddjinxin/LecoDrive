@@ -257,6 +257,14 @@ public class SettingsActivity extends Activity {
         Button btnHelp = findViewById(R.id.btn_help);
         btnHelp.setOnClickListener(v -> startActivity(new Intent(this, HelpActivity.class)));
 
+        // Copyright & version
+        String versionName = "";
+        try {
+            versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception ignored) {}
+        ((TextView) findViewById(R.id.tv_copyright)).setText(
+                "乐酷驾驶 v" + versionName + "  © 2026 静心");
+
         // Keep screen on
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }

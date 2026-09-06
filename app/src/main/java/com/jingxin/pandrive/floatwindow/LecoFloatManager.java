@@ -189,15 +189,12 @@ public class LecoFloatManager {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            Log.d(TAG, "onReceive: action=" + action + " isFloating=" + isFloating.get()
-                    + " canFloat=" + canFloat.get()
-                    + " currentActivity=" + currentFloatingActivity);
             if (ACTION_SHOW_MAP.equals(action)) {
                 handleShowMap(intent);
             } else if (ACTION_CLOSE_MAP.equals(action)) {
                 handleCloseMap();
             } else {
-                Log.d(TAG, "onReceive: 未知 action=" + action);
+                // Unknown action
             }
         }
     }
@@ -213,16 +210,11 @@ public class LecoFloatManager {
         floatCornerRadius = r;
         canFloat.set(true);
 
-        Log.d(TAG, "showmap: x=" + x + " y=" + y + " w=" + w + " h=" + h
-                + " r=" + r + " → floatW=" + getFloatWidth() + " floatH=" + getFloatHeight());
-
         if (isFloating.get()) {
             // 已悬浮，只更新窗口尺寸
-            Log.d(TAG, "showmap: 已悬浮，调用 updateFloatWindowSize");
             updateFloatWindowSize();
         } else {
             // 首次进入悬浮
-            Log.d(TAG, "showmap: 未悬浮，currentActivity=" + currentFloatingActivity);
             if (currentFloatingActivity != null) {
                 floatActivity(currentFloatingActivity);
             } else {
@@ -232,7 +224,6 @@ public class LecoFloatManager {
     }
 
     private void handleCloseMap() {
-        Log.d(TAG, "closemap: 立即关闭 isFloating=" + isFloating.get() + " canFloat=" + canFloat.get());
         canFloat.set(false);
         boolean wasFloating = isFloating.get();
         restoreCurrentActivity();
@@ -357,8 +348,6 @@ public class LecoFloatManager {
 
         // 10. 发送布局刷新广播，通知 MainActivity 按悬浮区域尺寸重新应用权重
         mainHandler.postDelayed(this::sendLayoutRefresh, 100);
-
-        Log.d(TAG, "进入悬浮态: " + floatW + "x" + floatH);
     }
 
     /**
@@ -394,8 +383,6 @@ public class LecoFloatManager {
         // 3. 清理引用（注意：不清空 currentFloatingActivity，以便后续 showmap 能重新悬浮）
         floatContentView = null;
         isFloating.set(false);
-
-        Log.d(TAG, "退出悬浮态，View 已还原");
     }
 
     /**
@@ -437,7 +424,6 @@ public class LecoFloatManager {
         floatCornerRadius = 0f;
         isFloating.set(false);
         canFloat.set(false);
-        Log.d(TAG, "forceRemoveFloatWindow: 悬浮窗已强制清理");
     }
 
     // ==================== 窗口尺寸更新 ====================
@@ -507,8 +493,6 @@ public class LecoFloatManager {
 
         // 通知 MainActivity 刷新布局
         sendLayoutRefresh();
-
-        Log.d(TAG, "悬浮窗口尺寸更新: " + newW + "x" + newH);
     }
 
     // ==================== 窗口参数 ====================

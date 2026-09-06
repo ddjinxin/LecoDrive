@@ -1238,7 +1238,6 @@ public class DataHub {
             public void onReceive(Context context, Intent intent) {
                 if (!ACTION_AUTONAVI.equals(intent.getAction())) return;
                 int keyType = intent.getIntExtra("KEY_TYPE", -1);
-                Log.d(TAG, "收到高德广播: KEY_TYPE=" + keyType);
                 dispatchAmapBroadcast(intent);
             }
         };
@@ -1266,7 +1265,6 @@ public class DataHub {
      */
     private void dispatchAmapBroadcast(Intent intent) {
         int keyType = intent.getIntExtra("KEY_TYPE", -1);
-        Log.d(TAG, "分发高德广播: KEY_TYPE=" + keyType);
         switch (keyType) {
             case KEY_TYPE_NAVI_GUIDE:
                 parseNaviGuideInfo(intent);
@@ -1290,15 +1288,6 @@ public class DataHub {
         int newIcon = extras.getInt("NEW_ICON", 0);
         int icon = extras.getInt("ICON", 0);
         int effectiveIcon = newIcon != 0 ? newIcon : icon;
-
-        Log.d(TAG, "NaviGuide: ICON=" + icon + " NEW_ICON=" + newIcon
-                + " effectiveIcon=" + effectiveIcon
-                + " CUR_SPEED=" + extras.getInt("CUR_SPEED", -1)
-                + " LIMITED_SPEED=" + extras.getInt("LIMITED_SPEED", -1)
-                + " SEG_REMAIN_DIS=" + extras.getString("SEG_REMAIN_DIS_AUTO", "")
-                + " NEXT_ROAD=" + extras.getString("NEXT_ROAD_NAME", "")
-                + " CUR_ROAD=" + extras.getString("CUR_ROAD_NAME", "")
-                + " mode=" + (effectiveIcon != 0 ? "NAVI" : "CRUISE"));
 
         // Reset navi timeout
         resetNaviTimeout();
@@ -1375,9 +1364,6 @@ public class DataHub {
 
         int lightStatus = extras.getInt("trafficLightStatus", -1);
         String lightsData = extras.getString("lightsData");
-        Log.d(TAG, "TrafficLight: status=" + lightStatus + " lightsData=" + lightsData
-                + " mode=" + currentMode);
-
         if (currentMode == MODE_NAVI) {
             trafficLightStatus = extras.getInt("trafficLightStatus", -1);
             trafficLightDir = extras.getInt("dir", 0);
@@ -1443,9 +1429,6 @@ public class DataHub {
                 tmcStatusArray[i] = segmentList.get(i)[0];
                 tmcPercentArray[i] = segmentList.get(i)[1];
             }
-
-            Log.d(TAG, "TMC parsed: " + segmentList.size() + " segments, total="
-                    + tmcTotalDistance + "m, finish=" + tmcFinishDistance + "m");
 
         } catch (Exception e) {
             Log.e(TAG, "TMC parse error: " + e.getMessage());
@@ -1636,17 +1619,7 @@ public class DataHub {
      * EXTRA_STATE=37=day, 38=night
      */
     private void parseDayNightInfo(Intent intent) {
-        Bundle extras = intent.getExtras();
         int extraState = intent.getIntExtra("EXTRA_STATE", -1);
-
-        // Log all extras for diagnosis
-        if (extras != null) {
-            StringBuilder sb = new StringBuilder();
-            for (String key : extras.keySet()) {
-                sb.append(key).append("=").append(extras.get(key)).append(" ");
-            }
-            Log.d(TAG, "10019广播所有字段: " + sb.toString().trim());
-        }
 
         if (extraState != EXTRA_STATE_DAY && extraState != EXTRA_STATE_NIGHT) {
             Log.w(TAG, "10019 EXTRA_STATE=" + extraState + " 不匹配日/夜值(37/38)");
@@ -1659,7 +1632,6 @@ public class DataHub {
         lastDayNightTime = now;
 
         boolean isNight = (extraState == EXTRA_STATE_NIGHT);
-        Log.d(TAG, "高德日夜模式: " + (isNight ? "夜间" : "白天"));
         notifyDayNightChanged(isNight);
     }
 

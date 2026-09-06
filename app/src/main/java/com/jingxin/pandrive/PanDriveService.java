@@ -55,7 +55,6 @@ public class PanDriveService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "PanDriveService 创建");
 
         createNotificationChannel();
         safeStartForeground(this, NOTIFICATION_ID, buildNotification());
@@ -82,7 +81,6 @@ public class PanDriveService extends Service {
     public void onTaskRemoved(Intent rootIntent) {
         // 用户从最近任务列表划掉应用时触发
         // 此时 Activity 已被销毁，前台服务即将被杀，强制清理悬浮窗防止残留
-        Log.d(TAG, "onTaskRemoved: 用户划掉应用，清理悬浮窗");
         LecoFloatManager.getInstance().forceRemoveFloatWindow();
         super.onTaskRemoved(rootIntent);
     }
@@ -100,7 +98,6 @@ public class PanDriveService extends Service {
         unregisterExitReceiver();
         // 兜底：销毁前台服务时强制清理悬浮窗，防止进程结束后窗口残留
         LecoFloatManager.getInstance().forceRemoveFloatWindow();
-        Log.d(TAG, "PanDriveService 销毁");
     }
 
     // ==================== 定时检查更新 ====================
@@ -117,14 +114,12 @@ public class PanDriveService extends Service {
         updateCheckRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "定时检查更新");
                 UpdateChecker.getInstance(PanDriveService.this).checkSilently();
                 updateCheckHandler.postDelayed(this, CHECK_INTERVAL_MS);
             }
         };
         // 首次延迟一个周期再检查（启动时 MainActivity 已检查过）
         updateCheckHandler.postDelayed(updateCheckRunnable, CHECK_INTERVAL_MS);
-        Log.d(TAG, "定时更新检查已启动，间隔 " + (CHECK_INTERVAL_MS / 3600000) + " 小时");
     }
 
     private void stopUpdateCheckLoop() {
@@ -147,7 +142,6 @@ public class PanDriveService extends Service {
                 if (!ACTION_AUTONAVI.equals(intent.getAction())) return;
 
                 int keyType = intent.getIntExtra("KEY_TYPE", -1);
-                Log.d(TAG, "Service收到高德广播: KEY_TYPE=" + keyType);
 
                 // 1. 直接触发DataHub解析（DataHub是单例，App Context生命周期）
                 DataHub.getInstance(PanDriveService.this).onAmapBroadcastReceived(intent);
@@ -164,7 +158,6 @@ public class PanDriveService extends Service {
 
         IntentFilter filter = new IntentFilter(ACTION_AUTONAVI);
         CompatUtils.safeRegisterReceiverExported(this, amapReceiver, filter);
-        Log.d(TAG, "高德广播接收器已在Service中注册");
     }
 
     private void unregisterAmapReceiver() {
@@ -185,7 +178,6 @@ public class PanDriveService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
                 if (ACTION_EXIT.equals(intent.getAction())) {
-                    Log.d(TAG, "收到退出广播，停止服务");
                     stopSelf();
                 }
             }

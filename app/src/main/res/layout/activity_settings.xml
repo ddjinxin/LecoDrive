@@ -1229,5 +1229,17 @@
 
         </LinearLayout>
 
+        <!-- Copyright & Version -->
+        <TextView
+            android:id="@+id/tv_copyright"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text=""
+            android:textColor="#FF888888"
+            android:textSize="11sp" />
+
     </LinearLayout>
 </ScrollView>

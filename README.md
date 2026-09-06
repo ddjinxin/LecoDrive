@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'b66c9f52-9799-434d-af18-bffdfcadbde3'
-  PropagateID: 'b66c9f52-9799-434d-af18-bffdfcadbde3'
-  ReservedCode1: '63813bda-b638-41d6-9ed2-ca9b11b5d356'
-  ReservedCode2: '63813bda-b638-41d6-9ed2-ca9b11b5d356'
+  ProduceID: 'ded68af7-78a8-47ae-969f-8be6566609a9'
+  PropagateID: 'ded68af7-78a8-47ae-969f-8be6566609a9'
+  ReservedCode1: '613a296a-b5ba-42e6-8189-7e54df299aa9'
+  ReservedCode2: '613a296a-b5ba-42e6-8189-7e54df299aa9'
 ---
 
 <div align="center">
@@ -30,7 +30,13 @@ https://pd.qq.com/s/8wejgtf1k?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.6.2)
+## 📢 最新版本 (v1.0.6.3)
+
+### v1.0.6.3 — 帮助文档完善 + 设置页版权信息 + 调试日志清理
+- **帮助文档更新** — 仪表区从三页更正为四页（日历→速度→指南针→时钟），补充日历功能说明（上下滑动切换日期、农历/干支/节气/月相/宜忌、离线日历库）
+- **设置说明补全** — 新增滚轮透明度、日历背景色与透明度的帮助说明，与设置页实际功能对齐
+- **设置页底部版权信息** — 设置页最底部显示版本号与版权信息（普通模式+悬浮模式同步）
+- **调试日志清理** — 移除 10 个文件共 45 处 Log.d 调试日志，保留 Log.w/Log.e
 
 ### v1.0.6.2 — 翻页日历 + weight=0 资源优化
 - **仪表区新增翻页日历** — DashboardView 从三页扩展为四页（日历→速度→指南针→时钟），左右滑动切换，底部 LED 指示点同步更新

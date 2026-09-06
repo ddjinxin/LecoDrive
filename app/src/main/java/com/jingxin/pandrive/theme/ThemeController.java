@@ -65,7 +65,6 @@ public class ThemeController implements DataHub.OnDayNightListener {
      */
     public void registerAmapReceiver() {
         DataHub.getInstance(appContext).addDayNightListener(this);
-        Log.d(TAG, "已注册为DataHub日夜模式监听器");
     }
 
     /**
@@ -98,8 +97,6 @@ public class ThemeController implements DataHub.OnDayNightListener {
         // Persist
         appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 .edit().putBoolean(KEY_IS_NIGHT, isNight).apply();
-
-        Log.d(TAG, "日夜模式切换: " + (isNight ? "夜间" : "白天"));
 
         // Notify all listeners
         for (OnThemeChangeListener listener : listeners) {

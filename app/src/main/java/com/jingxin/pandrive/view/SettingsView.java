@@ -267,6 +267,14 @@ public class SettingsView extends ScrollView {
             helpView.onClose = () -> gv.removeOverlay(helpView);
             gv.addOverlay(helpView);
         });
+
+        // Copyright & version
+        String versionName = "";
+        try {
+            versionName = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0).versionName;
+        } catch (Exception ignored) {}
+        ((TextView) findViewById(R.id.tv_copyright)).setText(
+                "乐酷驾驶 v" + versionName + "  © 2026 静心");
     }
 
     private void close() {

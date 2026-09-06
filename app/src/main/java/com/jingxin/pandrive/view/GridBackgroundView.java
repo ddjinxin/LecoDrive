@@ -495,7 +495,6 @@ public class GridBackgroundView extends FrameLayout {
             // 采样图片壁纸导航区域亮度
             boolean dark = sampleBitmapBrightness(wallpaperBitmap) < 0.6f;
             notifyBrightness(dark);
-            Log.d(TAG, "Image wallpaper loaded: " + path + " (" + wallpaperBitmap.getWidth() + "x" + wallpaperBitmap.getHeight() + ")");
         } else {
             Log.w(TAG, "Failed to decode image wallpaper: " + path);
             currentWallpaperPath = null;
@@ -542,8 +541,6 @@ public class GridBackgroundView extends FrameLayout {
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
-
-        Log.d(TAG, "Video wallpaper setup: " + path);
     }
 
     private void startVideoPlayback(SurfaceTexture surfaceTexture) {
@@ -567,7 +564,6 @@ public class GridBackgroundView extends FrameLayout {
                 if (wallpaperTextureView != null) {
                     wallpaperTextureView.post(() -> updateVideoLayout());
                 }
-                Log.d(TAG, "Video wallpaper started");
             });
 
             wallpaperMediaPlayer.setOnErrorListener((mp, what, extra) -> {
@@ -627,11 +623,6 @@ public class GridBackgroundView extends FrameLayout {
         lp.leftMargin = leftOffset;
         lp.topMargin = topOffset;
         wallpaperTextureView.setLayoutParams(lp);
-
-        Log.d(TAG, "Video layout: parent=" + parentW + "x" + parentH
-                + " video=" + videoW + "x" + videoH
-                + " scaled=" + scaledW + "x" + scaledH
-                + " offset=" + leftOffset + "," + topOffset);
     }
 
     private void releaseWallpaperResources() {

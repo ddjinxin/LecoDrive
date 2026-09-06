@@ -1096,9 +1096,6 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
         for (int i = 0; i < DEMO_ANIM_COUNT; i++) {
             demoScheduleTimes[i] += firstDelay;
         }
-
-        Log.d(TAG, "演示周期: 顺序=" + java.util.Arrays.toString(demoOrder)
-                + " 时间=" + java.util.Arrays.toString(demoScheduleTimes));
     }
 
     /**
@@ -1110,7 +1107,6 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
         demoStartTime = now;
         demoRotY = 0f;
         demoScaleFactor = 1f;
-        Log.d(TAG, "开始演示动画" + animId);
     }
 
     /**
@@ -1232,7 +1228,6 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
      * 动画播放完毕，重置状态
      */
     private void finishDemoAnim() {
-        Log.d(TAG, "演示动画" + demoCurrentAnim + "播放完毕");
         demoCurrentAnim = -1;
         demoPhase = 0;
         demoRotY = 0f;
@@ -1281,19 +1276,12 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
     private void classifyLights() {
         if (drawUnits == null) return;
 
-        // 打印所有材质名，便于调试
-        for (GlbParser.DrawUnit unit : drawUnits) {
-            Log.d(TAG, "DrawUnit材质: " + unit.materialName + " hasTexture=" + unit.hasTexture
-                    + " bcf=" + java.util.Arrays.toString(unit.baseColorFactor));
-        }
-
         // 通过材质名和颜色特征识别灯部件，只标记isLight，左右由shader判断
         int lightCount = 0;
         for (GlbParser.DrawUnit unit : drawUnits) {
             unit.isLight = isLightPart(unit);
             if (unit.isLight) lightCount++;
         }
-        Log.d(TAG, "灯部件识别: " + lightCount + "/" + drawUnits.size() + " 个DrawUnit是灯");
     }
 
     private boolean isLightPart(GlbParser.DrawUnit unit) {

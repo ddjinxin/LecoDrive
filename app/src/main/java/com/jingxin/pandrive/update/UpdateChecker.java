@@ -123,7 +123,6 @@ public class UpdateChecker {
      */
     public void checkOnLaunch(Activity activity) {
         if (launchChecked) {
-            Log.d(TAG, "本次启动已检查过更新，跳过");
             return;
         }
         launchChecked = true;
@@ -144,7 +143,6 @@ public class UpdateChecker {
      */
     public void checkSilently() {
         if (isChecking) {
-            Log.d(TAG, "已有检查任务在运行，跳过 checkSilently");
             return;
         }
         isChecking = true;
@@ -204,7 +202,6 @@ public class UpdateChecker {
      */
     public void checkSilentlyWithFeedback(Context context) {
         if (isChecking) {
-            Log.d(TAG, "已有检查任务在运行，跳过 checkSilentlyWithFeedback");
             mainHandler.post(() -> FloatToast.show(context, "正在检查更新，请稍候..."));
             return;
         }
@@ -271,7 +268,6 @@ public class UpdateChecker {
      */
     private void checkAndDownload(final Activity activity, final boolean force) {
         if (isChecking) {
-            Log.d(TAG, "已有检查任务在运行，跳过");
             if (force) {
                 mainHandler.post(() ->
                     Toast.makeText(activity, "正在检查更新，请稍候...", Toast.LENGTH_SHORT).show());
@@ -652,7 +648,7 @@ public class UpdateChecker {
                 fos.write(buf, 0, n);
                 downloaded += n;
                 if (total > 0) {
-                    Log.d(TAG, "下载进度: " + (downloaded * 100 / total) + "%");
+                    // Progress tracked silently
                 }
             }
             fos.flush();

@@ -612,14 +612,11 @@ public class MainActivity extends Activity implements
      */
     private boolean isLeKuLauncherInstalled() {
         try {
-            android.content.pm.PackageInfo info = getPackageManager().getPackageInfo("com.lecoauto", 0);
-            android.util.Log.d("LeKuCheck", "getPackageInfo returned: " + info.packageName);
+            getPackageManager().getPackageInfo("com.lecoauto", 0);
             return true;
         } catch (PackageManager.NameNotFoundException e) {
-            android.util.Log.d("LeKuCheck", "NameNotFoundException: com.lecoauto not found");
             return false;
         } catch (Exception e) {
-            android.util.Log.d("LeKuCheck", "Other exception: " + e.getClass().getName() + " " + e.getMessage());
             return false;
         }
     }

@@ -33,7 +33,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="仪表区：三页滑动切换，左右滑动可在速度仪表盘、指南针、圆形时钟之间切换，底部指示点显示当前页面。单击可切换对应仪表的显示样式。速度仪表盘显示实时车速，超速时数字变红预警；指南针显示当前方向，行驶时方向自动跟随GPS更新；圆形时钟显示当前时间。"
+            android:text="仪表区：四页滑动切换，左右滑动可在日历、速度仪表盘、指南针、圆形时钟之间切换，底部LED指示点显示当前页面。单击可切换对应仪表的显示样式。日历页上下滑动切换日期，显示农历、干支、生肖、节气、节日、月相和宜忌信息，法定假日标注休/班，内置离线日历库无需联网；速度仪表盘显示实时车速，超速时数字变红预警；指南针显示当前方向，行驶时方向自动跟随GPS更新；圆形时钟显示当前时间。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="4dp"
@@ -105,7 +105,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;左右滑动仪表区：在速度仪表盘、指南针、圆形时钟之间切换。&#10;单击仪表区：切换当前仪表的显示样式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
+            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;左右滑动仪表区：在日历、速度仪表盘、指南针、圆形时钟之间切换。&#10;上下滑动日历页：切换日期。&#10;单击仪表区：切换当前仪表的显示样式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -232,6 +232,24 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="车道背景色：可分别自定义夜间顶部/底部和白天顶部/底部的车道渐变色，通过滑动色相条选择颜色，即选即存。透明度滑条可调节车道背景的透明度(0~100%)，使壁纸能在车道区域透出。每行可单独恢复默认，也可点击&quot;全部默认&quot;一键恢复。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="滚轮透明度：调节车辆信息区3D滚轮的透明度(0~100%)，搭配壁纸使用可获得更通透的视觉效果。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="日历背景色：可分别自定义日历在夜间和白天模式下的背景颜色，通过滑动色相条选择颜色，即选即存。透明度滑条可调节日历背景的透明度(0~100%)，使壁纸能在日历区域透出。每行可单独恢复默认，也可点击&quot;全部默认&quot;一键恢复。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"

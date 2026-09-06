@@ -330,11 +330,6 @@ public class WeatherHelper {
         // 持久化视频索引
         getSharedPreferences().edit().putInt(SP_VIDEO_INDEX, newVideoIndex).apply();
 
-        Log.d(TAG, String.format(Locale.US,
-            "天气更新: code=%d temp=%.1f° feels=%.1f° humidity=%d%% wind=%.1fkm/h dir=%d° video=%s",
-            weatherCode, temperature, apparentTemp, humidity, windSpeed, windDirection,
-            currentVideoIndex >= 0 ? VIDEO_FILES[currentVideoIndex] : "无"));
-
         if (changed && listener != null) {
             String videoFile = currentVideoIndex >= 0 ? VIDEO_FILES[currentVideoIndex] : null;
             String line1 = getWeatherDesc() + "  " + formatTemp(temperature);
