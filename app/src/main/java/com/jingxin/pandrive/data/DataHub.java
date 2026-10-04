@@ -500,6 +500,12 @@ public class DataHub {
             fuelCalcKm           = (float) root.optDouble("fuel_calc_km", 0f);
             fuelConsumption      = (float) root.optDouble("fuel_consumption", 0f);
             tankCapacity         = (float) root.optDouble("tank_capacity", 0f);
+            // 车机综合油耗分段累计五状态量（重启衔接）
+            vehicleBaseOdometer    = (float) root.optDouble("veh_base_odo", -1d);
+            vehicleBaseFuelLiters  = (float) root.optDouble("veh_base_fuel", -1d);
+            vehicleTotalFuelUsed   = (float) root.optDouble("veh_total_fuel", 0d);
+            vehicleTotalDistUsed   = (float) root.optDouble("veh_total_dist", 0d);
+            vehicleOverallFuel     = (float) root.optDouble("veh_overall_fuel", -1d);
             int winSec           = root.optInt("recent_fuel_window_sec", 120);
             setRecentFuelWindowSec(winSec);  // 初始化样本池
             recentFuelMode       = root.optInt("recent_fuel_mode", RECENT_MODE_TIME);
@@ -609,6 +615,11 @@ public class DataHub {
         e.putFloat("fuel_calc_km", fuelCalcKm);
         e.putFloat("fuel_consumption", fuelConsumption);
         e.putFloat("tank_capacity", tankCapacity);
+        e.putFloat("veh_base_odo", vehicleBaseOdometer);
+        e.putFloat("veh_base_fuel", vehicleBaseFuelLiters);
+        e.putFloat("veh_total_fuel", vehicleTotalFuelUsed);
+        e.putFloat("veh_total_dist", vehicleTotalDistUsed);
+        e.putFloat("veh_overall_fuel", vehicleOverallFuel);
         e.putInt("recent_fuel_window_sec", recentFuelWindowSec);
         e.putInt("recent_fuel_mode", recentFuelMode);
         e.putInt("lane_night_top", laneNightTopColor);
@@ -661,6 +672,12 @@ public class DataHub {
             root.put("fuel_calc_km", fuelCalcKm);
             root.put("fuel_consumption", fuelConsumption);
             root.put("tank_capacity", tankCapacity);
+            // 车机综合油耗分段累计五状态量（重启衔接）
+            root.put("veh_base_odo", vehicleBaseOdometer);
+            root.put("veh_base_fuel", vehicleBaseFuelLiters);
+            root.put("veh_total_fuel", vehicleTotalFuelUsed);
+            root.put("veh_total_dist", vehicleTotalDistUsed);
+            root.put("veh_overall_fuel", vehicleOverallFuel);
             root.put("recent_fuel_window_sec", recentFuelWindowSec);
             JSONArray layoutLand = new JSONArray();
             JSONArray layoutPort = new JSONArray();
@@ -879,41 +896,92 @@ public class DataHub {
         return vehicleStatus.timestamp > 0;
     }
 
-    // ===== 车机综合油耗（里程差法）=====
-    /** 基线里程（km），首次收到有效 odometer 时锁定 */
+    // ===== 车机综合油耗（分段累计法，持久化） =====
+    /** 当前段基线里程（km），首次有效数据锁定；加油时前移 */
     private float vehicleBaseOdometer = -1f;
-    /** 基线油量百分比，首次收到有效 fuelPct 时锁定 */
-    private float vehicleBaseFuelPct = -1f;
-    /** 最近一次车机综合油耗（L/100km），<0=无效 */
+    /** 当前段基线油量（L），首次有效数据锁定；加油时抬到加油后 */
+    private float vehicleBaseFuelLiters = -1f;
+    /** 所有段累计消耗油量（L），加油不清零 */
+    private float vehicleTotalFuelUsed = 0f;
+    /** 所有段累计行驶里程（km），加油不清零 */
+    private float vehicleTotalDistUsed = 0f;
+    /** 最近算出的综合油耗（L/100km），<0=尚无值 */
     private float vehicleOverallFuel = -1f;
 
-    /** 车机综合油耗：基于 odometer 差值和 fuelPct 差值用里程差法计算。
-     *  首次收到有效数据时锁定基线，之后每次 odometer 变化时更新。
-     *  受 fuelPct 整数百分比精度限制，适合长距离累计统计。
-     *  @return L/100km，<0=数据不足或无效 */
+    /** 车机综合油耗：分段累计法。
+     *  油量下降→记录消耗与里程；油量上升（加油）→只抬基线不记录；历史不清零。
+     *  五状态量持久化（备份文件+SP），重启车机无缝衔接。
+     *  @return L/100km，<0=数据不足 */
     public float getVehicleOverallFuel() {
         return vehicleOverallFuel;
     }
 
-    /** 收到车况广播时调用：记录基线 + 更新车机综合油耗 */
+    /** 收到车况广播时调用：分段累计更新车机综合油耗 */
     private void updateVehicleOverallFuel(float odometer, float fuelPct) {
-        // 过滤无效值
+        // 有效性过滤
         if (odometer < 0 || odometer == 1.6777215E7f) return;
         if (fuelPct < 0 || fuelPct > 100) return;
-        // 首次锁定基线
-        if (vehicleBaseOdometer < 0) {
+        if (tankCapacity <= 0) return;  // 无油箱容量无法换算升数
+
+        float fuelLiters = fuelPct * tankCapacity / 100f;
+
+        // 情形A：基线未初始化（首次有效数据）→ 只建基线
+        if (vehicleBaseOdometer < 0 || vehicleBaseFuelLiters < 0) {
             vehicleBaseOdometer = odometer;
-            vehicleBaseFuelPct = fuelPct;
+            vehicleBaseFuelLiters = fuelLiters;
+            persistVehicleFuelStats();
             return;
         }
-        // odometer 变化时计算油耗
+
+        // 情形B：油量上升（加油）→ 抬基线，不记录
+        // 加油期间每条广播都刷新基线，加油完成后基线停在最终值
+        if (fuelLiters > vehicleBaseFuelLiters) {
+            vehicleBaseOdometer = odometer;
+            vehicleBaseFuelLiters = fuelLiters;
+            persistVehicleFuelStats();
+            return;
+        }
+
+        // 情形C：油量不变 → 只前移里程基线（1%跳变间隙，避免间隙里程虚低）
+        if (fuelLiters == vehicleBaseFuelLiters) {
+            vehicleBaseOdometer = odometer;
+            persistVehicleFuelStats();
+            return;
+        }
+
+        // 情形D：油量下降（正常行驶）→ 记录本段增量
         float deltaDist = odometer - vehicleBaseOdometer;
-        if (deltaDist > 0.1f && tankCapacity > 0) {
-            float deltaFuelPct = vehicleBaseFuelPct - fuelPct;
-            if (deltaFuelPct > 0) {
-                float consumedLiters = deltaFuelPct * tankCapacity / 100f;
-                vehicleOverallFuel = consumedLiters / deltaDist * 100f;
-            }
+        if (deltaDist <= 0.1f) return;  // 里程保护：过短不记录（基线不动，等下条广播）
+        float deltaFuel = vehicleBaseFuelLiters - fuelLiters;
+        vehicleTotalFuelUsed += deltaFuel;
+        vehicleTotalDistUsed += deltaDist;
+        vehicleBaseOdometer = odometer;       // 基线前移
+        vehicleBaseFuelLiters = fuelLiters;
+
+        // 最低5km采样门槛：不足时沿用旧值防启动初期乱跳
+        if (vehicleTotalDistUsed >= 5f) {
+            vehicleOverallFuel = vehicleTotalFuelUsed / vehicleTotalDistUsed * 100f;
+        }
+        persistVehicleFuelStats();
+    }
+
+    /** 上次备份文件写入时间（车机油耗统计用，10秒节流防高频广播刷盘） */
+    private long lastVehFuelPersistMs = 0L;
+
+    /** 持久化分段累计五状态量（SP 每次快照；备份文件 10 秒节流。
+     *  基线滞后无害：差值法只要求基线是真实历史配对值，恢复后照常算差值） */
+    private void persistVehicleFuelStats() {
+        editSettings()
+                .putFloat("veh_base_odo", vehicleBaseOdometer)
+                .putFloat("veh_base_fuel", vehicleBaseFuelLiters)
+                .putFloat("veh_total_fuel", vehicleTotalFuelUsed)
+                .putFloat("veh_total_dist", vehicleTotalDistUsed)
+                .putFloat("veh_overall_fuel", vehicleOverallFuel)
+                .apply();
+        long now = System.currentTimeMillis();
+        if (now - lastVehFuelPersistMs >= 10_000L) {
+            lastVehFuelPersistMs = now;
+            persistBackup();
         }
     }
 

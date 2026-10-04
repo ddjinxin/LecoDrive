@@ -102,6 +102,25 @@ public class SettingsActivity extends Activity {
         switchLincoln.setOnCheckedChangeListener((button, isChecked) ->
                 MainPagerView.setLincolnEnabled(this, isChecked));
 
+        // 原车信息运行模式开关（0=带界面 默认 / 1=纯服务）
+        // 切换时发广播 com.jingxin.lincarinfo.SET_MODE 给 LinCarInfo，extra mode=0或1
+        Switch switchLincolnMode = findViewById(R.id.switch_lincoln_mode);
+        boolean serviceMode = getSharedPreferences("lincoln", MODE_PRIVATE)
+                .getBoolean("run_mode_service", false);
+        switchLincolnMode.setChecked(serviceMode);
+        switchLincolnMode.setOnCheckedChangeListener((button, isChecked) -> {
+            getSharedPreferences("lincoln", MODE_PRIVATE).edit()
+                    .putBoolean("run_mode_service", isChecked).apply();
+            Intent modeIntent = new Intent("com.jingxin.lincarinfo.SET_MODE");
+            modeIntent.putExtra("mode", isChecked ? 1 : 0);
+            modeIntent.setPackage("com.jingxin.lincarinfo");
+            // 刚安装/更新后应用处于 stopped 态，此 flag 确保广播必达
+            modeIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            sendBroadcast(modeIntent);
+            Toast.makeText(this, isChecked ? "已切换为纯服务模式" : "已切换为带界面模式",
+                    Toast.LENGTH_SHORT).show();
+        });
+
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);
         editTankCapacity = findViewById(R.id.edit_tank_capacity);
