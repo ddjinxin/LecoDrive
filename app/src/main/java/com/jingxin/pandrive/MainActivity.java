@@ -81,6 +81,7 @@ public class MainActivity extends Activity implements
     private MileageView mileageView;
     private GridBackgroundView gridBackgroundView;
     private TextureView textureView;
+    private com.jingxin.pandrive.view.TirePressureOverlay tirePressureOverlay;
     private Car3DRenderer car3DRenderer;
     private GlTextureRenderer glTextureRenderer;
     private android.widget.ImageView themeButton;
@@ -149,6 +150,7 @@ public class MainActivity extends Activity implements
         gridBackgroundView = findViewById(R.id.grid_background);
         themeButton = findViewById(R.id.theme_button);
         textureView = findViewById(R.id.texture_view);
+        tirePressureOverlay = findViewById(R.id.tire_pressure_overlay);
         mainPager = findViewById(R.id.main_pager);
         // 林肯页默认关闭：开关关闭时不在容器内，从 pager 的保留引用取实例
         lincolnPage = mainPager != null ? mainPager.getLincolnPageView() : null;
@@ -939,6 +941,7 @@ public class MainActivity extends Activity implements
         if (compassViewMinimal != null) compassViewMinimal.setNightMode(isNight);
         if (navigationBarView != null) navigationBarView.setNightMode(isNight);
         if (laneView != null) laneView.setNightMode(isNight);
+        if (tirePressureOverlay != null) tirePressureOverlay.setNightMode(isNight);
         if (clockView != null) clockView.setNightMode(isNight);
         if (calendarView != null) calendarView.setNightMode(isNight);
         if (mileageView != null) mileageView.setNightMode(isNight);
