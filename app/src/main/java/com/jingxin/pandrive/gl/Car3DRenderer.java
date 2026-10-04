@@ -184,9 +184,21 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
                        String segRemainDis, String nextRoadName, int speedLimit,
                        String routeRemainDis, int remainTimeSec, String etaText);
     }
+    /** 车辆演示动画状态回调（主线程分发） */
+    public interface OnDemoAnimListener {
+        void onDemoAnimStateChanged(boolean animating);
+    }
+    /** 车头偏航角回调（主线程分发，角度变化超阈值才通知） */
+    public interface OnYawListener {
+        void onYawChanged(float yawDeg);
+    }
     private RenderRequester renderRequester;
     private OnSimSpeedListener simSpeedListener;
     private OnSimNaviListener simNaviListener;
+    private OnDemoAnimListener demoAnimListener;
+    private OnYawListener yawListener;
+    private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private float lastNotifiedYaw = 9999f;   // 上次回调的偏航角，初始哨兵值
 
     private boolean needsNextFrame = false;
 
@@ -274,6 +286,8 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
     public void setRenderRequester(RenderRequester requester) { this.renderRequester = requester; }
     public void setSimSpeedListener(OnSimSpeedListener listener) { this.simSpeedListener = listener; }
     public void setSimNaviListener(OnSimNaviListener listener) { this.simNaviListener = listener; }
+    public void setDemoAnimListener(OnDemoAnimListener listener) { this.demoAnimListener = listener; }
+    public void setYawListener(OnYawListener listener) { this.yawListener = listener; }
     public void requestRender() { if (renderRequester != null) renderRequester.requestRender(); }
     public boolean needsNextFrame() { return needsNextFrame; }
 
@@ -526,6 +540,12 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
         }
 
         buildModelMatrix(rotY + naviCurrentRotY + cruiseCurrentRotY + demoRotY, shakeX, shakeY);
+        // 通知偏航角（变化超 1° 才回调，避免每帧通知主线程）
+        float yaw = naviCurrentRotY + cruiseCurrentRotY;
+        if (yawListener != null && Math.abs(yaw - lastNotifiedYaw) > 1f) {
+            lastNotifiedYaw = yaw;
+            mainHandler.post(() -> yawListener.onYawChanged(yaw));
+        }
         // Global MVP = Proj * View * BaseModel
         Matrix.multiplyMM(tempMatrix, 0, viewMatrix, 0, modelMatrix, 0);
         Matrix.multiplyMM(mvpMatrix, 0, projMatrix, 0, tempMatrix, 0);
@@ -1107,6 +1127,7 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
         demoStartTime = now;
         demoRotY = 0f;
         demoScaleFactor = 1f;
+        notifyDemoAnim(true);
     }
 
     /**
@@ -1232,6 +1253,13 @@ public class Car3DRenderer implements GLSurfaceView.Renderer {
         demoPhase = 0;
         demoRotY = 0f;
         demoScaleFactor = 1f;
+        notifyDemoAnim(false);
+    }
+
+    private void notifyDemoAnim(boolean animating) {
+        if (demoAnimListener != null) {
+            mainHandler.post(() -> demoAnimListener.onDemoAnimStateChanged(animating));
+        }
     }
 
     private static float smoothstep(float t) {

@@ -6,6 +6,8 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.view.View;
+import android.animation.ValueAnimator;
+import android.view.animation.LinearInterpolator;
 
 import com.jingxin.pandrive.data.DataHub;
 
@@ -49,6 +51,16 @@ public class TirePressureOverlay extends View implements DataHub.OnVehicleStatus
     private String tireUnit = "";
 
     private float density = 1f;
+
+    // ===== 车头偏航角（导航/巡航车头左右偏转，4个胎压值跟随旋转） =====
+    private float yawDeg = 0f;
+
+    // ===== 车辆动画期间的抖动动画 =====
+    private static final float SHAKE_AMP_DP = 1.5f;   // 抖动幅度 dp
+    private static final long SHAKE_PERIOD_MS = 400L; // 抖动周期
+    private ValueAnimator shakeAnim;
+    private float shakePhase = 0f;   // 0→1 正弦波相位
+    private boolean shaking = false;
 
     public TirePressureOverlay(Context context) { this(context, null); }
     public TirePressureOverlay(Context context, AttributeSet attrs) { this(context, attrs, 0); }
@@ -95,7 +107,44 @@ public class TirePressureOverlay extends View implements DataHub.OnVehicleStatus
     @Override
     protected void onDetachedFromWindow() {
         DataHub.getInstance(getContext()).removeVehicleStatusListener(this);
+        stopShake();
         super.onDetachedFromWindow();
+    }
+
+    /** 设置车头偏航角（正值=左偏，负值=右偏），4个胎压值绕道路中心跟随旋转 */
+    public void setYaw(float yaw) {
+        if (Math.abs(yaw - yawDeg) < 0.5f) return;
+        yawDeg = yaw;
+        invalidate();
+    }
+
+    /** 车辆动画状态切换：true 开始抖动，false 停止 */
+    public void setShake(boolean shake) {
+        if (shaking == shake) return;
+        shaking = shake;
+        if (shake) startShake(); else stopShake();
+    }
+
+    private void startShake() {
+        if (shakeAnim != null && shakeAnim.isRunning()) return;
+        shakeAnim = ValueAnimator.ofFloat(0f, 1f);
+        shakeAnim.setDuration(SHAKE_PERIOD_MS);
+        shakeAnim.setRepeatCount(ValueAnimator.INFINITE);
+        shakeAnim.setInterpolator(new LinearInterpolator());
+        shakeAnim.addUpdateListener(an -> {
+            shakePhase = (float) an.getAnimatedValue();
+            invalidate();
+        });
+        shakeAnim.start();
+    }
+
+    private void stopShake() {
+        if (shakeAnim != null) {
+            shakeAnim.cancel();
+            shakeAnim = null;
+        }
+        shakePhase = 0f;
+        invalidate();
     }
 
     // ==================== 绘制 ====================
@@ -114,12 +163,35 @@ public class TirePressureOverlay extends View implements DataHub.OnVehicleStatus
         float frontHalf = roadHalf(nearWidth, farWidth, FRONT_Y);
         float rearHalf = roadHalf(nearWidth, farWidth, REAR_Y);
 
-        // 左前/右前（远处，车头两侧）
-        drawSlot(canvas, 0, centerX - frontHalf * FRONT_X_FRACTION, FRONT_Y * h, true);
-        drawSlot(canvas, 1, centerX + frontHalf * FRONT_X_FRACTION, FRONT_Y * h, true);
-        // 左后/右后（近处，车尾两侧）
-        drawSlot(canvas, 2, centerX - rearHalf * REAR_X_FRACTION, REAR_Y * h, false);
-        drawSlot(canvas, 3, centerX + rearHalf * REAR_X_FRACTION, REAR_Y * h, false);
+        // 4 个锚点原始坐标
+        float[][] pts = {
+            {centerX - frontHalf * FRONT_X_FRACTION, FRONT_Y * h},  // 左前
+            {centerX + frontHalf * FRONT_X_FRACTION, FRONT_Y * h},  // 右前
+            {centerX - rearHalf  * REAR_X_FRACTION,  REAR_Y  * h},  // 左后
+            {centerX + rearHalf  * REAR_X_FRACTION,  REAR_Y  * h},  // 右后
+        };
+
+        // 偏航角绕道路中心（centerX, h/2）做 2D 旋转，让胎压值跟随车头偏转
+        // Canvas Y轴朝下，+角度是顺时针；GL车头左转(naviCurrentRotY>0)视觉是逆时针，
+        // 故取 -yawDeg 使胎压值与车头同向旋转
+        if (Math.abs(yawDeg) > 0.5f) {
+            float pivotX = centerX;
+            float pivotY = h * 0.5f;
+            double rad = Math.toRadians(-yawDeg);
+            float cos = (float) Math.cos(rad);
+            float sin = (float) Math.sin(rad);
+            for (int i = 0; i < 4; i++) {
+                float dx = pts[i][0] - pivotX;
+                float dy = pts[i][1] - pivotY;
+                pts[i][0] = pivotX + dx * cos - dy * sin;
+                pts[i][1] = pivotY + dx * sin + dy * cos;
+            }
+        }
+
+        drawSlot(canvas, 0, pts[0][0], pts[0][1], true);
+        drawSlot(canvas, 1, pts[1][0], pts[1][1], true);
+        drawSlot(canvas, 2, pts[2][0], pts[2][1], false);
+        drawSlot(canvas, 3, pts[3][0], pts[3][1], false);
     }
 
     private float roadHalf(float nearWidth, float farWidth, float yFraction) {
@@ -156,11 +228,10 @@ public class TirePressureOverlay extends View implements DataHub.OnVehicleStatus
         float valSize = 15f * d * scale * 1.3f;   // 字号整体放大30%
         float unitSize = valSize * 0.4f;
 
-        // 白天文字统一白色，夜间用状态色（LED发光）
-        int textColor = isNightMode ? color : 0xFFFFFFFF;
-        valuePaint.setColor(textColor);
+        // 日夜均用白色文字；夜间保留状态色 LED 发光
+        valuePaint.setColor(0xFFFFFFFF);
         valuePaint.setTextSize(valSize);
-        unitPaint.setColor(textColor);
+        unitPaint.setColor(0xFFFFFFFF);
         unitPaint.setTextSize(unitSize);
         if (isNightMode) {
             valuePaint.setShadowLayer(4f * d, 0, 0, color);
@@ -170,12 +241,20 @@ public class TirePressureOverlay extends View implements DataHub.OnVehicleStatus
             unitPaint.clearShadowLayer();
         }
 
+        // 车辆动画期间抖动：正弦波 × 振幅（水平+垂直，垂直幅度减半）
+        float shakeX = 0f, shakeY = 0f;
+        if (shaking) {
+            double wave = Math.sin(shakePhase * 2f * Math.PI);
+            shakeX = (float) wave * SHAKE_AMP_DP * d;
+            shakeY = (float) Math.cos(shakePhase * 2f * Math.PI) * SHAKE_AMP_DP * d * 0.5f;
+        }
+
         float valH = valuePaint.getFontMetrics().bottom - valuePaint.getFontMetrics().top;
         float unitH = unitPaint.getFontMetrics().bottom - unitPaint.getFontMetrics().top;
         float totalH = valH + unitH + 2f * d;
         float topY = cy - totalH / 2f;
-        canvas.drawText(value, cx, topY - valuePaint.getFontMetrics().top, valuePaint);
-        canvas.drawText(unit, cx, topY + valH + 2f * d - unitPaint.getFontMetrics().top, unitPaint);
+        canvas.drawText(value, cx + shakeX, topY - valuePaint.getFontMetrics().top + shakeY, valuePaint);
+        canvas.drawText(unit, cx + shakeX, topY + valH + 2f * d - unitPaint.getFontMetrics().top + shakeY, unitPaint);
     }
 
     // ==================== 颜色 / 换算（照抄林肯页） ====================

@@ -332,6 +332,14 @@ public class MainActivity extends Activity implements
                 }
             });
         });
+        // 车辆演示动画状态 → 胎压 Overlay 抖动同步
+        car3DRenderer.setDemoAnimListener(animating -> {
+            if (tirePressureOverlay != null) tirePressureOverlay.setShake(animating);
+        });
+        // 车头偏航角 → 胎压 Overlay 跟随旋转
+        car3DRenderer.setYawListener(yaw -> {
+            if (tirePressureOverlay != null) tirePressureOverlay.setYaw(yaw);
+        });
         glTextureRenderer.setTextureView(textureView);
     }
 
