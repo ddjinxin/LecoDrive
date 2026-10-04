@@ -16,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -244,6 +245,49 @@ public class DataHub {
     public interface OnFuelListener { void onFuelChanged(float overallFuelLPer100km, float recentFuelLPer100km, float remainingRangeKm, float remainingPercent); }
     public interface OnLocationListener { void onLocationChanged(double latitude, double longitude); }
 
+    /** 车况数据快照（来自林肯车机信息广播） */
+    public static class VehicleStatus {
+        // 横幅
+        public float speed = -1f;          // km/h
+        public int gear = -1;              // 0=P/1=N/2=R/3=D...
+        public float odometer = -1f;       // km（无效哨兵 1.6777215E7）
+        public float range = -1f;          // km
+        public String mileageUnit = "km";
+        public float fuelPct = -1f;        // %
+        public int fuelWarn = -1;
+        public int oilLife = -1;           // %
+        public int ignition = -1;
+        // 转向灯 3=亮/1=灭/0=关
+        public int turnLeft = -1, turnRight = -1;
+        // 胎压：[0]=左前 [1]=右前 [2]=左后 [3]=右后
+        public float[] tirePressure = {-1f, -1f, -1f, -1f};
+        public float[] tireTemp = {-1f, -1f, -1f, -1f};
+        public int[] tireState = {-1, -1, -1, -1};
+        public String tireUnit = "";       // psi/kPa/bar，空=未知
+        // 门窗 1=开 0=关 -1=无数据
+        public int doorLB = -1, doorRB = -1, doorLR = -1, doorRR = -1;
+        public int trunkIn = -1, trunkOut = -1;
+        // 车窗 0=开 1=关 -1=无数据
+        public int winDriver = -1, winPassenger = -1, winLeftRear = -1, winRightRear = -1;
+        // 空调
+        public float tempDriver = Float.MIN_VALUE;   // ℃（MIN_VALUE=无数据）
+        public float tempPassenger = Float.MIN_VALUE;
+        public int acPower = -1;          // 1=开 2=关
+        public int fanLevel = -1;
+        public int acRecycle = -1;
+        public int acOn = -1;
+        public int pm25 = -1;             // μg/m³
+        /** 收到本快照的时间戳（elapsedRealtime），判新鲜度用 */
+        public long timestamp = 0L;
+
+        /** 数据是否新鲜（10 秒内有广播到达） */
+        public boolean isFresh(long now) {
+            return timestamp > 0 && (now - timestamp) < 10_000L;
+        }
+    }
+
+    public interface OnVehicleStatusListener { void onVehicleStatusChanged(VehicleStatus status); }
+
     private final List<OnSpeedListener> speedListeners = new ArrayList<>();
     private final List<OnDirectionListener> directionListeners = new ArrayList<>();
     private final List<OnNavigationListener> navigationListeners = new ArrayList<>();
@@ -252,11 +296,15 @@ public class DataHub {
     private final List<OnMileageListener> mileageListeners = new ArrayList<>();
     private final List<OnFuelListener> fuelListeners = new ArrayList<>();
     private final List<OnLocationListener> locationListeners = new ArrayList<>();
+    private final List<OnVehicleStatusListener> vehicleStatusListeners = new ArrayList<>();
 
     private static DataHub instance;
     private boolean dataLoadedFromBackup = false;  // 是否已从备份文件成功加载过数据，未加载前不允许写文件
     private final Context appContext;
     private BroadcastReceiver amapDataReceiver;
+
+    /** 林肯车机信息广播的当前缓存快照（林肯页读它刷新 UI） */
+    private VehicleStatus vehicleStatus = new VehicleStatus();
 
     private DataHub(Context context) {
         appContext = context.getApplicationContext();
@@ -287,6 +335,8 @@ public class DataHub {
     public void removeFuelListener(OnFuelListener l) { fuelListeners.remove(l); }
     public void addLocationListener(OnLocationListener l) { if (!locationListeners.contains(l)) locationListeners.add(l); }
     public void removeLocationListener(OnLocationListener l) { locationListeners.remove(l); }
+    public void addVehicleStatusListener(OnVehicleStatusListener l) { if (!vehicleStatusListeners.contains(l)) vehicleStatusListeners.add(l); }
+    public void removeVehicleStatusListener(OnVehicleStatusListener l) { vehicleStatusListeners.remove(l); }
 
     // --- Getters ---
     public int getCurrentMode() { return currentMode; }
@@ -808,6 +858,127 @@ public class DataHub {
         float todayKm = todayDistance / 1000f;
         float totalKm = totalDistance / 1000f;
         for (OnMileageListener l : mileageListeners) l.onMileageChanged(tripKm, todayKm, totalKm);
+    }
+
+    // ==================== 林肯车机信息数据桥 ====================
+
+    /** 林肯车机信息广播 action（发送端 LinCarInfo.ACTION_VEHICLE_DATA） */
+    public static final String ACTION_VEHICLE_DATA = "com.jingxin.lincarinfo.VEHICLE_DATA";
+
+    /** 获取车况快照（可能为初始空快照，UI 侧需用 isFresh 判断新鲜度） */
+    public VehicleStatus getVehicleStatus() { return vehicleStatus; }
+
+    /** 林肯车机信息是否在持续供数（10 秒内有广播） */
+    public boolean isVehicleDataFresh() {
+        return vehicleStatus.isFresh(SystemClock.elapsedRealtime());
+    }
+
+    /** 本次进程是否收到过车机广播（timestamp>0）。用于首页滚轮"车机优先"判据：
+     *  不用 isFresh（10s 窗口），因为车机数据静止时 LinCarInfo 不发广播，用 isFresh 会闪变。 */
+    public boolean hasVehicleData() {
+        return vehicleStatus.timestamp > 0;
+    }
+
+    // ===== 车机综合油耗（里程差法）=====
+    /** 基线里程（km），首次收到有效 odometer 时锁定 */
+    private float vehicleBaseOdometer = -1f;
+    /** 基线油量百分比，首次收到有效 fuelPct 时锁定 */
+    private float vehicleBaseFuelPct = -1f;
+    /** 最近一次车机综合油耗（L/100km），<0=无效 */
+    private float vehicleOverallFuel = -1f;
+
+    /** 车机综合油耗：基于 odometer 差值和 fuelPct 差值用里程差法计算。
+     *  首次收到有效数据时锁定基线，之后每次 odometer 变化时更新。
+     *  受 fuelPct 整数百分比精度限制，适合长距离累计统计。
+     *  @return L/100km，<0=数据不足或无效 */
+    public float getVehicleOverallFuel() {
+        return vehicleOverallFuel;
+    }
+
+    /** 收到车况广播时调用：记录基线 + 更新车机综合油耗 */
+    private void updateVehicleOverallFuel(float odometer, float fuelPct) {
+        // 过滤无效值
+        if (odometer < 0 || odometer == 1.6777215E7f) return;
+        if (fuelPct < 0 || fuelPct > 100) return;
+        // 首次锁定基线
+        if (vehicleBaseOdometer < 0) {
+            vehicleBaseOdometer = odometer;
+            vehicleBaseFuelPct = fuelPct;
+            return;
+        }
+        // odometer 变化时计算油耗
+        float deltaDist = odometer - vehicleBaseOdometer;
+        if (deltaDist > 0.1f && tankCapacity > 0) {
+            float deltaFuelPct = vehicleBaseFuelPct - fuelPct;
+            if (deltaFuelPct > 0) {
+                float consumedLiters = deltaFuelPct * tankCapacity / 100f;
+                vehicleOverallFuel = consumedLiters / deltaDist * 100f;
+            }
+        }
+    }
+
+    /** 主动重推里程/油量给监听者（设置页切换"车机信息卡片"开关后调用，
+     *  让 MainActivity 的替换逻辑即时生效，无需等下一次广播）。 */
+    public void refreshMileageAndFuel() {
+        notifyMileageChanged();
+        notifyFuelChanged();
+    }
+
+    /** 收到林肯车机信息广播（PanDriveService 转发）→ 解析 extras → 更新快照 → 分发 */
+    public void onVehicleDataReceived(Intent intent) {
+        if (intent == null) return;
+        VehicleStatus s = new VehicleStatus();
+        // ---- 横幅 ----
+        s.speed = intent.getFloatExtra("speed", -1f);
+        s.gear = intent.getIntExtra("gear", -1);
+        s.odometer = intent.getFloatExtra("odometer", -1f);
+        s.range = intent.getFloatExtra("range", -1f);
+        String unit = intent.getStringExtra("mileageUnit");
+        s.mileageUnit = (unit == null || unit.isEmpty()) ? "km" : unit;
+        s.fuelPct = intent.getFloatExtra("fuelPct", -1f);
+        s.fuelWarn = intent.getIntExtra("fuelWarn", -1);
+        s.oilLife = intent.getIntExtra("oilLife", -1);
+        s.ignition = intent.getIntExtra("ignition", -1);
+        // ---- 转向灯 ----
+        s.turnLeft = intent.getIntExtra("turnLeft", -1);
+        s.turnRight = intent.getIntExtra("turnRight", -1);
+        // ---- 胎压：[0]左前 [1]右前 [2]左后 [3]右后 ----
+        for (int i = 0; i < 4; i++) {
+            String p = "tire" + i;
+            s.tirePressure[i] = intent.getFloatExtra(p + "Pressure", -1f);
+            s.tireTemp[i] = intent.getFloatExtra(p + "Temp", -1f);
+            s.tireState[i] = intent.getIntExtra(p + "State", -1);
+        }
+        String tu = intent.getStringExtra("tireUnit");
+        s.tireUnit = tu == null ? "" : tu;
+        // ---- 门窗后备箱 ----
+        s.doorLB = intent.getIntExtra("doorLB", -1);
+        s.doorRB = intent.getIntExtra("doorRB", -1);
+        s.doorLR = intent.getIntExtra("doorLR", -1);
+        s.doorRR = intent.getIntExtra("doorRR", -1);
+        s.trunkIn = intent.getIntExtra("trunkIn", -1);
+        s.trunkOut = intent.getIntExtra("trunkOut", -1);
+        // ---- 车窗 ----
+        s.winDriver = intent.getIntExtra("winDriver", -1);
+        s.winPassenger = intent.getIntExtra("winPassenger", -1);
+        s.winLeftRear = intent.getIntExtra("winLeftRear", -1);
+        s.winRightRear = intent.getIntExtra("winRightRear", -1);
+        // ---- 空调 ----
+        s.tempDriver = intent.getFloatExtra("tempDriver", Float.MIN_VALUE);
+        s.tempPassenger = intent.getFloatExtra("tempPassenger", Float.MIN_VALUE);
+        s.acPower = intent.getIntExtra("acPower", -1);
+        s.fanLevel = intent.getIntExtra("fanLevel", -1);
+        s.acRecycle = intent.getIntExtra("acRecycle", -1);
+        s.acOn = intent.getIntExtra("acOn", -1);
+        s.pm25 = intent.getIntExtra("pm25", -1);
+        s.timestamp = SystemClock.elapsedRealtime();
+
+        vehicleStatus = s;
+        // 更新车机综合油耗（里程差法）
+        updateVehicleOverallFuel(s.odometer, s.fuelPct);
+        Log.i(TAG, "[车况] 收到林肯广播: speed=" + (int) s.speed + " gear=" + s.gear
+                + " 胎压单位=" + s.tireUnit + " PM2.5=" + s.pm25);
+        for (OnVehicleStatusListener l : vehicleStatusListeners) l.onVehicleStatusChanged(s);
     }
 
     public float getFuelConsumption() { return fuelConsumption; }

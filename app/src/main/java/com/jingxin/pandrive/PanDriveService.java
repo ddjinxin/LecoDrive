@@ -44,8 +44,18 @@ public class PanDriveService extends Service {
     // Amap broadcast
     private static final String ACTION_AUTONAVI = "AUTONAVI_STANDARD_BROADCAST_SEND";
 
+    // 林肯车机信息数据桥广播（LinCarInfo.ACTION_VEHICLE_DATA，setPackage 定向发到本应用）
+    public static final String ACTION_VEHICLE_DATA = "com.jingxin.lincarinfo.VEHICLE_DATA";
+
+    // 车况查询广播（乐酷 → LinCarInfo，LinCarInfo 收到后回发当前快照，
+    // 解决"乐酷后启动错过推送、数据静止无广播"导致页面 -- 等待的问题）
+    public static final String ACTION_VEHICLE_DATA_QUERY = "com.jingxin.lincarinfo.VEHICLE_DATA_QUERY";
+    /** 接收方包名（LinCarInfo，setPackage 定向） */
+    private static final String LINCARINFO_PKG = "com.jingxin.lincarinfo";
+
     private BroadcastReceiver amapReceiver;
     private BroadcastReceiver exitReceiver;
+    private BroadcastReceiver vehicleReceiver;
 
     // 定时检查更新
     private static final long CHECK_INTERVAL_MS = 2 * 60 * 60 * 1000L; // 2 小时
@@ -61,6 +71,12 @@ public class PanDriveService extends Service {
 
         // 在Service中注册高德广播接收器
         registerAmapReceiver();
+
+        // 注册林肯车机信息数据桥接收器（林肯车机信息 App 发来的车况广播）
+        registerVehicleReceiver();
+
+        // 启动即向 LinCarInfo 查询一次当前车况（乐酷可能晚于其启动，错过启动波推送）
+        queryVehicleData();
 
         // 注册退出广播接收器
         registerExitReceiver();
@@ -95,6 +111,7 @@ public class PanDriveService extends Service {
         super.onDestroy();
         stopUpdateCheckLoop();
         unregisterAmapReceiver();
+        unregisterVehicleReceiver();
         unregisterExitReceiver();
         // 兜底：销毁前台服务时强制清理悬浮窗，防止进程结束后窗口残留
         LecoFloatManager.getInstance().forceRemoveFloatWindow();
@@ -167,6 +184,50 @@ public class PanDriveService extends Service {
             } catch (Exception ignored) {}
             amapReceiver = null;
         }
+    }
+
+    /**
+     * 注册林肯车机信息数据桥接收器：监听 LinCarInfo 定向发来的车况广播，
+     * 收到后交给 DataHub 解析缓存（林肯页 UI 从 DataHub 读快照刷新）。
+     * 悬浮窗态下本 Service 常驻，数据不随 Activity 生命周期中断。
+     */
+    private void registerVehicleReceiver() {
+        if (vehicleReceiver != null) return;
+        vehicleReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (!ACTION_VEHICLE_DATA.equals(intent.getAction())) return;
+                DataHub.getInstance(PanDriveService.this).onVehicleDataReceived(intent);
+            }
+        };
+        IntentFilter filter = new IntentFilter(ACTION_VEHICLE_DATA);
+        CompatUtils.safeRegisterReceiverExported(this, vehicleReceiver, filter);
+    }
+
+    private void unregisterVehicleReceiver() {
+        if (vehicleReceiver != null) {
+            try {
+                unregisterReceiver(vehicleReceiver);
+            } catch (Exception ignored) {}
+            vehicleReceiver = null;
+        }
+    }
+
+    /** 向 LinCarInfo 定向查询当前车况快照（其收到后 refreshDisplay 回发广播）。
+     *  任意 Context 可调：服务启动时、林肯页翻页可见时。 */
+    public static void queryVehicleData(Context context) {
+        try {
+            Intent query = new Intent(ACTION_VEHICLE_DATA_QUERY);
+            query.setPackage(LINCARINFO_PKG);
+            context.sendBroadcast(query);
+            Log.i(TAG, "已向 LinCarInfo 查询车况快照");
+        } catch (Throwable e) {
+            Log.w(TAG, "查询车况快照失败: " + e);
+        }
+    }
+
+    private void queryVehicleData() {
+        queryVehicleData(this);
     }
 
     /**

@@ -80,6 +80,34 @@
 
         </LinearLayout>
 
+        <!-- Lincoln Vehicle Card Toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="车机信息卡片"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFCCCCCC" />
+
+            <Switch
+                android:id="@+id/switch_lincoln_card"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textOff="关"
+                android:textOn="开"
+                android:thumbTint="#FFFFFFFF"
+                android:trackTint="#FFFFFFFF" />
+
+        </LinearLayout>
+
         <!-- Wallpaper Section -->
         <TextView
             android:layout_width="match_parent"

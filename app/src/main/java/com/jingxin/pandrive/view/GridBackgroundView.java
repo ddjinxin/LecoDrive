@@ -121,6 +121,9 @@ public class GridBackgroundView extends FrameLayout {
     // 与主布局区分：主 LinearLayout 也是 MATCH_PARENT，不能误判为覆盖层
     private final Set<View> overlayViews = Collections.synchronizedSet(new HashSet<View>());
 
+    // 林肯车况页激活时跳过天气文字（纯车况页不叠首页内容）
+    private boolean skipWeatherLabels = false;
+
     // ==================== 背景亮度自适应 ====================
     /**
      * 背景亮度变化监听器。
@@ -177,6 +180,13 @@ public class GridBackgroundView extends FrameLayout {
         if (view == null) return;
         overlayViews.remove(view);
         removeView(view);
+        invalidate();
+    }
+
+    /** 林肯页激活状态：激活时跳过天气文字绘制（页面回调驱动） */
+    public void setSkipWeatherLabels(boolean skip) {
+        if (skipWeatherLabels == skip) return;
+        skipWeatherLabels = skip;
         invalidate();
     }
 
@@ -780,8 +790,8 @@ public class GridBackgroundView extends FrameLayout {
         // 3. 渲染子View（视频TextureView在index 0 → 最底层，仪表盘等在上面）
         super.dispatchDraw(canvas);
 
-        // 4. 天气文字（被全屏覆盖页遮挡时跳过）
-        if (!hasFullscreenOverlay()) {
+        // 4. 天气文字（被全屏覆盖页遮挡或林肯页激活时跳过）
+        if (!hasFullscreenOverlay() && !skipWeatherLabels) {
             drawWeatherLabels(canvas, w, h);
         }
     }

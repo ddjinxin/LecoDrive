@@ -21,6 +21,7 @@ import com.jingxin.pandrive.floatwindow.LecoFloatManager;
 import com.jingxin.pandrive.theme.ThemeController;
 import com.jingxin.pandrive.update.UpdateChecker;
 import com.jingxin.pandrive.view.GridBackgroundView;
+import com.jingxin.pandrive.view.MainPagerView;
 import com.jingxin.pandrive.view.MileageView;
 import com.jingxin.pandrive.view.LaneColorHelper;
 import com.jingxin.pandrive.view.CalendarColorHelper;
@@ -94,6 +95,12 @@ public class SettingsActivity extends Activity {
                     .apply();
             ThemeController.getInstance(this).forceSetNightMode(isChecked);
         });
+
+        // 林肯车机信息卡片开关（默认关闭，SP 持久化 + 主界面即时增删页）
+        Switch switchLincoln = findViewById(R.id.switch_lincoln_card);
+        switchLincoln.setChecked(MainPagerView.isLincolnEnabled(this));
+        switchLincoln.setOnCheckedChangeListener((button, isChecked) ->
+                MainPagerView.setLincolnEnabled(this, isChecked));
 
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);

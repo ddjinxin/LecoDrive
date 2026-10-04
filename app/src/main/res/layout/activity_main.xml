@@ -5,12 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <LinearLayout
+    <!-- 全屏水平分页容器：第0页=首页，第1页=林肯车况页（背景共享壁纸，仅内容平移） -->
+    <com.jingxin.pandrive.view.MainPagerView
+        android:id="@+id/main_pager"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:weightSum="100"
-        android:background="@android:color/transparent">
+        android:layout_height="match_parent">
+
+        <!-- ========== 第 0 页：首页 ========== -->
+        <LinearLayout
+            android:id="@+id/home_page"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:weightSum="100"
+            android:background="@android:color/transparent">
 
         <!-- Section 1: Date & Time (10%) -->
         <com.jingxin.pandrive.view.DateTimeView
@@ -127,6 +135,14 @@
         </FrameLayout>
 
     </LinearLayout>
+
+        <!-- ========== 第 1 页：林肯车况页（代码构建，透明共享壁纸） ========== -->
+        <com.jingxin.pandrive.lincoln.LincolnPageView
+            android:id="@+id/lincoln_page"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </com.jingxin.pandrive.view.MainPagerView>
 
     <!-- 设置按钮（右上角） -->
     <ImageView

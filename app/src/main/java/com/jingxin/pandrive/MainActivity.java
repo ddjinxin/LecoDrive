@@ -45,6 +45,8 @@ import com.jingxin.pandrive.view.SettingsView;
 import com.jingxin.pandrive.view.SpeedometerView;
 import com.jingxin.pandrive.update.UpdateChecker;
 
+import com.jingxin.pandrive.view.MainPagerView;
+
 public class MainActivity extends Activity implements
         ThemeController.OnThemeChangeListener,
         DataHub.OnSpeedListener,
@@ -53,7 +55,8 @@ public class MainActivity extends Activity implements
         DataHub.OnModeListener,
         DataHub.OnMileageListener,
         DataHub.OnFuelListener,
-        DataHub.OnLocationListener {
+        DataHub.OnLocationListener,
+        DataHub.OnVehicleStatusListener {
 
     private static final int REQ_NOTIFICATION = 1;
     private static final int REQ_LOCATION = 2;
@@ -82,6 +85,8 @@ public class MainActivity extends Activity implements
     private GlTextureRenderer glTextureRenderer;
     private android.widget.ImageView themeButton;
     private SettingsView settingsView; // 悬浮态下的设置页 View
+    private MainPagerView mainPager;
+    private com.jingxin.pandrive.lincoln.LincolnPageView lincolnPage;
 
     private ThemeController themeController;
     private DataHub dataHub;
@@ -144,6 +149,9 @@ public class MainActivity extends Activity implements
         gridBackgroundView = findViewById(R.id.grid_background);
         themeButton = findViewById(R.id.theme_button);
         textureView = findViewById(R.id.texture_view);
+        mainPager = findViewById(R.id.main_pager);
+        // 林肯页默认关闭：开关关闭时不在容器内，从 pager 的保留引用取实例
+        lincolnPage = mainPager != null ? mainPager.getLincolnPageView() : null;
 
         // 根据横竖屏调整布局比例
         applyLayoutWeights();
@@ -162,6 +170,7 @@ public class MainActivity extends Activity implements
         dataHub.addMileageListener(this);
         dataHub.addFuelListener(this);
         dataHub.addLocationListener(this);
+        dataHub.addVehicleStatusListener(this);
 
         // 天气回调：收到天气数据后更新视频背景和文字
         weatherHelper.setListener(new WeatherHelper.OnWeatherListener() {
@@ -190,6 +199,33 @@ public class MainActivity extends Activity implements
         boolean weatherAnimEnabled = getSharedPreferences("wallpaper", MODE_PRIVATE)
                 .getBoolean("weather_animation_enabled", false);
         gridBackgroundView.setWeatherAnimationMode(weatherAnimEnabled);
+
+        // 林肯页翻页回调：林肯页激活时隐藏设置按钮+天气文字，回首页恢复
+        if (mainPager != null) {
+            mainPager.setOnPageChangeListener(page -> {
+                boolean lincoln = page == 1;
+                if (themeButton != null) {
+                    themeButton.setVisibility(lincoln ? View.GONE : View.VISIBLE);
+                }
+                if (gridBackgroundView != null) {
+                    gridBackgroundView.setSkipWeatherLabels(lincoln);
+                }
+                // 林肯页首次激活时按实际尺寸缩放字号+定位标签
+                if (lincoln && lincolnPage != null) {
+                    lincolnPage.post(() -> {
+                        lincolnPage.scaleTextByRegion();
+                        lincolnPage.updateData(dataHub.getVehicleStatus());
+                    });
+                    // 翻到林肯页即查询一次最新快照（数据静止无推送时也能拿到）
+                    PanDriveService.queryVehicleData(MainActivity.this);
+                }
+            });
+        }
+
+        // 应用林肯页开关（关闭时移除、开启时加回，onFinishInflate 已初始化过默认关闭）
+        if (mainPager != null) {
+            mainPager.applyLincolnEnabledFromMain();
+        }
 
         // 启动时用已有坐标请求天气，GPS未定位时不请求（等GPS回调驱动）
         {
@@ -227,6 +263,8 @@ public class MainActivity extends Activity implements
                         applyLayoutWeightsForFloat();
                         forceRefreshAllViews();
                     }
+                    // 林肯页按页面（悬浮区域）实际尺寸全量重算（全屏/悬浮切换、区域变化都触发）
+                    if (lincolnPage != null) lincolnPage.post(() -> lincolnPage.relayoutAll());
                 }
             }
         };
@@ -907,6 +945,7 @@ public class MainActivity extends Activity implements
         if (mileageView != null) mileageView.setVehicleType(dataHub.getVehicleType());
         if (mileageView != null) mileageView.setRollerAlpha(dataHub.getRollerAlpha());
         if (gridBackgroundView != null) gridBackgroundView.setNightMode(isNight);
+        if (lincolnPage != null) lincolnPage.setNightMode(isNight);
         updateThemeButtonIcon(isNight);
     }
 
@@ -993,6 +1032,13 @@ public class MainActivity extends Activity implements
     @Override
     public void onMileageChanged(float tripKm, float todayKm, float totalKm) {
         if (mileageView != null) {
+            // 车机信息卡片开关打开且收到过车机广播时，累计里程取车机真实值
+            if (mainPager != null && MainPagerView.isLincolnEnabled(this) && dataHub.hasVehicleData()) {
+                float odo = dataHub.getVehicleStatus().odometer;
+                if (odo >= 0 && odo != 1.6777215E7f) {
+                    totalKm = odo;
+                }
+            }
             mileageView.updateMileage(tripKm, todayKm, totalKm);
         }
     }
@@ -1000,6 +1046,21 @@ public class MainActivity extends Activity implements
     @Override
     public void onFuelChanged(float overallFuelLPer100km, float recentFuelLPer100km, float remainingRangeKm, float remainingPercent) {
         if (mileageView != null) {
+            // 车机信息卡片开关打开且收到过车机广播时，综合油耗/剩余油量百分比/剩余续航取车机真实值
+            if (mainPager != null && MainPagerView.isLincolnEnabled(this) && dataHub.hasVehicleData()) {
+                DataHub.VehicleStatus vs = dataHub.getVehicleStatus();
+                float fuelPct = vs.fuelPct;
+                if (fuelPct >= 0 && fuelPct <= 100) {
+                    remainingPercent = fuelPct;
+                }
+                if (vs.range >= 0) {
+                    remainingRangeKm = vs.range;
+                }
+                float vOverall = dataHub.getVehicleOverallFuel();
+                if (vOverall > 0) {
+                    overallFuelLPer100km = vOverall;
+                }
+            }
             mileageView.updateFuel(overallFuelLPer100km, recentFuelLPer100km, remainingRangeKm, remainingPercent);
         }
     }
@@ -1008,6 +1069,21 @@ public class MainActivity extends Activity implements
     public void onLocationChanged(double latitude, double longitude) {
         if (weatherHelper != null) {
             weatherHelper.onLocationUpdate(latitude, longitude);
+        }
+    }
+
+    // ==================== Vehicle status callback（林肯车机信息广播） ====================
+
+    @Override
+    public void onVehicleStatusChanged(DataHub.VehicleStatus status) {
+        // 广播在主线程分发（PanDriveService 主线程 onReceive），直接刷新林肯页
+        if (lincolnPage != null) {
+            lincolnPage.updateData(status);
+        }
+        // 车机信息卡片开关打开时，重推里程/油量给首页滚轮
+        // （累计里程/剩余油量改取车机值，广播到达即刷新，不必等乐酷内部 tick）
+        if (mainPager != null && MainPagerView.isLincolnEnabled(this)) {
+            dataHub.refreshMileageAndFuel();
         }
     }
 

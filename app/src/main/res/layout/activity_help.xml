@@ -105,7 +105,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;左右滑动仪表区：在日历、速度仪表盘、指南针、圆形时钟之间切换。&#10;上下滑动日历页：切换日期。&#10;单击仪表区：切换当前仪表的显示样式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。"
+            android:text="长按右上角日/夜按钮：进入设置页面。&#10;单击右上角日/夜按钮：切换日间/夜间模式。&#10;左右滑动仪表区：在日历、速度仪表盘、指南针、圆形时钟之间切换。&#10;上下滑动日历页：切换日期。&#10;单击仪表区：切换当前仪表的显示样式。&#10;单击导航区域：随机切换3D车型。&#10;自己获取的3D车模文件要放到车机的下载目录。&#10;车辆静止时（车速为0）：可自由旋转和缩放3D车型。&#10;行驶中（车速不为0）：只能缩放，不能旋转，保障驾驶安全。&#10;在主界面最左侧向右滑动（或从首页向左滑动）：进入车机信息页（需在设置中打开&quot;车机信息卡片&quot;开关），显示车况数据；向右滑动回到首页。"
             android:textSize="14sp"
             android:textColor="#FFEEEEEE"
             android:lineSpacingExtra="6dp"
@@ -127,6 +127,15 @@
             android:textSize="14sp"
             android:textColor="#FFCCCCCC"
             android:lineSpacingExtra="4dp"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="车机信息卡片：打开后首页左滑可进入车机信息页，显示车况数据（车速、挡位、续航、里程、胎压、门窗、空调等）。需配合林肯车机信息应用使用，数据通过本地定向广播传递。打开后，首页车辆信息滚轮中的&quot;累计里程&quot;和&quot;剩余油量&quot;也会改取车机真实数据，不再使用本应用GPS累计和推算值。关闭后恢复本应用自算。"
+            android:textSize="14sp"
+            android:textColor="#FFEEEEEE"
+            android:lineSpacingExtra="6dp"
             android:layout_marginBottom="8dp" />
 
         <TextView

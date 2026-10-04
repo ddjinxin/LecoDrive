@@ -112,6 +112,12 @@ public class SettingsView extends ScrollView {
             ThemeController.getInstance(getContext()).forceSetNightMode(isChecked);
         });
 
+        // 林肯车机信息卡片开关（默认关闭，SP 持久化 + 主界面即时增删页）
+        Switch switchLincoln = findViewById(R.id.switch_lincoln_card);
+        switchLincoln.setChecked(MainPagerView.isLincolnEnabled(getContext()));
+        switchLincoln.setOnCheckedChangeListener((button, isChecked) ->
+                MainPagerView.setLincolnEnabled(getContext(), isChecked));
+
         editBaseMileage = findViewById(R.id.edit_base_mileage);
         editIdleFuelRate = findViewById(R.id.edit_idle_fuel_rate);
         editTankCapacity = findViewById(R.id.edit_tank_capacity);
