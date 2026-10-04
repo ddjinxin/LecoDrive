@@ -258,8 +258,16 @@ public class MainPagerView extends FrameLayout {
         }
         // 仪表区是 home_page 的子孙 View，用边界判定（instanceof 扫直接子 View 匹配不到）
         View dashboard = findViewById(R.id.dashboard_view);
-        if (dashboard != null && x >= dashboard.getLeft() && x <= dashboard.getRight()
+        if (dashboard != null && dashboard.getVisibility() == View.VISIBLE
+                && x >= dashboard.getLeft() && x <= dashboard.getRight()
                 && y >= dashboard.getTop() && y <= dashboard.getBottom()) {
+            return true;
+        }
+        // 3D 车模区域：拖拽旋转/双指缩放手势自治，父容器不拦截
+        View car3d = findViewById(R.id.section_car3d);
+        if (car3d != null && car3d.getVisibility() == View.VISIBLE
+                && x >= car3d.getLeft() && x <= car3d.getRight()
+                && y >= car3d.getTop() && y <= car3d.getBottom()) {
             return true;
         }
         return false;

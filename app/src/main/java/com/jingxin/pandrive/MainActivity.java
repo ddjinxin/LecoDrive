@@ -352,6 +352,9 @@ public class MainActivity extends Activity implements
                     lastTouchX = event.getX(0);
                     lastTouchY = event.getY(0);
                     isPinching = false;
+                    // 3D 手势独占：禁止父级（MainPagerView）拦截本触摸序列做整页翻页，
+                    // 保证 3D 区域内的拖拽旋转/双指缩放绝对优先于页面左右滑动。
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
                     // Second finger down = start pinch
