@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '2fc1be54-1f9c-4158-bfae-09a998391d70'
-  PropagateID: '2fc1be54-1f9c-4158-bfae-09a998391d70'
-  ReservedCode1: '8d580ec1-6ff2-416a-9be5-7985a46a4417'
-  ReservedCode2: '8d580ec1-6ff2-416a-9be5-7985a46a4417'
+  ProduceID: '43898bdd-fcff-4dd4-99b5-40803512bb2a'
+  PropagateID: '43898bdd-fcff-4dd4-99b5-40803512bb2a'
+  ReservedCode1: '3a06b39d-6495-4bfc-8b0d-4e7ab0d1acb4'
+  ReservedCode2: '3a06b39d-6495-4bfc-8b0d-4e7ab0d1acb4'
 ---
 
 <div align="center">
@@ -30,7 +30,11 @@ https://pd.qq.com/s/fng6x6nlx?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 Latest Release (v1.0.6.3)
+## 📢 Latest Release (v1.0.6.4)
+
+### v1.0.6.4 — Settings Layout Optimization + Wording Alignment
+- **Settings item repositioned** — The "Show detailed car info card" and "Original car info broadcast silent run" toggles moved to the bottom of the settings page, right above the bottom button area, keeping them separate from other settings
+- **Wording aligned** — "Car info card" renamed to "Show detailed car info card", "Original car info run mode" renamed to "Original car info broadcast silent run", matching their actual behavior
 
 ### v1.0.6.3 — Help Docs Refined + Settings Copyright + Debug Log Cleanup
 - **Help documentation updated** — Dashboard corrected from 3 pages to 4 pages (Calendar → Speed → Compass → Clock), added calendar feature descriptions (swipe up/down to change date, lunar calendar / Gan-Zhi / solar terms / moon phases / auspicious-inauspicious, offline calendar library)

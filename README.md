@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: 'ded68af7-78a8-47ae-969f-8be6566609a9'
-  PropagateID: 'ded68af7-78a8-47ae-969f-8be6566609a9'
-  ReservedCode1: '613a296a-b5ba-42e6-8189-7e54df299aa9'
-  ReservedCode2: '613a296a-b5ba-42e6-8189-7e54df299aa9'
+  ProduceID: '36bbec09-0afd-4cfe-a1f1-be7c5af4ed62'
+  PropagateID: '36bbec09-0afd-4cfe-a1f1-be7c5af4ed62'
+  ReservedCode1: 'f97e4023-ccb2-40d7-a196-8cb089526234'
+  ReservedCode2: 'f97e4023-ccb2-40d7-a196-8cb089526234'
 ---
 
 <div align="center">
@@ -30,7 +30,11 @@ https://pd.qq.com/s/fng6x6nlx?b=2
 ---
 
 <!-- LATEST_RELEASE_START -->
-## 📢 最新版本 (v1.0.6.3)
+## 📢 最新版本 (v1.0.6.4)
+
+### v1.0.6.4 — 设置页布局优化 + 文案对齐
+- **设置项位置调整** — 「显示车机详细信息卡片」与「原车信息广播静默运行」两个开关移到页面最下方，紧挨底部按钮区上方，避免与其他设置项混杂
+- **文案对齐** — 「车机信息卡片」更名为「显示车机详细信息卡片」，「原车信息运行模式」更名为「原车信息广播静默运行」，与功能实际含义一致
 
 ### v1.0.6.3 — 帮助文档完善 + 设置页版权信息 + 调试日志清理
 - **帮助文档更新** — 仪表区从三页更正为四页（日历→速度→指南针→时钟），补充日历功能说明（上下滑动切换日期、农历/干支/节气/月相/宜忌、离线日历库）
