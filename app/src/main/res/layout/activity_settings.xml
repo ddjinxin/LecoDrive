@@ -80,62 +80,6 @@
 
         </LinearLayout>
 
-        <!-- Lincoln Vehicle Card Toggle -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="车机信息卡片"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#FFCCCCCC" />
-
-            <Switch
-                android:id="@+id/switch_lincoln_card"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textOff="关"
-                android:textOn="开"
-                android:thumbTint="#FFFFFFFF"
-                android:trackTint="#FFFFFFFF" />
-
-        </LinearLayout>
-
-        <!-- Lincoln Info Run Mode Toggle (带界面/纯服务) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="原车信息运行模式"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:textColor="#FFCCCCCC" />
-
-            <Switch
-                android:id="@+id/switch_lincoln_mode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textOff="带界面"
-                android:textOn="纯服务"
-                android:thumbTint="#FFFFFFFF"
-                android:trackTint="#FFFFFFFF" />
-
-        </LinearLayout>
-
         <!-- Wallpaper Section -->
         <TextView
             android:layout_width="match_parent"
@@ -1230,6 +1174,63 @@
                 android:layout_marginLeft="8dp"
                 android:paddingStart="8dp"
                 android:paddingEnd="8dp" />
+
+        </LinearLayout>
+
+        <!-- Lincoln Vehicle Card Toggle -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="显示车机详细信息卡片"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFCCCCCC" />
+
+            <Switch
+                android:id="@+id/switch_lincoln_card"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textOff="关"
+                android:textOn="开"
+                android:thumbTint="#FFFFFFFF"
+                android:trackTint="#FFFFFFFF" />
+
+        </LinearLayout>
+
+        <!-- Lincoln Info Run Mode Toggle (带界面/纯服务) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="原车信息广播静默运行"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#FFCCCCCC" />
+
+            <Switch
+                android:id="@+id/switch_lincoln_mode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textOff="带界面"
+                android:textOn="纯服务"
+                android:thumbTint="#FFFFFFFF"
+                android:trackTint="#FFFFFFFF" />
 
         </LinearLayout>
 
