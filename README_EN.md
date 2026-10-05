@@ -3,10 +3,10 @@ AIGC:
   ContentProducer: '001191110102MAD55U9H0F10002'
   ContentPropagator: '001191110102MAD55U9H0F10002'
   Label: '1'
-  ProduceID: '43898bdd-fcff-4dd4-99b5-40803512bb2a'
-  PropagateID: '43898bdd-fcff-4dd4-99b5-40803512bb2a'
-  ReservedCode1: '3a06b39d-6495-4bfc-8b0d-4e7ab0d1acb4'
-  ReservedCode2: '3a06b39d-6495-4bfc-8b0d-4e7ab0d1acb4'
+  ProduceID: 'a0f6a586-59ae-4fc4-b3c6-5b3fbe3774de'
+  PropagateID: 'a0f6a586-59ae-4fc4-b3c6-5b3fbe3774de'
+  ReservedCode1: '6ab438c8-69b5-4bec-95d5-a4e767cea78b'
+  ReservedCode2: '6ab438c8-69b5-4bec-95d5-a4e767cea78b'
 ---
 
 <div align="center">
@@ -32,9 +32,17 @@ https://pd.qq.com/s/fng6x6nlx?b=2
 <!-- LATEST_RELEASE_START -->
 ## 📢 Latest Release (v1.0.6.4)
 
-### v1.0.6.4 — Settings Layout Optimization + Wording Alignment
-- **Settings item repositioned** — The "Show detailed car info card" and "Original car info broadcast silent run" toggles moved to the bottom of the settings page, right above the bottom button area, keeping them separate from other settings
-- **Wording aligned** — "Car info card" renamed to "Show detailed car info card", "Original car info run mode" renamed to "Original car info broadcast silent run", matching their actual behavior
+### v1.0.6.4 — Lincoln Car Info Page + 3D Tire Pressure Overlay + Fuel Consumption Fix
+- **Lincoln car info page** — New LincolnPageView 1:1 replica of the Lincoln dashboard interface (banner / car image / tire pressure / doors & windows / HVAC cards); home screen adds MainPagerView with left/right paging (Home ↔ Lincoln page), swipe left to view car info
+- **Home roller uses real car data** — Cumulative mileage / remaining fuel / range / overall fuel consumption now read from the car broadcast; total mileage shown as integer + unit; HVAC temperature changed to float precision (%.1f display)
+- **Overall fuel consumption (mileage-difference method)** — DataHub records odometer/fuelPct baseline and calculates overall consumption when odometer changes
+- **Car info card toggle** — New settings switch to control the car info card display; help docs updated accordingly
+- **Original car info run mode switch** — New "Original car info run mode" (with UI / service-only) switch in settings, sends SET_MODE broadcast to LinCarInfo on change
+- **Summary fuel consumption segmented cumulative method** — Refactored: refueling only lifts the baseline without resetting, history persisted and resumed across restarts, minimum 5km sampling threshold, consumption not reset on restart
+- **Home 3D tire pressure overlay** — New TirePressureOverlay positions 4 tire pressure values by the road perspective trapezoid anchors (front small / rear large), white text in day / status-color LED at night, synced with day-night switching
+- **Tire pressure overlay enhancement** — Demo animation shake, yaw-follow rotation, unified white text day/night; new car-top assets (car_top.webp / car_top_day.webp)
+- **3D gesture priority fix** — Drag/rotate/pinch inside the 3D area now uses requestDisallowInterceptTouchEvent to take over the touch sequence, taking priority over full-page left/right swiping without interference
+- **Settings layout & wording alignment** — "Show detailed car info card" and "Original car info broadcast silent run" toggles moved to the bottom of the settings page, wording aligned with actual behavior
 
 ### v1.0.6.3 — Help Docs Refined + Settings Copyright + Debug Log Cleanup
 - **Help documentation updated** — Dashboard corrected from 3 pages to 4 pages (Calendar → Speed → Compass → Clock), added calendar feature descriptions (swipe up/down to change date, lunar calendar / Gan-Zhi / solar terms / moon phases / auspicious-inauspicious, offline calendar library)
